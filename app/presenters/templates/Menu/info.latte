@@ -1,0 +1,19 @@
+<div class="submenuContainer" id="infoSubmenuContainer" style="display: none;" onmouseover="displaySubmenu('info', '{App\Presenters\BasePresenter::INFO_COLOR|noescape}');" onmouseout="hideSubmenus();">
+	<div class="menuItemsContainer" style="width:100%;">
+		<a href="{plink Info:rules}">
+			<div class="menuItemContainer">
+				<p class="menuText{if $presenter->isLinkCurrent('Info:rules')} selected{/if}">Pravidla</p>
+			</div>
+		</a>
+		<a href="{plink Info:}">
+			<div class="menuItemContainer">
+				<p class="menuText{if $presenter->isLinkCurrent('Info:')} selected{/if}">Aktuality</p>
+			</div>
+		</a>
+		<a href="{plink Info:equipment}">
+			<div class="menuItemContainer">
+				<p class="menuText{if $presenter->isLinkCurrent('Info:equipment')} selected{/if}">Výbava</p>
+			</div>
+		</a>
+	</div>
+</div>

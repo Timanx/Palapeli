@@ -1,0 +1,16 @@
+<div class="submenuContainer" id="teamSubmenuContainer" style="display:none;" onmouseover="displaySubmenu('team', '{App\Presenters\BasePresenter::TEAM_COLOR|noescape}');" onmouseout="hideSubmenus();">
+	<div class="menuItemsContainer teamPadding" style="width:100%;">
+		<a href="{plink Team:}">
+			<div class="menuItemContainer">
+				<p class="menuText{if $presenter->isLinkCurrent('Team:')} selected{/if}">Přihlášení</p>
+			</div>
+		</a>
+		{if $isSelectedYearCurrent}
+			<a href="{plink Team:registration}">
+				<div class="menuItemContainer">
+					<p class="menuText{if $presenter->isLinkCurrent('Team:registration')} selected{/if}">Registrace</p>
+				</div>
+			</a>
+		{/if}
+	</div>
+</div>

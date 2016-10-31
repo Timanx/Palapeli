@@ -1,0 +1,11 @@
+{block content}
+
+	<div id="formValidationError" class="flash info"></div>
+
+	{control loginForm}
+
+	<p class="information">
+		{if $isRegistrationOpen}Po přihlášení budete automaticky zaregistrováni do aktuálního ročníku.<br>{/if}
+		Pokud jste zapomněli heslo, můžete si ho nechat přegenerovat <a href="{plink Team:password}">ZDE</a>.
+	</p>
+{/block}

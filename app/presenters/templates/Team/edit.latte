@@ -1,0 +1,181 @@
+{block content}
+			<div id="formValidationError" class="flash info"></div>
+			{if !isset($teamName)}
+				<div class="flash info">Nejste přihlášeni.</div>
+			{elseif $teamId == App\Presenters\BasePresenter::ORG_TEAM_ID}
+				<div class="teamForm">
+				{form editForm}
+					<table>
+						<tr>
+							<td colspan="2">
+								{label name /}<br>
+								{input name}
+							</td>
+						</tr>
+						<tr style="height:30px">
+						</tr>
+						<tr style="margin-top:30px">
+							<td class="firstColumn">
+								{label password /}<br>
+								{input password}
+							</td>
+							<td>
+								{label passwordVerify /}<br>
+								{input passwordVerify}
+							</td>
+						</tr>
+						<tr style="height:30px">
+						</tr>
+						<tr>
+							<td class="firstColumn">
+								{label member1 /}<br>
+								{input member1}
+							</td>
+							<td>
+								{label member2 /}<br>
+								{input member2}
+							</td>
+						</tr>
+						<tr>
+							<td class="firstColumn">
+								{label member3 /}<br>
+								{input member3}
+							</td>
+							<td>
+								{label member4 /}<br>
+								{input member4}
+							</td>
+						</tr>
+						<tr style="height:30px">
+						</tr>
+						<tr>
+							<td class="firstColumn">
+								{label email1 /}<br>
+								{input email1}
+							</td>
+							<td>
+								{label email2 /}<br>
+								{input email2}
+							</td>
+						</tr>
+						<tr>
+							<td class="firstColumn">
+								{label phone1 /}<br>
+								{input phone1}
+							</td>
+							<td>
+								{label phone2 /}<br>
+								{input phone2}
+							</td>
+						</tr>
+						<tr>
+							<td colspan="2">
+								{input edit}
+							</td>
+						</tr>
+
+					</table>
+				{/form}
+				</div>
+				<div class="responsiveTeamForm">
+					{control editForm}
+				</div>
+			{else}
+				{if $isSelectedYearCurrent}
+					{if $hasRegistrationStarted}
+						{if $registered}
+							<div class="teamForm">
+								{form editForm}
+									<table>
+										<tr>
+											<td colspan="2">
+												{label name /}<br>
+												{input name}
+											</td>
+										</tr>
+										<tr style="height:30px">
+										</tr>
+										<tr style="margin-top:30px">
+											<td class="firstColumn">
+												{label password /}<br>
+												{input password}
+											</td>
+											<td>
+												{label passwordVerify /}<br>
+												{input passwordVerify}
+											</td>
+										</tr>
+										<tr style="height:30px">
+										</tr>
+										<tr>
+											<td class="firstColumn">
+												{label member1 /}<br>
+												{input member1}
+											</td>
+											<td>
+												{label member2 /}<br>
+												{input member2}
+											</td>
+										</tr>
+										<tr>
+											<td class="firstColumn">
+												{label member3 /}<br>
+												{input member3}
+											</td>
+											<td>
+												{label member4 /}<br>
+												{input member4}
+											</td>
+										</tr>
+										<tr style="height:30px">
+										</tr>
+										<tr>
+											<td class="firstColumn">
+												{label email1 /}<br>
+												{input email1}
+											</td>
+											<td>
+												{label email2 /}<br>
+												{input email2}
+											</td>
+										</tr>
+										<tr>
+											<td class="firstColumn">
+												{label phone1 /}<br>
+												{input phone1}
+											</td>
+											<td>
+												{label phone2 /}<br>
+												{input phone2}
+											</td>
+										</tr>
+										<tr>
+											<td colspan="2">
+												{input edit}
+											</td>
+										</tr>
+
+									</table>
+								{/form}
+								</div>
+								<div class="responsiveTeamForm">
+									{control editForm}
+								</div>
+						{elseif !$hasRegistrationEnded}
+							<div class="flash info">Do {$selectedYear}. ročníku ještě nejste zaregistrovaní. Můžete tak učinit kliknutím <a href="{plink Team:registerLogged}">SEM</a>.</div>
+						{else}
+							<div class="flash info">Registrace do {$selectedYear}. ročníku už je uzavřena.</div>
+						{/if}
+					{else}
+						<div class="flash info">Registrace do {$selectedYear}. ročníku ještě nezačala.</div>
+					{/if}
+				{else}
+					{if $registered}
+						<div class="flash info">Pozor, upravujete údaje z {$selectedYear}. ročníku. To je umožněno kvůli případům, kdy informace o týmu neodpovídají skutečnému stavu ze hry. </div>
+						{control editForm}
+					{else}
+						<div class="flash info">{$selectedYear}. ročníku se tým {$teamName|noescape} nezúčastnil.</div>
+					{/if}
+				{/if}
+			{/if}
+{/block}

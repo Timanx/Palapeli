@@ -1,0 +1,66 @@
+<script>
+	function handleMailForm(envelope) {
+		var mailForm = document.getElementById('mailForm');
+		var footer = document.getElementById('footer');
+		var wrapper = document.getElementById('wrapper');
+		var wrapperJS = document.getElementById('wrapperJS');
+
+		if ($(window).width() > 940) {
+			var responsiveModification = 0;
+		} else {
+			var responsiveModification = 113;
+		}
+
+		if(mailForm.style.display == 'none') {
+			mailForm.style.display = 'block';
+			footer.style.height = (371 + responsiveModification) + 'px';
+			wrapperJS.innerHTML= '.wrapper:after{ height: ' + (371 + responsiveModification) + 'px; }';
+			wrapper.style.marginBottom = (-433 - responsiveModification) + 'px';
+			window.scrollTo(0,document.body.scrollHeight);
+		} else {
+			mailForm.style.display = 'none';
+			footer.style.height = (98 + responsiveModification) + 'px';
+			wrapperJS.innerHTML= '.wrapper:after{ height: ' + (98 + responsiveModification) + 'px; }';
+			wrapper.style.marginBottom = (-150 - responsiveModification) + 'px';
+			window.scrollTo(0,document.body.scrollHeight);
+		}
+
+	}
+</script>
+
+<div>
+	<div class="contact">
+		<p class="archiveHeader">KONTAKT</p>
+		<a href="{plink Discussion:}" title="Diskuse">
+			<div class="svgContainer" style="margin-right:30px;">
+				{include ../../../components/SVG/discussion.svg, dim => '50px'}
+			</div>
+		</a>
+		<div class="svgContainer" title="Zpráva organizátorům" style="margin-right:20px;cursor:pointer;" onclick="handleMailForm(this)">
+			{include ../../../components/SVG/envelope.svg, dim => '50px'}
+		</div>
+		<a href="https://www.facebook.com/sifrovaci.hra.palapeli" title="Facebook" target="_blank">
+			<div class="svgContainer" style="margin-right:10px;">
+				{include ../../../components/SVG/facebook.svg, dim => '50px'}
+			</div>
+		</a>
+	</div>
+	<div class="archive">
+		<p class="archiveHeader">ARCHIV</p>
+		<a class="archiveLink{if $selectedYear == 1} selected{/if}" href="{plink Archive: 1, 2012, $presenter->getAction(true)}">1</a>
+
+		<a class="archiveLink{if $selectedYear == 2} selected{/if}" href="{plink Archive: 2, 2013, $presenter->getAction(true)}">2</a>
+
+		<a class="archiveLink{if $selectedYear == 3} selected{/if}" href="{plink Archive: 3, 2014, $presenter->getAction(true)}">3</a>
+
+		<a class="archiveLink{if $selectedYear == 4} selected{/if}" href="{plink Archive: 4, 2015, $presenter->getAction(true)}">4</a>
+
+		<a class="archiveLink{if $selectedYear == 5} selected{/if}" href="{plink Archive: 5, 2016, $presenter->getAction(true)}">5</a>
+
+		<a class="archiveLink{if $selectedYear == $currentYear} selected{/if}" href="{plink Archive: $currentYear, $currentCalendarYear, $presenter->getAction(true)}">6</a>
+	</div>
+</div>
+<div id="mailForm" style="display: none;margin-top: 30px;">
+	<p class="archiveHeader">ZPRÁVA ORGANIZÁTORŮM</p>
+	{control mailForm}
+</div>

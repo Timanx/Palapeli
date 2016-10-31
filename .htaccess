@@ -1,0 +1,7 @@
+Allow from all
+
+RewriteEngine On
+RewriteCond %{HTTP_HOST} ^palapeli/$
+RewriteRule ^$ www/ [L]
+RewriteCond %{HTTP_HOST} ^palapeli/$
+RewriteRule (.*) www/$1 [L]

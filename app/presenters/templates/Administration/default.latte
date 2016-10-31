@@ -1,0 +1,37 @@
+{block content}
+	{if $orgLogged}
+		{form newUpdateForm}
+			<table>
+				<tr>
+					<td>
+						{label date /}<br>
+						{input date}
+					</td>
+				</tr>
+				<tr>
+					<td>
+						{label year /}<br>
+						{input year}
+					</td>
+				</tr>
+				<tr>
+					<td colspan="2">
+						{label message /}<br>
+						{input message}
+					</td>
+				</tr>
+				<tr>
+					<td colspan="2">
+						{input send}
+					</td>
+				</tr>
+
+			</table>
+
+		{/form}
+	{else}
+		<div class="flash info">
+			Na tuto stránku mají přístup pouze organizátoři. Můžete se vrátit například <a href="palapeli.cz">na hlavní stránku</a>.
+		</div>
+	{/if}
+{/block}

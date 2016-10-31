@@ -1,0 +1,196 @@
+<script>
+
+		window.addEventListener("scroll",function(){
+            var scrollEl = Math.max(document.body.scrollTop, document.documentElement.scrollTop);
+            var header = document.getElementById('mainMenuContainer');
+			if(header) {
+				if(scrollEl > 0) {
+					header.style.boxShadow = '0px 4px 8px #EEE';
+					header.style.borderBottomWidth = '0px';
+					//document.getElementById('scroll_to_top').style.display = 'block';
+				} else {
+					header.style.boxShadow = '0px 0px 0px #EEE';
+					header.style.borderBottomWidth = '1px';
+					//document.getElementById('scroll_to_top').style.display = 'none';
+				}
+			}
+		},false);
+
+	function displaySubmenu(submenu) {
+		if ($(window).width() > 940) {
+			var submenus = document.getElementsByClassName('submenuContainer');
+			for(var i = 0; i < submenus.length; i++) {
+				submenus[i].style.display = 'none';
+			}
+
+			document.getElementById(submenu + 'SubmenuContainer').style.display = 'block';
+		}
+	}
+
+	function hideSubmenus() {
+		if ($(window).width() > 940) {
+			var submenus = document.getElementsByClassName('submenuContainer');
+			for(var i = 0; i < submenus.length; i++) {
+				submenus[i].style.display = 'none';
+			}
+		}
+	}
+
+	function handleResponsiveMenu() {
+		var menuObject = document.getElementById('mainMenu');
+		var info = document.getElementById('infoMainLink');
+		var team = document.getElementById('teamMainLink');
+		var game = document.getElementById('gameMainLink');
+		var discussion = document.getElementById('discussionMainLink');
+		var administration = document.getElementById('administrationMainLink');
+		var infoContainer = document.getElementById('infoItemContainer');
+		var teamContainer = document.getElementById('teamItemContainer');
+		var gameContainer = document.getElementById('gameItemContainer');
+		var administrationContainer = document.getElementById('administrationItemContainer');
+		var discussionContainer = document.getElementById('discussionItemContainer');
+
+		var submenus = document.getElementsByClassName('submenuContainer');
+		for(var i = 0; i < submenus.length; i++) {
+			submenus[i].style.display = 'none';
+		}
+
+		if(menuObject.style.display == 'block') {
+
+			menuObject.style.display = 'none';
+
+			document.getElementById('content').style.display = 'block';
+			document.getElementById('footer').style.display = 'block';
+
+			info.setAttribute("href", {plink Info:});
+			team.setAttribute("href", {plink Team:});
+			game.setAttribute("href", {plink Game:});
+			discussion.setAttribute("href", {plink Discussion:});
+			if(administration) { administration.setAttribute("href", {plink Administration:}); }
+
+			info.removeAttribute("onclick");
+			discussion.removeAttribute("onclick");
+			team.removeAttribute("onclick");
+			game.removeAttribute("onclick");
+			if(administration) { administration.removeAttribute("onclick"); }
+
+		} else {
+			menuObject.style.display = 'block';
+
+			document.getElementById('content').style.display = 'none';
+			document.getElementById('footer').style.display = 'none';
+
+			info.removeAttribute("href");
+			team.removeAttribute("href");
+			game.removeAttribute("href");
+			discussion.removeAttribute("href");
+			if(administration) { administration.removeAttribute("href") };
+
+			info.setAttribute("onclick", "handleResponsiveSubmenu('info');");
+			team.setAttribute("onclick", "handleResponsiveSubmenu('team');");
+			game.setAttribute("onclick", "handleResponsiveSubmenu('game');");
+			discussion.setAttribute("onclick", "handleResponsiveSubmenu('discussion');");
+			if(administration) { administration.setAttribute("onclick", "handleResponsiveSubmenu('administration');"); }
+		}
+
+	}
+
+	function handleResponsiveSubmenu(submenu) {
+		var submenuObject = document.getElementById(submenu + 'SubmenuContainer');
+		var submenuObjectDisplayState = submenuObject.style.display;
+
+		var submenus = document.getElementsByClassName('submenuContainer');
+		for(var i = 0; i < submenus.length; i++) {
+			submenus[i].style.display = 'none';
+		}
+
+		if(submenuObjectDisplayState == 'none') {
+			submenuObject.style.display = 'block';
+		} else {
+			submenuObject.style.display = 'none';
+		}
+
+	}
+
+</script>
+
+
+<div class="menuContainer">
+	<div class="mainMenuContainer" id="mainMenuContainer">
+		<a href="{plink Homepage:}">
+			<div class="menuLogoContainer" style="position:fixed;z-index: 10;">
+				{include ../../../components/SVG/logo_basic.svg, dim => '50px'}
+			</div>
+		</a>
+
+		{if isset($teamName) || !$isSelectedYearCurrent}
+		<div class="menuItemContainer palapeliHeading">
+			{if isset($teamName)}<a href="{plink Team:edit}" title="Detail týmu {$teamName|noescape}">{/if}
+				<div class="teamText"{if !$isSelectedYearCurrent} style="position:relative;top:-5px;"{/if}>
+					<span class="teamLabel"{if !$isSelectedYearCurrent} style="position:relative;top:1px;"{/if}>
+						<p class="teamLabel">
+							{if $isSelectedYearCurrent}TÝM{else}<span class="yearNumber">{$selectedYear}</span>.&nbsp;ROČNÍK{if isset($teamName)}&nbsp;|{/if}{/if}{if isset($teamName)}&nbsp;{/if}<!--
+						--></p><!--
+					--></span><!--
+				-->{if isset($teamName)}<span class="loggedTeam"><!--
+					--><p><!--
+						-->{$teamNameUpper|noescape}
+						</p>
+					</span>
+					{/if}
+				</div>
+			{if isset($teamName)}</a>{/if}
+		</div>
+		{/if}
+		<div class="responsive responsiveMenuIcon" onclick="handleResponsiveMenu();">
+			{include ../../../components/SVG/menu_icon.svg, color => $color}
+		</div>
+		<div class="menuItemsContainer largeScreen" id="mainMenu">
+			<div class="menuSectionContainer" id="infoContainer">
+				<a href="{plink Info:rules}" id="infoMainLink">
+					<div class="menuItemContainer mainMenuItemContainer" id="infoItemContainer" style="border-color:{App\Presenters\BasePresenter::INFO_COLOR|noescape}" onmouseover="displaySubmenu('info');" onmouseout="hideSubmenus();">
+						<p class="menuText">INFO</p>
+					</div>
+				</a>
+				{include info.latte}
+			</div>
+			<div class="menuSectionContainer" id="teamContainer">
+				<a href="{if isset($teamName)}{plink Team:edit}{else}{plink Team:}{/if}" id="teamMainLink">
+					<div class="menuItemContainer mainMenuItemContainer" id="teamItemContainer" style="border-color:{App\Presenters\BasePresenter::TEAM_COLOR|noescape}" onmouseover="displaySubmenu('team');" onmouseout="hideSubmenus();">
+						<p class="menuText">TÝM</p>
+					</div>
+				</a>
+				{if isset($teamName)}
+					{include logged.latte}
+				{else}
+					{include team.latte}
+				{/if}
+			</div>
+			<div class="menuSectionContainer" id="gameContainer">
+				<a href="{plink Game:}" id="gameMainLink">
+					<div class="menuItemContainer mainMenuItemContainer" id="gameItemContainer" style="border-color:{App\Presenters\BasePresenter::GAME_COLOR|noescape}" onmouseover="displaySubmenu('game');" onmouseout="hideSubmenus();">
+						<p class="menuText">HRA</p>
+					</div>
+				</a>
+				{include game.latte}
+			</div>
+			<div class="menuSectionContainer" id="discussionContainer">
+				<a href="{plink Discussion:}" id="discussionMainLink">
+				<div class="menuItemContainer mainMenuItemContainer" id="discussionItemContainer" style="border-color:{App\Presenters\BasePresenter::DISCUSSION_COLOR|noescape}">
+					<p class="menuText">DISKUSE</p>
+				</div>
+				</a>
+				{include discussion.latte}
+			</div>
+			{if $orgLogged}
+				<div class="menuSectionContainer" id="administrationContainer">
+					<a href="{plink Administration:}" id="administrationMainLink">
+					<div class="menuItemContainer mainMenuItemContainer" id="administrationItemContainer" style="border-color:black" onmouseover="displaySubmenu('administration');" onmouseout="hideSubmenus();">
+						<p class="menuText">ADMIN</p>
+					</div>
+					</a>
+					{include administration.latte}
+				</div>
+			{/if}
+		</div>
+	</div>
+</div>

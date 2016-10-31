@@ -1,0 +1,68 @@
+{block content}
+<div class="rules">
+	<div class="ruleContainer">
+		<h3 id="about">O HŘE</h3>
+		<p>
+		Palapeli je lineární denní šifrovací hra. Od podobných her se poněkud liší, koná se totiž jako jedna z mála v zimě, a to konkrétně {date('j.&\nb\sp;n.&\nb\sp;Y', App\Presenters\BasePresenter::GAME_DATE)|noescape}. Letos proběhne již {App\Presenters\BasePresenter::CURRENT_YEAR}. ročník. Hru pro vás za pomoci mnoha dalších lidí připravují stálí i občasní členové týmu <a href="http://kvik.wz.cz" target="_blank">KVÍK!</a> Wal, Tíman, Soňa, Tinka, Kačka, Míša a Dark.
+		</p>
+	</div>
+
+	<div class="ruleContainer">
+	<h3 id="conditions">PODMÍNKY ÚČASTI</h3>
+	<p>
+		Počet členů týmu je 1–4. Týmy se musí <a href="{plink Team:registration}">zaregistrovat</a> nejpozději {date('j.&\nb\sp;n.&\nb\sp;Y', App\Presenters\BasePresenter::REGISTRATION_END)|noescape}. Startovné činí {App\Presenters\BasePresenter::ENTRY_FEE} Kč na tým, zasílá se na účet, jehož číslo vám bude sděleno po registraci. Po domluvě s organizátory je možné zaplatit startovné přímo na startu, ale kvůli zbytečné ztrátě času na startu preferujeme elektronickou variantu. Týmy, které do {date('j.&\nb\sp;n.&\nb\sp;Y', App\Presenters\BasePresenter::ENTRY_FEE_DEADLINE)|noescape} nezaplatí startovné a nezažádají o výjimku placení na startu, se hry nebudou moci zúčastnit. Startovné vracíme v případě zrušení účasti do {date('j.&\nb\sp;n.&\nb\sp;Y', App\Presenters\BasePresenter::ENTRY_FEE_RETURN_DEADLINE)|noescape}. Účastníci mladší než osmnáct let musí mít v týmu alespoň jednoho dospělého. Organizátoři nenesou za bezpečnost ani jednání hráčů zodpovědnost.
+		{if App\Presenters\BasePresenter::TEAM_LIMIT > 0}
+		Limit počtu hrajících týmů je {App\Presenters\BasePresenter::TEAM_LIMIT}.
+		{/if}
+	</p>
+	</div>
+
+	<div class="ruleContainer">
+		<h3 id="difficulty">NÁROČNOST</h3>
+		<p>
+			Určitě nepočítejte s nějakým maratonem typu <a href="http://tmou.cz" target="_blank">TMOU</a>, ale žádná pohodička to taky nebude. Největším problémem bude asi zima a (snad) sněhová vánice. Většina šifer by měla být luštitelná pro všechny, díky možnosti využití <a href="#hints">absolutních nápověd</a> je hra vhodná i pro mladší a méně zkušené hráče. Šifer bude okolo deseti, jejich přesný počet se dozvíte na startu. Délka trasy okolo 15 km.
+		</p>
+	</div>
+
+	<div class="ruleContainer">
+		<h3 id="scheme">SCHÉMA HRY</h3>
+		<p>
+			Palapeli probíhá podle základních pravidlech ostatních šifrovaček, stejně tak se počítá s tím, že týmy budou dodržovat zásady fair play, tedy co nejméně haluzit, nestalkovat ostatní týmy a podobně. Na startu obdrží týmy první šifru, z ní získají polohu následujícího stanoviště. Tam najdou další šifru a tak dále. Veškerý text psaný kurzívou slouží pouze jako upřesnění či nápověda a není součástí šifry. Za úspěšné dokončení hry se považuje dosažení cíle, správné vyřešení cílového hesla, odevzdání karty týmu a archu s nápovědami a předložení řešení všech šifer do 19:00. Start bude velmi pravděpodobně v 9:00 někde v Brně nebo blízkém okolí.
+		</p>
+	</div>
+
+	<div class="ruleContainer">
+		<h3 id="transport">PŘESUNY</h3>
+		<p>
+			Mezi stanovišti je možno přesouvat se pouze pěšky, pomocí MHD, na bobech, běžkách, bruslích nebo saních. GPS můžete používat dle libosti. Navazující stanoviště od sebe nejsou vzdálena více než 2&thinsp;km vzdušnou čarou.
+		</p>
+	</div>
+
+	<div class="ruleContainer">
+		<h3 id="hints">NÁPOVĚDY</h3>
+		<p>
+			Pokud se vám nepodaří šifru vyluštit, můžete otevřít obálku s totální nápovědou k dané šifře. Arch s nápovědami obdržíte na startu. Takto přeskočená šifra se vám však nebude počítat do prvního kritéria při vyhodnocování výsledků. <a href="#finish"><em>(viz odstavec Cíl)</em></a> Pokud otevřete nápovědu a nestihnete se zapsat na následujícím stanovišti, tato nápověda se vám nezapočítává.
+		</p>
+	</div>
+
+	<div class="ruleContainer">
+		<h3 id="stats">STATISTIKA PRŮCHODU</h3>
+		<p>
+			Abyste se mohli po hře dosyta nabažit grafů a statistik, vždy hned po příchodu na stanoviště zapište na přiložený papír čas a jméno týmu. Taky dostanete kartu týmu, kam byste měli tyto údaje také zapisovat, spolu s časem vyluštění šifry, případně časem otevření nápovědy (kvůli statistikám obtížnosti šifer a délky přesunů).
+		</p>
+	</div>
+
+	<div class="ruleContainer">
+		<h3 id="finish">CÍL</h3>
+		<p>
+			Cíl je v teple v civilizaci. Pořadí týmů bude vytvořeno podle následujících kritérií:
+			<ol>
+			<li>Nejvyšší navštívené stanoviště (příchod do cíle a vyluštění cílového hesla se berou jako
+			dvě samostatná stanoviště) <strong>mínus počet totálek</strong> <em>(Pokud by tedy na hře bylo 10 stanovišť bez startu a cíle, může tato hodnota být až 12).</em></li>
+			<li>Nejvyšší navštívené stanoviště bez ohledu na počet totálek.</li>
+			<li>Čas příchodu na nejvyšší navštívené stanoviště.</li>
+			</ol>
+		</p>
+	</div>
+</div>
+{/block}

@@ -1,0 +1,26 @@
+<div class="submenuContainer" id="teamSubmenuContainer" style="display:none;" onmouseover="displaySubmenu('team', '{App\Presenters\BasePresenter::TEAM_COLOR|noescape}');" onmouseout="hideSubmenus();">
+	<div class="menuItemsContainer" style="width:100%;">
+		<a href="{plink Team:edit}">
+			<div class="menuItemContainer">
+				<p class="menuText{if $presenter->isLinkCurrent('Team:edit')} selected{/if}">Údaje</p>
+			</div>
+		</a>
+		{if $isSelectedYearCurrent}
+			<a href="{plink Team:payment}">
+				<div class="menuItemContainer">
+					<p class="menuText{if $presenter->isLinkCurrent('Team:payment')} selected{/if}">Platba</p>
+				</div>
+			</a>
+			<a href="{plink Team:cancel}">
+				<div class="menuItemContainer">
+					<p class="menuText{if $presenter->isLinkCurrent('Team:cancel')} selected{/if}">Zrušení</p>
+				</div>
+			</a>
+		{/if}
+		<a href="{plink Team:logout}">
+			<div class="menuItemContainer">
+				<p class="menuText{if $presenter->isLinkCurrent('Team:logout')} selected{/if}">Odhlášení</p>
+			</div>
+		</a>
+	</div>
+</div>

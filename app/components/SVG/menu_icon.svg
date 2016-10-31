@@ -1,0 +1,9 @@
+<svg class="responsive" xmlns="http://www.w3.org/2000/svg" xml:space="preserve" width="34px" height="30px" version="1.1" style="shape-rendering:geometricPrecision; text-rendering:geometricPrecision; image-rendering:optimizeQuality; fill-rule:evenodd; clip-rule:evenodd"
+viewBox="0 0 34000 30001"
+ xmlns:xlink="http://www.w3.org/1999/xlink">
+ <g>
+   <rect style="fill:{$color|noescape}" x="-35" y="13000" width="34070" height="4000"/>
+   <rect style="fill:{$color|noescape}" x="-35" y="-4" width="34070" height="4000"/>
+   <rect style="fill:{$color|noescape}" x="-35" y="26004" width="34070" height="4000"/>
+ </g>
+</svg>

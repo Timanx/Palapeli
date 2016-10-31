@@ -1,0 +1,7 @@
+{block content}
+		{if $isSelectedYearCurrent}
+			<div class="flash info">{$selectedYear}. ročník ještě neproběhl a šifry tedy ještě nejsou k dispozici.</div>
+    	{else}
+    		<div class="flash info">Pro zvolený ročník zatím nejsou šifry doplněny. Přepnout do aktuálního ročníku se můžete <a href="{plink Archive: $currentYear, $currentCalendarYear, $presenter->getAction(true)}">ZDE</a>.</div>
+    	{/if}
+{/block}

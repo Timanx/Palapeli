@@ -1,0 +1,19 @@
+<div class="submenuContainer" id="administrationSubmenuContainer" style="display:none;" onmouseover="displaySubmenu('administration', '{App\Presenters\BasePresenter::TEAM_COLOR|noescape}');" onmouseout="hideSubmenus();">
+	<div class="menuItemsContainer teamPadding" style="width:100%;">
+		<a href="{plink Administration:}">
+			<div class="menuItemContainer">
+				<p class="menuText{if $presenter->isLinkCurrent('Administration:')} selected{/if}">Aktuality</p>
+			</div>
+		</a>
+		<a href="{plink Administration:teamCard}">
+			<div class="menuItemContainer">
+				<p class="menuText{if $presenter->isLinkCurrent('Administration:teamCard')} selected{/if}">Karta týmu</p>
+			</div>
+		</a>
+		<a href="{plink Administration:checkpointCard}">
+			<div class="menuItemContainer">
+				<p class="menuText{if $presenter->isLinkCurrent('Administration:checkpointCard')} selected{/if}">Stanoviště</p>
+			</div>
+		</a>
+	</div>
+</div>

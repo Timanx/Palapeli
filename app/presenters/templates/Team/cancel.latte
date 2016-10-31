@@ -1,0 +1,25 @@
+{block content}
+	{if isset($teamName)}
+		{if $isSelectedYearCurrent}
+			{if $hasRegistrationStarted && !$hasGameStarted && $registered}
+				<div id="formValidationError" class="flash info"></div>
+				{control cancelForm}
+			{elseif !$registered}
+				<div class="flash info">
+					Do {$selectedYear}. ročníku nejste zaregistrovaní.{if $hasRegistrationStarted && !$hasRegistrationEnded} Můžete tak učinit kliknutím <a href="{plink Team:registerLogged}">SEM</a>.{/if}
+				</div>
+			{elseif !$hasRegistrationStarted}
+				<div class="flash info">
+					Registrace do {$selectedYear}. ročníku ještě nebyla spuštěna a takže ještě nejste zaregistrovaní a tudíž nemůžete ani zrušit účast.
+				</div>
+			{else}
+				<div class="flash info">Aktuální ročník již proběhl, takže již není možné rušit účast.</div>
+			{/if}
+		{else}
+			<div class="flash info">Rušení účasti v předchozích ročnících není možné. Přepnout do aktuálního ročníku se můžete <a href="{plink Archive: $currentYear, $currentCalendarYear, $presenter->getAction(true)}">ZDE</a>.</div>
+		{/if}
+	{else}
+		<div class="flash info">Abyste mohli zrušit účast, musíte se nejprve přihlásit <a href="{plink Team:}">ZDE</a>.</div>
+	{/if}
+
+{/block}

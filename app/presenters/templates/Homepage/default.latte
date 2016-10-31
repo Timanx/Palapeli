@@ -1,0 +1,48 @@
+{block content}
+
+<script>
+	{include hover.js}
+</script>
+
+<div class="homepageContainer">
+	<div class="homepageBlock homepageHeading fullHeading" style="text-align:center;">
+		PALAPELI
+	</div>
+	<div class="homepageBlock homepageHeading halfHeading" style="text-align:right;">
+		PALA
+	</div>
+	<div class="puzzleContainer homepageBlock">
+
+		<a class="hoverBlock" href="{plink Game:}" id="gameBlock" style="bottom:0px;left:0px;">
+		</a>
+		<a class="hoverBlock" href="{plink Discussion:}" id="discussionBlock" style="bottom:0px;right:0px;">
+		</a>
+		<a class="hoverBlock" href="{plink Info:rules}" id="infoBlock" style="top:0px;left:0px;">
+		</a>
+		<a class="hoverBlock" href="{if isset($teamName)}{plink Team:edit}{else}{plink Team:}{/if}" id="teamBlock" style="top:0px;right:0px;">
+		</a>
+
+		<div class="puzzle" id="gamePuzzle" style="bottom:0px;left:0px;">
+			{include game.svg}
+		</div>
+
+		<div class="puzzle" id="discussionPuzzle" style="bottom:0px;right:0px;">
+			{include discussion.svg}
+		</div>
+
+		<div class="puzzle" id="infoPuzzle" style="top:0px;left:0px;">
+			{include info.svg}
+		</div>
+
+		<div class="puzzle" id="teamPuzzle" style="top:0px;right:0px;">
+			{include team.svg}
+		</div>
+
+	</div>
+	<div class="homepageBlock homepageHeading halfHeading" style="text-align:left;">
+		PELI
+	</div>
+
+</div>
+
+{/block}

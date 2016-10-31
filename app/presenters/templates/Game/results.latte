@@ -1,0 +1,69 @@
+{block content}
+		<script>
+
+		</script>
+
+		{if $isSelectedYearCurrent}
+			<div class="flash info">{$selectedYear}. ročník ještě neproběhl a výsledky tedy ještě nejsou k dispozici.</div>
+    	{elseif $selectedYear != 2 &&  $selectedYear != 3 &&  $selectedYear != 4 &&  $selectedYear != 5}
+    		<div class="flash info">Pro zvolený ročník zatím nejsou výsledky doplněny. Přepnout do aktuálního ročníku se můžete <a href="{plink Archive: $currentYear, $currentCalendarYear, $presenter->getAction(true)}">ZDE</a>.</div>
+		{else}
+			<div title="Kliknutím zobrazíte princip počítání výsledků." id="resultsHint" class="resultsHint" onclick="document.getElementById('resultsInfo').style.display = 'block';this.style.display='none'">Jak byly výsledky spočítány?</div>
+			<div title="Kliknutím text zavřete." id="resultsInfo" style="display: none;" class="resultsInfo" onclick="document.getElementById('resultsHint').style.display = 'block';this.style.display='none'">
+				Pořadí týmů je vytvořeno podle následujících kritérií:
+				<ol>
+					<li>Nejvyšší navštívené stanoviště (příchod do cíle a vyluštění cílového hesla se berou jako
+					dvě samostatná stanoviště) mínus počet totálek <em>(sloupec <span class="largeScreen">Výsledek</span><span class="responsive">V</span>).</em></li>
+					<li>Nejvyšší navštívené stanoviště bez ohledu na počet totálek <em>(sloupec <span class="largeScreen">Totálky</span><span class="responsive">T</span>).</em></li>
+					<li>Čas příchodu na nejvyšší navštívené stanoviště <em>(sloupec Čas).</em></li>
+				</ol>
+				Pokud tým neodevzdal kartu týmu a kartu s totálkami, nemáme o jeho průchopdu trasy dost informací na to, abychom ho zařadili do výsledků, a tak se nachází až na chvostu tabulky.
+			</div>
+			<table class="resultsTable">
+				{var $i = 1}
+					<tr>
+						<th class="c1" title="Výsledné pořadí týmu">
+							<span class="largeScreen">Pořadí</span><span class="responsive">#</span>
+						</th>						
+						<th class="c2" title="Název týmu">
+							Tým
+						</th>
+						<th class="c3" title="Nejvyšší dosažené stanoviště před koncem hry">
+							<span class="largeScreen">Stanoviště</span><span class="responsive">S</span>
+						</th>
+						<th class="c4" title="Počet totálek týmu (počítají se pouze tehdy, stihl-li tým před koncem hry dojít na následující stanoviště)">
+							<span class="largeScreen">Totálky</span><span class="responsive">T</span>
+						</th>
+						<th class="c5" title="Nejvyšší dosažené stanoviště mínus počet totálek">
+							<span class="largeScreen">Výsledek</span><span class="responsive">V</span>
+						</th>
+						<th class="c6" title="Čas příchodu na nejvyšší navštívené stanoviště">
+							Čas
+						</th>
+					</tr>
+				{foreach $data as $team}
+					<tr>
+						<td>
+							{$i}.
+						</td>						
+						<td class="team">
+							{$team->name|noescape}
+						</td>
+						<td>
+							{$team->max_checkpoint}
+						</td>
+						<td>
+							{$team->total_hints}
+						</td>
+						<td>
+							{ifset $team->total_hints}{$team->max_checkpoint - $team->total_hints}{/ifset}
+						</td>
+						<td>
+							{$team->finish_time}
+						</td>
+					</tr>
+					{var $i = $i + 1}
+				{/foreach}
+			</table>
+    	{/if}
+{/block}

@@ -1,0 +1,101 @@
+{block content}
+
+	{if $isSelectedYearCurrent}
+		{if $hasRegistrationStarted && !$hasRegistrationEnded}
+			<p class="information">
+				Pokud jste se účastnili některého z předchozích ročníků, budete do aktuálního ročníku přihlášeni automaticky po přihlášení do účtu vašeho týmu. Přihlásit se můžete <a href="{plink Team:}">ZDE</a>.
+			</p>
+			<div class="teamForm">
+			{form registrationForm}
+				{if $form->hasErrors()}
+					{foreach $form->errors as $error}
+                        {$error}
+					{/foreach}
+                {/if}
+
+				<table>
+					<tr>
+						<td colspan="2">
+							{label name /}<br>
+							{input name}
+						</td>
+					</tr>
+					<tr style="height:30px">
+					</tr>
+					<tr style="margin-top:30px">
+						<td class="firstColumn">
+							{label password /}<br>
+							{input password}
+						</td>
+						<td>
+							{label passwordVerify /}<br>
+							{input passwordVerify}
+						</td>
+					</tr>
+					<tr style="height:30px">
+					</tr>
+					<tr>
+						<td class="firstColumn">
+							{label member1 /}<br>
+							{input member1}
+						</td>
+						<td>
+							{label member2 /}<br>
+							{input member2}
+						</td>
+					</tr>
+					<tr>
+						<td class="firstColumn">
+							{label member3 /}<br>
+							{input member3}
+						</td>
+						<td>
+							{label member4 /}<br>
+							{input member4}
+						</td>
+					</tr>
+					<tr style="height:30px">
+					</tr>
+					<tr>
+						<td class="firstColumn">
+							{label email1 /}<br>
+							{input email1}
+						</td>
+						<td>
+							{label email2 /}<br>
+							{input email2}
+						</td>
+					</tr>
+					<tr>
+						<td class="firstColumn">
+							{label phone1 /}<br>
+							{input phone1}
+						</td>
+						<td>
+							{label phone2 /}<br>
+							{input phone2}
+						</td>
+					</tr>
+					<tr>
+						<td colspan="2">
+							{input login}
+						</td>
+					</tr>
+
+				</table>
+
+			{/form}
+			</div>
+			<div class="responsiveTeamForm">
+				{control registrationForm}
+			</div>
+		{elseif !$hasRegistrationStarted}
+			<div class="flash info">Registrace do {$selectedYear}. ročníku bude spuštěna až {date('j.&\nb\sp;n.&\nb\sp;Y&\nb\sp;\v&\nb\sp;H:i', App\Presenters\BasePresenter::REGISTRATION_START)|noescape}.</div>
+		{else}
+			<div class="flash info">Registrace do {$selectedYear}. ročníku již není možná.</div>
+		{/if}
+	{else}
+		<div class="flash info">Registrace do {$selectedYear}. ročníku již není možná.</div>
+	{/if}
+
+{/block}

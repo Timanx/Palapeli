@@ -1,0 +1,55 @@
+{block content}
+	{if $orgLogged}
+	<div class="information">Vybraný ročník: {$selectedYear}. ({$selectedCalendarYear})</div>
+	<div class="selectForm">
+		{control selectCheckpointForm}
+	</div>
+
+	{if isset($checkpoint) || isset($previous)}
+		<script>
+			function submitCurrentTime(team, form) {
+				var d = new Date();
+
+				var datestring = ("0" + d.getHours()).slice(-2) + ":" + ("0" + d.getMinutes()).slice(-2);
+
+				document.getElementById('frm-checkpointCardForm-team' + team + '-entryTime').value = datestring;
+				form.submit();
+			}
+		</script>
+
+		{form checkpointCardForm}
+			<table class="card">
+				{for $i = 0; $i < $teamsCount; $i++}
+					{var $container = 'team' . $i}
+					{formContainer $container}
+						<tr>
+							<td class="teamName">
+								{label entryTime /}
+							</td>
+							<td>
+								{input entryTime}
+								{input teamId}
+							</td>
+							<td class="rightButton">
+								{input currentTime}
+							</td>
+							<td class="rightButton">
+								{input inputtedTime}
+							</td>
+						</tr>
+					{/formContainer}
+				{/for}
+				<tr>
+					<td colspan="4">
+						{input send}
+					</td>
+				</tr>
+			</table>
+		{/form}
+	{/if}
+	{else}
+		<div class="flash info">
+			Na tuto stránku mají přístup pouze organizátoři. Můžete se vrátit například <a href="palapeli.cz">na hlavní stránku</a>.
+		</div>
+	{/if}
+{/block}

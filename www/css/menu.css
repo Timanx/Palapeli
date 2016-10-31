@@ -1,0 +1,112 @@
+.menuItemContainer {
+    text-align: center;
+    vertical-align: top;
+    display: inline-block;
+    border-top: 4px solid transparent;
+}
+
+.menuItemsContainer {
+    font-weight: 700;
+}
+
+.menuContainer {
+    position: fixed;
+    width: 100%;
+    height: 73px;
+    background-color: #FFF;
+    z-index: 100;
+}
+
+.mainMenuContainer {
+    padding: 8px 0px;
+    height: 54px
+}
+
+.mainMenuContainer a:hover {
+    color: #000;
+}
+
+.submenuContainer .menuItemsContainer {
+    float: none;
+    right: 0px;
+}
+
+.submenuContainer .menuText {
+    margin: 0;
+    font-weight: 400;
+}
+
+.menuText {
+    font-weight: 700;
+}
+
+.submenuContainer .menuText:hover {
+    font-weight: 700;
+}
+
+.submenuContainer {
+    display: block;
+    font-family: 'Source Sans Pro', sans-serif;
+    position: relative;
+    top: -10px;
+    text-align: right;
+}
+
+.loggedTeam {
+    font-weight: 400;
+    text-align: left;
+}
+
+.loggedTeam p {
+    width: 350px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    WHITE-SPACE: nowrap;
+    display: inline-block;
+}
+
+.teamText {
+    font-weight: 700;
+    text-align: left;
+    white-space: nowrap;
+}
+
+.teamLabel {
+    overflow: hidden;
+    font-weight: 700;
+}
+
+.teamLabel p {
+    display: inline-block;
+}
+
+.selected {
+    font-weight: 700 !important;
+}
+
+.responsiveMenuIcon {
+    position: absolute;
+    right: 21px;
+    top: 21px;
+    cursor: pointer
+}
+
+.menuItemsContainer {
+    background-color: #FFFFFF;
+}
+
+.calendarYear {
+    font-family: 'Source Sans Pro', sans-serif;
+    font-size: 19px;
+    font-weight: 600;
+}
+
+.palapeliHeading {
+    position: relative;
+    left: 73px;
+    width: auto;
+}
+
+.menuLogoContainer {
+    padding-left: 8px;
+}

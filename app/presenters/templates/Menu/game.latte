@@ -1,0 +1,29 @@
+<div class="submenuContainer" id="gameSubmenuContainer" style="display:none;" onmouseover="displaySubmenu('game', '{App\Presenters\BasePresenter::GAME_COLOR|noescape}');" onmouseout="hideSubmenus();">
+	<div class="menuItemsContainer" style="width:100%;">
+		<a href="{plink Game:}">
+			<div class="menuItemContainer">
+				<p class="menuText{if $presenter->isLinkCurrent('Game:')} selected{/if}">Týmy</p>
+			</div>
+		</a>
+		<a href="{plink Game:results}">
+			<div class="menuItemContainer">
+				<p class="menuText{if $presenter->isLinkCurrent('Game:results')} selected{/if}">Výsledky</p>
+			</div>
+		</a>
+		<a href="{plink Game:ciphers}">
+			<div class="menuItemContainer">
+				<p class="menuText{if $presenter->isLinkCurrent('Game:ciphers')} selected{/if}">Šifry</p>
+			</div>
+		</a>
+		<a href="{plink Game:photos}">
+			<div class="menuItemContainer">
+				<p class="menuText{if $presenter->isLinkCurrent('Game:photos')} selected{/if}">Fotky</p>
+			</div>
+		</a>
+		<a href="{plink Game:reports}">
+			<div class="menuItemContainer">
+				<p class="menuText{if $presenter->isLinkCurrent('Game:reports')} selected{/if}">Reportáže</p>
+			</div>
+		</a>
+	</div>
+</div>

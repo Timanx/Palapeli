@@ -1,0 +1,646 @@
+html {
+    font-family: 'Raleway', sans-serif;
+}
+
+body {
+    margin: 0px;
+}
+
+html, body {
+    height: 100%;
+}
+
+a {
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+a:hover {
+    color: #666;
+}
+
+h3 {
+    font-family: 'Raleway', sans-serif;
+}
+
+ul {
+    padding-left: 20px;
+}
+
+.content {
+    padding: 95px 20px 50px 20px;
+    font-family: 'Source Sans Pro', sans-serif;
+}
+
+.wrapper:after {
+    content: "";
+    display: block;
+}
+
+.footer {
+    text-align: center;
+    padding-top: 8px;
+    font-family: 'Source Sans Pro', sans-serif;
+    position: relative;
+    z-index: 1;
+    margin-top: 40px;
+    box-shadow: #EEE 0px -4px 8px;
+    color: #666;
+}
+
+.footerHeading {
+    margin-top: 10px;
+}
+
+.footerHeader {
+    font-weight: 700;
+    font-family: 'Raleway', sans-serif;
+}
+
+.svgContainer {
+    display: inline-block;
+    border-top: 4px solid transparent;
+    padding-top: 5px;
+}
+
+.archive, .contact {
+    display: inline-block;
+    margin-left: 40px;
+    margin-right: 40px;
+    width:230px;
+    vertical-align: top;
+}
+.archiveLink {
+    width: 30px;
+    display: inline-block;
+    font-weight: 300;
+    font-size: 18pt;
+    color: #666;
+    border-top: 4px solid transparent;
+}
+
+.archiveHeader {
+    font-family: 'Raleway', sans-serif;
+    font-weight: 700;
+    color: #666;
+}
+
+h1 {
+    font-family: 'Raleway', sans-serif;
+    border-top-width: 4px;
+    border-top-style: solid;
+    text-align: center;
+    width: 300px;
+    margin: auto;
+    padding: 20px 0 40px 0;
+}
+
+/** GAME **/
+
+/** teams **/
+.teamsList {
+
+}
+
+.teamsCount {
+    text-align: center;
+    font-size: 14pt;
+    font-weight: 600;
+}
+
+.teamBlock {
+    background-color: #F8F8F8;
+    border-left: 4px solid #69B300;
+    padding: 8px;
+    word-break: break-word;
+    width: 50%;
+    margin: 30px auto;
+}
+
+.teamName {
+    font-weight: 700;
+    font-size: 110%;
+}
+.teamMembers {
+
+}
+
+.teamPayment {
+    width:50px;
+}
+
+.teamRegistrationInfo {
+
+}
+
+/** INFO **/
+.rules {
+    width: 50%;
+    text-align: justify;
+    margin: auto;
+}
+
+.ruleContainer h3 {
+    margin-top: 00px;
+    margin-bottom: 0px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    background-repeat: no-repeat;
+    padding-left: 60px;
+    text-align: left;
+}
+
+.ruleContainer p {
+    margin-top: 0px;
+    margin-bottom: 40px;
+}
+
+.ruleContainer ol {
+    margin-top: -20px;
+}
+
+/** TEAM **/
+
+.payment-info {
+    text-align: center;
+    width: 50%;
+    margin: auto;
+}
+
+/** DISCUSSION **/
+
+.discussionFormBlock {
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+}
+
+.discussionContent {
+    padding: 8px;
+    background-color: #F8F8F8;
+    border-left: 4px solid #FFCA05;
+}
+
+.discussionPost {
+    width: 50%;
+    margin: 40px auto;
+}
+
+.discussionPostSender {
+    font-size: 120%;
+    font-weight: 700;
+    word-break: break-word;
+    width: 69%;
+    display: inline-block;
+    vertical-align: top;
+}
+
+.discussionPostTeam {
+    font-weight: 400;
+}
+
+.discussionPostContent {
+    margin-top: 8px;
+    word-break: break-word;
+}
+
+.discussionPostDate {
+    width: 30%;
+    text-align: right;
+    display: inline-block;
+    vertical-align: top;
+}
+
+/** UPDATES **/
+
+.updatesFormBlock {
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+}
+
+.updatesPost {
+    width: 50%;
+    margin: 40px auto;
+}
+
+.updatesContent {
+    padding: 8px;
+    background-color: #F8F8F8;
+    border-left: 4px solid #FF0000;
+}
+
+.updatesPostSender {
+    font-size: 120%;
+    font-weight: 700;
+}
+
+.updatesPostTeam {
+    font-weight: 400;
+}
+
+.updatesPostContent {
+    margin-top: 8px;
+}
+
+.updatesPostDate {
+    font-weight: 700;
+}
+
+/** FLASHES **/
+.flash {
+    text-align: left;
+    padding: 18px 10px 18px 70px;
+    font-weight: 600;
+    margin: auto auto 10px auto;
+    color: white;
+    width: calc(50% - 80px);
+    background: no-repeat 15px 50%;
+    font-size: 115%;
+    word-break: break-word;
+}
+
+.flash.success {
+    background-color: #69B300;
+}
+
+.flash.info {
+    background-color: #FFCA05;
+}
+
+.flash.error {
+    background-color: #FF0000;
+}
+
+.flash a {
+    text-decoration: underline;
+}
+
+/** FORMS **/
+
+ul.error {
+    padding: 0px;
+    list-style-type: none;
+    margin: 0px;
+}
+
+ul.error a {
+    text-decoration: underline;
+}
+
+#formValidationError {
+    display: none;
+}
+
+input[type="submit"] {
+    padding: 7px;
+    background-color: #005BD0;
+    color: white;
+    cursor: pointer;
+    font-weight: 600;
+    font-family: Raleway, sans-serif;
+    width: 100%;
+    margin-top: 22px;
+    border: 0px;
+    font-size: 11pt;
+    letter-spacing: 0.5px;
+}
+
+input[type="button"] {
+    padding: 6px 2px 7px 2px;
+    background-color: #005BD0;
+    color: white;
+    cursor: pointer;
+    font-weight: 600;
+    font-family: 'Source Sans Pro', sans-serif;
+    width: 100%;
+    border: 0px;
+    font-size: 10pt;
+}
+
+input[type="submit"]:hover, input[type="button"]:hover {
+    background-color: #327BD9;
+}
+
+form label {
+    font-weight: 400;
+    word-break: break-word;
+}
+
+form table {
+    margin: auto;
+}
+
+
+form th {
+    text-align: left;
+    padding-right: 5px;
+    vertical-align: top;
+}
+
+form td, form th {
+    display: block;
+    padding: 0;
+    border-spacing: 0px;
+}
+
+.teamForm td, .teamForm th {
+    display: table-cell;
+}
+
+.firstColumn {
+    border-right: 30px solid transparent;
+}
+
+input[type="email"], input[type="number"], input[type="password"], input[type="tel"], input[type="url"], input[type="text"], input[type="date"], input[type="time"], select {
+    height: 26px;
+    padding: 2px 5px;
+    margin-bottom: 10px;
+    border: 0;
+    background-color: #EEE;
+    font-family: 'Source Sans Pro', sans-serif;
+    font-size: 105%;
+}
+
+input[type="checkbox"] {
+    background: #EEE;
+    border-radius: 0px;
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    margin: 0px 10px 0px 0px;
+    position: relative;
+    top: 4px;
+    -moz-appearance: none;
+    -webkit-appearance: none;
+    -o-appearance: none;
+}
+
+input:disabled {
+    background-color: #FFF;
+    padding: 0px;
+    color: black;
+    font-weight: 700;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    width: 166px;
+}
+
+textarea  {
+    height: 100%;
+    font-family: 'Source Sans Pro', sans-serif;
+    border: 0;
+    background-color: #EEE;
+    resize: none;
+    width: calc(100% - 10px);
+    padding: 2px 5px;
+    font-size: 105%;
+    position: static;
+}
+
+.autoWidth {
+    width: auto !important;
+}
+
+.nowrap {
+    white-space: nowrap;
+}
+
+.center {
+     text-align: center;
+}
+
+.inlineBlock {
+    display: inline-block;
+}
+
+.marginRight {
+    margin-right: 30px;
+}
+
+/** FOOTER **/
+.footer textarea {
+    width: 200px;
+    height:70px;
+}
+
+.footer input[type="text"], .footer input[type="email"] {
+    width: 200px;
+}
+
+.footer input[type="submit"] {
+    margin-top: 5px;
+    margin-bottom: 20px;
+    background-color: #666;
+}
+
+.svgContainer:hover, .archiveLink:hover {
+    border-top: 4px solid #666;
+}
+
+/** SVG **/
+.fillEEE {
+    fill: #EEE;
+}
+
+.fill666 {
+    fill: #666;
+}
+
+.fillgreen {
+    fill: #69B300;
+}
+
+.fillblue {
+    fill: #005BD0;
+}
+
+.fillyellow {
+    fill: #FFCA05;
+}
+
+.fillred {
+    fill: #FF0000;
+}
+
+.fillblack {
+    fill: #000;
+}
+
+.fillwhite {
+    fill: #FFF;
+}
+
+.fillnone {
+    fill: none;
+}
+
+.fillbluetint {
+    fill: #A9CEFF;
+}
+
+.fillredtint {
+    fill: #FFB1B1;
+}
+
+.fillgreentint {
+    fill: #D7FF9F;
+}
+
+.fillyellowtint {
+    fill: #FFCA05;
+}
+
+/** GENERAL **/
+.information {
+    width: 50%;
+    margin: 20px auto;
+    text-align: center;
+}
+
+.yearNumber {
+    font-family: 'Source Sans Pro', sans-serif;
+    font-size: 120%;
+    font-weight: 600;
+}
+
+/** PHOTOS **/
+
+.photos {
+    width: 50%;
+    margin: auto;
+}
+
+.photos p {
+    text-align: center;
+}
+
+.photos h3 {
+    margin-top: 00px;
+    margin-bottom: 0px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    text-align: center;
+}
+
+.photos p {
+    margin-top: 0px;
+    margin-bottom: 40px;
+}
+
+.calendarYearNumber {
+    font-family: 'Source Sans Pro', sans-serif;
+    font-size: 110%;
+    font-weight: 600;
+}
+
+/** RESULTS **/
+.resultsTable {
+    margin: auto;
+    border-spacing: 0px;
+    width: 50%
+}
+
+.resultsTable td, th {
+    padding: 5px;
+    text-align: left;
+    vertical-align: top;
+}
+
+.resultsTable td.team {
+    word-break: break-word;
+}
+
+.resultsTable tr:nth-child(even) {
+    background: #EEE;
+}
+
+.resultsInfo, .resultsHint {
+    margin: auto auto 20px auto;
+    width: 50%;
+    cursor: pointer;
+}
+
+.resultsHint {
+    text-align: right;
+    color: #666;
+    margin: auto auto 10px auto;
+    font-size: 80%;
+}
+
+.resultsHint:hover {
+    text-decoration: underline;
+}
+
+/** ADMINISTRATION **/
+input[type="number"] {
+    width: calc(100% - 10px);
+}
+
+.card th {
+    display: table-cell;
+    vertical-align: bottom;
+    padding: 5px;
+    text-align: left;
+}
+
+.card td {
+    display: table-cell;
+    vertical-align: top;
+    padding: 5px 0;
+    width: 83px;
+}
+
+.card {
+    border-spacing: 0px;
+}
+
+
+.card .header {
+    background-color: #EEE;
+    text-align: center;
+}
+
+.card .headings {
+    font-family: 'Raleway', sans-serif;
+}
+
+.card .left{
+    text-align: left;
+}
+
+.card .right{
+    text-align: right;
+}
+
+.card input[type="checkbox"]{
+    margin-right: 0;
+}
+
+select {
+    max-width:250px;
+}
+
+.selectForm, .selectForm th {
+    text-align: center;
+}
+
+.card .teamName {
+    white-space: nowrap;
+    max-width: 100px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.card .rightButton {
+    padding-left: 5px;
+}
+
+.card .dead {
+    text-decoration: underline;
+}
+
+.card .spacing {
+    border-left: 20px solid transparent;
+}

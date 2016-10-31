@@ -1,0 +1,67 @@
+{block content}
+<div class="teamsCount">
+	{if $selectedYear > 1 && $selectedYear < 4}
+		<div class="flash info">Kvůli nedostatečné databázi ze starších ročníků nemáme pro 2. a 3. ročník k dispozici správné údaje o složení těch týmů, které se zúčastnily i 3. nebo 4. ročníku. Pokud si tedy pamatujete (nebo jste schopni dohledat) složení vašich týmů, budeme rádi, když jej upravíte <a href="{if isset($teamName)}{plink Team:edit}{else}{plink Team:}{/if}">ZDE</a>. Děkujeme.</div>
+	{/if}
+
+	{if $isSelectedYearCurrent}
+		{if $teamsCount == 0}
+			Zatím není zaregistrovaný žádný tým.
+		{else}
+			{if $teamsCount == 1}
+				Je zaregistrován 1 tým.
+			{elseif $teamsCount < 5}
+				Jsou zaregistrovány {$teamsCount} týmy.
+			{else}
+				Je zaregistrováno {$teamsCount} týmů.
+			{/if}
+		{/if}
+	{else}
+		{if $teamsCount == 0}
+			Hry se nezúčastnil žádný tým.
+		{else}
+			{if $teamsCount == 1}
+				Hry se zúčasntil 1 tým.
+			{elseif $teamsCount < 5}
+				Hry se zúčastnily {$teamsCount} týmy.
+			{else}
+				Hry se zúčastnilo {$teamsCount} týmů.
+			{/if}
+		{/if}
+	{/if}
+</div>
+<div class="teamsList">
+	{capture $pay_ok}
+		<span title="Zaplaceno">{include ../../../components/SVG/pay_ok.svg, dim => '50px'}</span>
+	{/capture}
+	{capture $pay_nok}
+		<span title="Nezaplaceno">{include ../../../components/SVG/pay_nok.svg, dim => '50px'}</span>
+	{/capture}
+	{capture $pay_start}
+		<span title="Platba na startu">{include ../../../components/SVG/pay_start.svg, dim => '50px'}</span>
+	{/capture}
+
+	{foreach $data as $team}
+		<table class="teamBlock">
+			<tr>
+				<td class="teamName">{$team->name|noescape}</td>
+				<td class="teamPayment" rowspan="2">
+					{if $team->paid == App\Presenters\BasePresenter::PAY_OK}
+						{$pay_ok|noescape}
+					{elseif $team->paid == App\Presenters\BasePresenter::PAY_NOK}
+						{$pay_nok|noescape}
+					{else}
+						{$pay_start|noescape}
+					{/if}
+				</td>
+			</tr>
+			<tr>
+				<td class="teamMembers">
+					{$team->member1|noescape}{if isset($team->member2) && strlen($team->member2) > 0}, {$team->member2|noescape}{/if}{if isset($team->member3) && strlen($team->member3) > 0}, {$team->member3|noescape}{/if}{if isset($team->member4) && strlen($team->member4) > 0}, {$team->member4|noescape}{/if}
+				</td>
+			</tr>
+		</table>
+	{/foreach}
+</div>
+
+{/block}
