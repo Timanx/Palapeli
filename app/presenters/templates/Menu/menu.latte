@@ -38,6 +38,7 @@
 
 	function handleResponsiveMenu() {
 		var menuObject = document.getElementById('mainMenu');
+		var menuContainer = document.getElementById('mainMenuContainer');
 		var info = document.getElementById('infoMainLink');
 		var team = document.getElementById('teamMainLink');
 		var game = document.getElementById('gameMainLink');
@@ -55,7 +56,7 @@
 		}
 
 		if(menuObject.style.display == 'block') {
-
+			mainMenuContainer.style.position = 'fixed';
 			menuObject.style.display = 'none';
 
 			document.getElementById('content').style.display = 'block';
@@ -74,6 +75,7 @@
 			if(administration) { administration.removeAttribute("onclick"); }
 
 		} else {
+			mainMenuContainer.style.position = 'static';
 			menuObject.style.display = 'block';
 
 			document.getElementById('content').style.display = 'none';
@@ -113,11 +115,9 @@
 
 </script>
 
-
-<div class="menuContainer">
 	<div class="mainMenuContainer" id="mainMenuContainer">
 		<a href="{plink Homepage:}">
-			<div class="menuLogoContainer" style="position:fixed;z-index: 10;">
+			<div class="menuLogoContainer">
 				{include ../../../components/SVG/logo_basic.svg, dim => '50px'}
 			</div>
 		</a>
@@ -193,4 +193,3 @@
 			{/if}
 		</div>
 	</div>
-</div>
