@@ -240,71 +240,74 @@ class TeamPresenter extends BasePresenter
 
         if (count($teamId) == 0) {
             $form->addError(Nette\Utils\Html::el('div', ['class' => 'flash info'])->setHtml('Tým se zadaným názvem neexistuje.'));
-        } elseif($teamId[0] == self::ORG_TEAM_ID) {
-            $teamId = $teamId[0];
-            $this->flashMessage('Organizátorský tým byl úspěšně přihlášen.', 'success');
-            $this->session->getSection('team')->teamId = $teamId;
-            $this->session->getSection('team')->teamName = $values['name'];
-            $this->redirect('Discussion:');
         } else {
             $teamId = $teamId[0];
             $teamData = $this->database->query('
-            SELECT 1
-            FROM teams
-            WHERE password = ? AND id = ?', $password, $teamId
+                SELECT 1
+                FROM teams
+                WHERE password = ? AND id = ?',
+                $password, $teamId
             )->fetchAll();
 
             if (count($teamData) == 0) {
                 $form->addError(Nette\Utils\Html::el('div', ['class' => 'flash info'])->setHtml('Nesprávně zadané heslo.'));
             } else {
-                $isInSelectedYear = $this->database->query('
+                if($teamId == self::ORG_TEAM_ID) {
+                    $this->flashMessage('Organizátorský tým byl úspěšně přihlášen.', 'success');
+                    $this->session->getSection('team')->teamId = self::ORG_TEAM_ID;
+                    $this->session->getSection('team')->teamName = $values['name'];
+                    $this->redirect('Discussion:');
+                } else {
+
+                    $isInSelectedYear = $this->database->query('
                     SELECT 1
                     FROM teamsyear
                     WHERE team_id = ? AND year = ?
                 ', $teamId, $this->selectedYear)->fetchAll();
 
-                if(!count($isInSelectedYear) && $this->selectedYear == self::CURRENT_YEAR) {
-                    if(!$this->isRegistrationOpen()) {
-                        $this->flashMessage('Tým ' . $values ['name'] . ' byl úspěšně přihlášen.', 'success');
+                    if (!count($isInSelectedYear) && $this->selectedYear == self::CURRENT_YEAR) {
+                        if (!$this->isRegistrationOpen()) {
+                            $this->flashMessage('Tým ' . $values ['name'] . ' byl úspěšně přihlášen.', 'success');
+                            $this->session->getSection('team')->teamId = $teamId;
+                            $this->session->getSection('team')->teamName = $values['name'];
+                            $this->redirect('Info:');
+                        } else {
+                            if (count($isInSelectedYear) == 0) {
+                                $teamData = $this->database->query('
+                                      SELECT *
+                                      FROM teamsyear
+                                      WHERE team_id = ' . $teamId . '
+                                      ORDER BY year DESC'
+                                )->fetchAll();
+
+                                if (count($teamData) != 0) {
+                                    $teamData = $teamData[0];
+                                    $this->database->query('
+                            INSERT INTO teamsyear (team_id, year, paid, member1, member2, member3, member4, registered) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                        ', $teamId, self::CURRENT_YEAR, 0, $teamData->member1, $teamData->member2, $teamData->member3, $teamData->member4, date('Y-m-d H:i:s', time()));
+
+                                } else {
+                                    $this->database->query('
+                            INSERT INTO teamsyear (team_id, year, paid, member1, member2, member3, member4, registered) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                        ', $teamId, self::CURRENT_YEAR, 0, "", null, null, null, date('Y-m-d H:i:s', time()));
+                                }
+                                $this->flashMessage('Tým ' . $values ['name'] . ' byl úspěšně zaregistrován do aktuálního ročníku a přihlášen.', 'success');
+                                $this->session->getSection('team')->teamId = $teamId;
+                                $this->session->getSection('team')->teamName = $values['name'];
+                                $this->redirect('Team:edit');
+                            }
+                        }
+                    } elseif (!count($isInSelectedYear) && $this->selectedYear != self::CURRENT_YEAR) {
+                        $this->flashMessage('Tým ' . $values ['name'] . ' byl úspěšně přihlášen. ' . $this->selectedYear . '. ročníku se však neúčastnil, pro úpravu údajů z jiných ročníků prosíme vyberte jiný ročník.', 'success');
                         $this->session->getSection('team')->teamId = $teamId;
                         $this->session->getSection('team')->teamName = $values['name'];
                         $this->redirect('Info:');
                     } else {
-                    if (count($isInSelectedYear) == 0) {
-                        $teamData = $this->database->query('
-                      SELECT *
-                      FROM teamsyear
-                      WHERE team_id = ' . $teamId . '
-                      ORDER BY year DESC'
-                        )->fetchAll();
-
-                        if (count($teamData) != 0) {
-                            $teamData = $teamData[0];
-                            $this->database->query('
-                            INSERT INTO teamsyear (team_id, year, paid, member1, member2, member3, member4, registered) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                        ', $teamId, self::CURRENT_YEAR, 0, $teamData->member1, $teamData->member2, $teamData->member3, $teamData->member4, date('Y-m-d H:i:s', time()));
-
-                        } else {
-                            $this->database->query('
-                            INSERT INTO teamsyear (team_id, year, paid, member1, member2, member3, member4, registered) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                        ', $teamId, self::CURRENT_YEAR, 0, "", null, null, null, date('Y-m-d H:i:s', time()));
-                        }
-                        $this->flashMessage('Tým ' . $values ['name'] . ' byl úspěšně zaregistrován do aktuálního ročníku a přihlášen.', 'success');
+                        $this->flashMessage('Tým ' . $values ['name'] . ' byl úspěšně přihlášen.', 'success');
                         $this->session->getSection('team')->teamId = $teamId;
                         $this->session->getSection('team')->teamName = $values['name'];
                         $this->redirect('Team:edit');
                     }
-                    }
-                } elseif(!count($isInSelectedYear) && $this->selectedYear != self::CURRENT_YEAR) {
-                    $this->flashMessage('Tým ' . $values ['name'] . ' byl úspěšně přihlášen. ' . $this->selectedYear . '. ročníku se však neúčastnil, pro úpravu údajů z jiných ročníků prosíme vyberte jiný ročník.', 'success');
-                    $this->session->getSection('team')->teamId = $teamId;
-                    $this->session->getSection('team')->teamName = $values['name'];
-                    $this->redirect('Info:');
-                } else {
-                    $this->flashMessage('Tým ' . $values ['name'] . ' byl úspěšně přihlášen.', 'success');
-                    $this->session->getSection('team')->teamId = $teamId;
-                    $this->session->getSection('team')->teamName = $values['name'];
-                    $this->redirect('Team:edit');
                 }
             }
         }
