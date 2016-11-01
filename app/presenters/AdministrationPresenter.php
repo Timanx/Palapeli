@@ -49,6 +49,13 @@ class AdministrationPresenter extends BasePresenter
         $this->template->checkpoint = $checkpoint;
     }
 
+    public function renderCiphers()
+    {
+        parent::render();
+        $this->prepareHeading('Šifry');
+    }
+
+
     public function createComponentNewUpdateForm()
     {
         $form = new UI\Form;
@@ -290,4 +297,35 @@ class AdministrationPresenter extends BasePresenter
         $this->flashMessage('Údaje z karty stanoviště byly úspěšně uloženy', 'success');
         $this->redirect('this');
     }
+
+
+    public function createComponentCipherForm()
+    {
+        $checkpoint = $_GET['checkpoint'];
+        $this->getYearData();
+            $data = $this->database->query('
+            SELECT cipher_description, solution_description, CONCAT_WS(\'/\',cipher_image.path, cipher_image.name) AS cipher_image, CONCAT(solution_image.path, solution_image.name) AS solution_image
+            FROM ciphers
+            LEFT JOIN files AS cipher_image ON cipher_image.id = ciphers.cipher_image_id
+            LEFT JOIN files AS solution_image ON solution_image.id = ciphers.cipher_image_id
+            WHERE year = ? AND checkpoint_number = ?
+        ', $checkpoint, $this->selectedYear, ($checkpoint == 0 ? 0 : $checkpoint - 1), $this->selectedYear)->fetchAll();
+
+        $form = new UI\Form;
+
+        for ($i = 0; $i < count($data); $i++) {
+            $teamContainer = $form->addContainer('team' . $i);
+            $teamName = $teamContainer->addText('entryTime', $data[$i]['name'])->setType('time')->setDefaultValue((isset($data[$i]['entry_time']) ? $data[$i]['entry_time'] : '--:--'));
+            if($checkpoint > 1 && !$data[$i]['visited_previous']) {
+                $teamName->getLabelPrototype()->addAttributes(['class' => 'dead', 'title' => 'Tým nemá vyplněný příchod na předchozím stanovišti']);
+            }
+            $teamContainer->addHidden('teamId', $data[$i]['id']);
+            $teamContainer->addButton('currentTime', 'Teď')->setAttribute('onclick', 'submitCurrentTime(' . $i . ', this.form)');
+            $teamContainer->addButton('inputtedTime', 'Zadáno')->setAttribute('onclick', 'this.form.submit()');
+        }
+        $form->addSubmit('send', 'ODESLAT KARTU STANOVIŠTĚ');
+        $form->onSuccess[] = [$this, 'checkpointCardFormSucceeded'];
+        return $form;
+    }
+
 }
