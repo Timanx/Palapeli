@@ -644,3 +644,7 @@ select {
 .card .spacing {
     border-left: 20px solid transparent;
 }
+
+input[type="time"] {
+    max-width: 100px;
+}
