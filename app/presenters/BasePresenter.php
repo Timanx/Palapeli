@@ -22,7 +22,7 @@ class BasePresenter extends Nette\Application\UI\Presenter
     const CURRENT_CALENDAR_YEAR = 2017;
 
     const ENTRY_FEE = 240; //CZK
-    const ENTRY_FEE_DEADLINE = 1485039600 + self::ALMOST_DAY;  //22. 1. 2017
+    const ENTRY_FEE_DEADLINE = 1485212400 + self::ALMOST_DAY; //24. 1. 2017
     const ENTRY_FEE_RETURN_DEADLINE = 1485385200 + self::ALMOST_DAY; ///26. 1. 2015
     const GAME_DATE = 1485558000; //28. 1. 2017
     const GAME_START = 1485590400 ; //28. 1. 2017 9:00
