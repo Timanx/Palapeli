@@ -256,7 +256,7 @@ class TeamPresenter extends BasePresenter
                     $this->flashMessage('Organizátorský tým byl úspěšně přihlášen.', 'success');
                     $this->session->getSection('team')->teamId = self::ORG_TEAM_ID;
                     $this->session->getSection('team')->teamName = $values['name'];
-                    $this->redirect('Discussion:');
+                    $this->redirect('Administration:');
                 } else {
 
                     $isInSelectedYear = $this->database->query('

@@ -175,14 +175,14 @@ class AdministrationPresenter extends BasePresenter
                 INSERT INTO results (team_id, year, checkpoint_number, entry_time, exit_time, used_hint) VALUES
                 (?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE entry_time = ?, exit_time = ?, used_hint = ?
             ', $teamId, $this->selectedYear, $number, ($checkpoint['entryTime'] == '' ? NULL : $checkpoint['entryTime']), ($checkpoint['exitTime'] == '' ? NULL : $checkpoint['exitTime']), (isset($checkpoint['usedHint']) && $checkpoint['usedHint'] ? 1 : 0), ($checkpoint['entryTime'] == '' ? NULL : $checkpoint['entryTime']), ($checkpoint['exitTime'] == '' ? NULL : $checkpoint['exitTime']), (isset($checkpoint['usedHint']) && $checkpoint['usedHint'] ? 1 : 0));
+            }
 
-                //Handle finish
-                if ($number == count($values) - 1 && $checkpoint['exitTime'] != '') {
-                    $this->database->query('
+            //Handle finish
+            if ($number == count($values) - 1 && $checkpoint['exitTime'] != '') {
+                $this->database->query('
                 INSERT INTO results (team_id, year, checkpoint_number, entry_time) VALUES
                 (?, ?, ?, ?) ON DUPLICATE KEY UPDATE entry_time = ?
             ', $teamId, $this->selectedYear, ((int)$number + 1), $checkpoint['exitTime'],$checkpoint['exitTime']);
-                }
             }
         }
 

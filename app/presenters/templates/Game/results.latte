@@ -5,8 +5,6 @@
 
 		{if $isSelectedYearCurrent}
 			<div class="flash info">{$selectedYear}. ročník ještě neproběhl a výsledky tedy ještě nejsou k dispozici.</div>
-    	{elseif $selectedYear != 2 &&  $selectedYear != 3 &&  $selectedYear != 4 &&  $selectedYear != 5}
-    		<div class="flash info">Pro zvolený ročník zatím nejsou výsledky doplněny. Přepnout do aktuálního ročníku se můžete <a href="{plink Archive: $currentYear, $currentCalendarYear, $presenter->getAction(true)}">ZDE</a>.</div>
 		{else}
 			<div title="Kliknutím zobrazíte princip počítání výsledků." id="resultsHint" class="resultsHint" onclick="document.getElementById('resultsInfo').style.display = 'block';this.style.display='none'">Jak byly výsledky spočítány?</div>
 			<div title="Kliknutím text zavřete." id="resultsInfo" style="display: none;" class="resultsInfo" onclick="document.getElementById('resultsHint').style.display = 'block';this.style.display='none'">
