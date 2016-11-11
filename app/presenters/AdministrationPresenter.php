@@ -3,6 +3,7 @@ namespace App\Presenters;
 
 use Nette;
 use Nette\Application\UI;
+use Nette\Http\FileUpload;
 
 
 class AdministrationPresenter extends BasePresenter
@@ -49,10 +50,11 @@ class AdministrationPresenter extends BasePresenter
         $this->template->checkpoint = $checkpoint;
     }
 
-    public function renderCiphers()
+    public function renderCiphers($checkpoint = null)
     {
         parent::render();
         $this->prepareHeading('Šifry');
+        $this->template->checkpoint = $checkpoint;
     }
 
 
@@ -303,29 +305,81 @@ class AdministrationPresenter extends BasePresenter
     {
         $checkpoint = $_GET['checkpoint'];
         $this->getYearData();
-            $data = $this->database->query('
-            SELECT cipher_description, solution_description, CONCAT_WS(\'/\',cipher_image.path, cipher_image.name) AS cipher_image, CONCAT(solution_image.path, solution_image.name) AS solution_image
+        $data = $this->database->query('
+            SELECT ciphers.name, cipher_description, solution_description, CONCAT_WS(\'/\',cipher_image.path, cipher_image.name) AS cipher_image, CONCAT(solution_image.path, solution_image.name) AS solution_image
             FROM ciphers
             LEFT JOIN files AS cipher_image ON cipher_image.id = ciphers.cipher_image_id
             LEFT JOIN files AS solution_image ON solution_image.id = ciphers.cipher_image_id
             WHERE year = ? AND checkpoint_number = ?
-        ', $checkpoint, $this->selectedYear, ($checkpoint == 0 ? 0 : $checkpoint - 1), $this->selectedYear)->fetchAll();
+        ', $this->selectedYear, $checkpoint)->fetch();
 
         $form = new UI\Form;
+        $form->elementPrototype->addAttributes(['enctype' => 'multipart/form-data']);
 
-        for ($i = 0; $i < count($data); $i++) {
-            $teamContainer = $form->addContainer('team' . $i);
-            $teamName = $teamContainer->addText('entryTime', $data[$i]['name'])->setType('time')->setDefaultValue((isset($data[$i]['entry_time']) ? $data[$i]['entry_time'] : '--:--'));
-            if($checkpoint > 1 && !$data[$i]['visited_previous']) {
-                $teamName->getLabelPrototype()->addAttributes(['class' => 'dead', 'title' => 'Tým nemá vyplněný příchod na předchozím stanovišti']);
-            }
-            $teamContainer->addHidden('teamId', $data[$i]['id']);
-            $teamContainer->addButton('currentTime', 'Teď')->setAttribute('onclick', 'submitCurrentTime(' . $i . ', this.form)');
-            $teamContainer->addButton('inputtedTime', 'Zadáno')->setAttribute('onclick', 'this.form.submit()');
-        }
-        $form->addSubmit('send', 'ODESLAT KARTU STANOVIŠTĚ');
-        $form->onSuccess[] = [$this, 'checkpointCardFormSucceeded'];
+        $form->addText('name', 'Název šifry', null, 255)->setDefaultValue(isset($data->name) ? $data->name : null);
+        $form->addTextArea('cipher_description', 'Popis zadání')->setDefaultValue(isset($data->cipher_description) ? $data->cipher_description : null);
+        $form->addTextArea('solution_description', 'Popis řešení')->setDefaultValue(isset($data->solution_description) ? $data->solution_description : null);
+        $form->addUpload('cipher_image', 'Obrázek šifry');
+        $form->addUpload('solution_image', 'Obrázek řešení');
+        $form->addSubmit('send', 'VLOŽIT ŠIFRU');
+        $form->onSuccess[] = [$this, 'cipherFormSucceeded'];
         return $form;
+    }
+
+    private function uploadFile(FileUpload $file, $path) {
+        if($file->getError() == UPLOAD_ERR_OK) {
+            $target_file = $path . basename($file->getName());
+
+            $tmpFile = $file->getTemporaryFile();
+
+            move_uploaded_file($tmpFile, $target_file);
+
+            $this->database->beginTransaction();
+
+            $this->database->query('
+                INSERT INTO files (path, name) VALUES (?, ?)
+            ', $path, $file->getName());
+
+            $id = $this->database->getInsertId();
+
+            $this->database->commit();
+
+            return $id;
+        }
+
+        return null;
+    }
+
+    public function cipherFormSucceeded(UI\Form $form, array $values)
+    {
+        $checkpoint = $_GET['checkpoint'];
+
+        if(!file_exists('cipher_images')) {
+            mkdir('cipher_images');
+        }
+
+        if(!file_exists('cipher_images/' . $this->selectedYear)) {
+            mkdir('cipher_images/' . $this->selectedYear);
+        }
+
+        $target_dir = 'cipher_images/' . $this->selectedYear . '/' . $checkpoint . '/';
+        if(!file_exists($target_dir)) {
+            mkdir($target_dir);
+        }
+
+
+
+        $cipher_image_id = $this->uploadFile($values['cipher_image'], $target_dir);
+        $solution_image_id = $this->uploadFile($values['solution_image'], $target_dir);
+
+        $this->database->query('
+            INSERT INTO ciphers (year, checkpoint_number, name, cipher_description, cipher_image_id, solution_description, solution_image_id) VALUES
+            (?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE name = ?, cipher_description = ?, cipher_image_id = ?, solution_description = ?, solution_image_id = ?
+        ', $this->selectedYear, $checkpoint, $values['name'], $values['cipher_description'], $cipher_image_id, $values['solution_description'], $solution_image_id, $values['name'], $values['cipher_description'], $cipher_image_id, $values['solution_description'], $solution_image_id
+        );
+
+        $this->flashMessage('Šifra byla úspěšně vložena.', 'success');
+        $this->redirect('this');
     }
 
 }
