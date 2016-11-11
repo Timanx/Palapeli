@@ -211,6 +211,7 @@ class AdministrationPresenter extends BasePresenter
         }
 
         $form = new UI\Form;
+
         $form->addCheckbox('previous', 'Řadit týmy podle příchodu na předchozí stanoviště')->setAttribute('onchange', 'this.form.submit()')->setDefaultValue($checked);
         $form->addSelect('checkpoint', 'Vyberte stanoviště:', $options, 1)->setAttribute('onchange', 'this.form.submit()')->setDefaultValue($checkpoint);
         $form->onSuccess[] = [$this, 'checkpointSelected'];
@@ -220,6 +221,33 @@ class AdministrationPresenter extends BasePresenter
     public function checkpointSelected(UI\Form $form, array $values)
     {
         $this->redirect('this', ['checkpoint' => $values['checkpoint'], 'previous' => $values['previous']]);
+    }
+
+    public function createComponentSelectOnlyCheckpointForm()
+    {
+        $checkpoint = (isset($_GET['checkpoint']) ? $_GET['checkpoint'] : null);
+        $this->getYearData();
+
+        $checkpointCount = $this->database->query('
+                SELECT checkpoint_count
+                FROM years
+                WHERE year = ?
+            ', $this->selectedYear)->fetch()->checkpoint_count;
+
+        $options = [];
+        for ($i = 0; $i < $checkpointCount; $i++){
+            $options[$i] = ($i == $checkpointCount - 1 ? 'Cíl' : ($i == 0 ? 'Start' : $i . '. stanoviště'));
+        }
+
+        $form = new UI\Form;
+        $form->addSelect('checkpoint', 'Vyberte stanoviště:', $options, 1)->setAttribute('onchange', 'this.form.submit()')->setDefaultValue($checkpoint);
+        $form->onSuccess[] = [$this, 'onlyCheckpointSelected'];
+        return $form;
+    }
+
+    public function onlyCheckpointSelected(UI\Form $form, array $values)
+    {
+        $this->redirect('this', ['checkpoint' => $values['checkpoint']]);
     }
 
     public function createComponentCheckpointCardForm()
@@ -306,7 +334,7 @@ class AdministrationPresenter extends BasePresenter
         $checkpoint = $_GET['checkpoint'];
         $this->getYearData();
         $data = $this->database->query('
-            SELECT ciphers.name, cipher_description, solution_description, CONCAT_WS(\'/\',cipher_image.path, cipher_image.name) AS cipher_image, CONCAT(solution_image.path, solution_image.name) AS solution_image
+            SELECT ciphers.name, cipher_description, solution_description, CONCAT_WS(\'/\',cipher_image.path, cipher_image.name) AS cipher_image, CONCAT(solution_image.path, solution_image.name) AS solution_image, ciphers.solution
             FROM ciphers
             LEFT JOIN files AS cipher_image ON cipher_image.id = ciphers.cipher_image_id
             LEFT JOIN files AS solution_image ON solution_image.id = ciphers.cipher_image_id
@@ -319,8 +347,10 @@ class AdministrationPresenter extends BasePresenter
         $form->addText('name', 'Název šifry', null, 255)->setDefaultValue(isset($data->name) ? $data->name : null);
         $form->addTextArea('cipher_description', 'Popis zadání')->setDefaultValue(isset($data->cipher_description) ? $data->cipher_description : null);
         $form->addTextArea('solution_description', 'Popis řešení')->setDefaultValue(isset($data->solution_description) ? $data->solution_description : null);
+        $form->addText('solution', 'Řešení', null, 1023)->setDefaultValue(isset($data->solution) ? $data->solution : null);
         $form->addUpload('cipher_image', 'Obrázek šifry');
         $form->addUpload('solution_image', 'Obrázek řešení');
+        $form->addUpload('pdf_file', 'PDF soubor se šifrou');
         $form->addSubmit('send', 'VLOŽIT ŠIFRU');
         $form->onSuccess[] = [$this, 'cipherFormSucceeded'];
         return $form;
@@ -367,16 +397,42 @@ class AdministrationPresenter extends BasePresenter
             mkdir($target_dir);
         }
 
-
-
         $cipher_image_id = $this->uploadFile($values['cipher_image'], $target_dir);
         $solution_image_id = $this->uploadFile($values['solution_image'], $target_dir);
+        $pdf_file_id = $this->uploadFile($values['pdf_file'], $target_dir);
 
         $this->database->query('
-            INSERT INTO ciphers (year, checkpoint_number, name, cipher_description, cipher_image_id, solution_description, solution_image_id) VALUES
-            (?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE name = ?, cipher_description = ?, cipher_image_id = ?, solution_description = ?, solution_image_id = ?
-        ', $this->selectedYear, $checkpoint, $values['name'], $values['cipher_description'], $cipher_image_id, $values['solution_description'], $solution_image_id, $values['name'], $values['cipher_description'], $cipher_image_id, $values['solution_description'], $solution_image_id
+            INSERT INTO ciphers (year, checkpoint_number, name, cipher_description,  solution_description, solution) VALUES
+            (?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE name = ?, cipher_description = ?, solution_description = ?, solution = ?
+        ', $this->selectedYear, $checkpoint, $values['name'], $values['cipher_description'], $values['solution_description'],
+              $values ['solution'],
+                $values['name'], $values['cipher_description'], $values['solution_description'],
+            $values ['solution']
         );
+
+        if($values['solution_image']->getError() == UPLOAD_ERR_OK) {
+            $this->database->query('
+                UPDATE ciphers
+                SET solution_image_id = ?
+                WHERE year = ? AND checkpoint_number = ?
+            ', $solution_image_id, $this->selectedYear, $checkpoint);
+        }
+
+        if($values['cipher_image']->getError() == UPLOAD_ERR_OK) {
+            $this->database->query('
+                UPDATE ciphers
+                SET cipher_image_id = ?
+                WHERE year = ? AND checkpoint_number = ?
+            ', $cipher_image_id, $this->selectedYear, $checkpoint);
+        }
+
+        if($values['pdf_file']->getError() == UPLOAD_ERR_OK) {
+            $this->database->query('
+                UPDATE ciphers
+                SET pdf_file_id = ?
+                WHERE year = ? AND checkpoint_number = ?
+            ', $pdf_file_id, $this->selectedYear, $checkpoint);
+        }
 
         $this->flashMessage('Šifra byla úspěšně vložena.', 'success');
         $this->redirect('this');

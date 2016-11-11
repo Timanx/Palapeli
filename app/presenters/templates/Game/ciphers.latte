@@ -1,7 +1,65 @@
 {block content}
-		{if $isSelectedYearCurrent}
+		<script>
+			function displaySolution(toggle) {
+				var solution = document.getElementById('solution');
+
+				if(solution.style.display == 'block') {
+					solution.style.display = 'none';
+					toggle.innerHTML = 'Zobrazit řešení'
+				} else {
+					solution.style.display = 'block';
+					toggle.innerHTML = 'Skrýt řešení'
+				}
+
+
+			}
+		</script>
+
+		{if $isSelectedYearCurrent && !$hasGameEnded}
 			<div class="flash info">{$selectedYear}. ročník ještě neproběhl a šifry tedy ještě nejsou k dispozici.</div>
     	{else}
-    		<div class="flash info">Pro zvolený ročník zatím nejsou šifry doplněny. Přepnout do aktuálního ročníku se můžete <a href="{plink Archive: $currentYear, $currentCalendarYear, $presenter->getAction(true)}">ZDE</a>.</div>
+    		<div class="ciphersList">
+    			{for $i = 0; $i < $checkpointCount; $i++}
+					<a class="cipherLink" href="{plink Game:ciphers, $i}">{if $i == 0}Start{elseif $i == $checkpointCount - 1}Cíl{else}Šifra {$i}{/if}</a>{if $i != $checkpointCount - 1}&nbsp;|&nbsp;{/if}
+    			{/for}
+    		</div>
+
+			{if $checkpoint >= 0 && $checkpoint < $checkpointCount}
+				<h2 class="cipherHeading">
+					{if $checkpoint == 0}Start{elseif $checkpoint == $checkpointCount - 1}Cíl{else}Šifra {$checkpoint}{/if}
+				</h2>
+			{/if}
+    		{if !$cipherData}
+    			<div class="flash info">
+    				Tato šifra zatím nebyla doplněna.
+    			</div>
+			{else}
+				<div class="cipherContainer">
+					<div n:if="$cipherData['cipher_description']" class="cipherDescription">
+						{$cipherData['cipher_description']|noescape}
+					</div>
+					{if isset($cipherData['cipher_image'])}
+						<img class="cipherImage" src="{$basePath}/{$cipherData['cipher_image']}" />
+					{/if}
+					{if isset($cipherData['pdf_file'])}
+						<a class="pdfLink" target="_blank" href="{$basePath}/{$cipherData['pdf_file']}">Stáhnout ve formátu PDF</a>
+					{/if}
+
+					<a class="displaySolution" id="solutionToggle" onclick="displaySolution(this)">
+						Zobrazit řešení
+					</a>
+					<div class="cipherSolution" id="solution" style="display:none;">
+						<div n:if="$cipherData['solution_description']" class="cipherDescription">
+							{$cipherData['solution_description']|noescape}
+						</div>
+						<div class="bold" n:if="$cipherData['solution']" class="cipherDescription">
+							Řešení: {$cipherData['solution']|noescape}
+						</div>
+						{if isset($cipherData['solution_image'])}
+							<img class="cipherImage" src="{$basePath}/{$cipherData['solution_image']}" />
+						{/if}
+					</div>
+				</div>
+    		{/if}
     	{/if}
 {/block}

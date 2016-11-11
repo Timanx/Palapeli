@@ -166,7 +166,7 @@
         margin: 0;
     }
 
-    .rules, .payment-info, .discussionPost, .teamBlock, .updatesPost, .information, .photos, .resultsTable, .resultsInfo, .resultsHint {
+    .rules, .payment-info, .discussionPost, .teamBlock, .updatesPost, .information, .photos, .resultsTable, .resultsInfo, .resultsHint, .cipherDescription {
         width: 100%;
     }
 
@@ -270,4 +270,8 @@
         border-spacing: 0px;
     }
 
+    .cipherForm textarea {
+        width: calc(100% - 10px);
+        height: 200px;
+    }
 }

@@ -33,10 +33,29 @@ class GamePresenter extends BasePresenter
         $this->template->teamsCount = count($data);
     }
 
-    public function renderCiphers()
+    public function renderCiphers($checkpoint = 0)
     {
         parent::render();
         $this->prepareHeading('Šifry');
+
+        $this->template->checkpointCount = $this->database->query('
+            SELECT checkpoint_count
+            FROM years
+            WHERE year = ?
+        ', $this->selectedYear)->fetchField('checkpoint_count');
+
+        $data = $this->database->query('
+            SELECT ciphers.*, CONCAT(cipher_image.path, cipher_image.name) AS cipher_image, CONCAT(solution_image.path, solution_image.name) AS solution_image, CONCAT(pdf_file.path, pdf_file.name) AS pdf_file
+            FROM ciphers
+            LEFT JOIN files AS cipher_image ON cipher_image.id = ciphers.cipher_image_id
+            LEFT JOIN files AS solution_image ON solution_image.id = ciphers.solution_image_id
+            LEFT JOIN files AS pdf_file ON pdf_file.id = ciphers.pdf_file_id
+            WHERE year = ? AND checkpoint_number = ?
+        ', $this->selectedYear, $checkpoint)->fetch();
+
+        $this->template->cipherData = $data;
+
+        $this->template->checkpoint = $checkpoint;
     }
 
     public function renderPhotos()

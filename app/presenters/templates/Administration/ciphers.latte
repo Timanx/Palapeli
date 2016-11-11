@@ -2,11 +2,13 @@
 	{if $orgLogged}
 	<div class="information">Vybraný ročník: {$selectedYear}. ({$selectedCalendarYear})</div>
 	<div class="selectForm">
-		{control selectCheckpointForm }
+		{control selectOnlyCheckpointForm}
 	</div>
 
 	{if isset($checkpoint)}
-		{control cipherForm}
+		<div class="cipherForm">
+			{control cipherForm}
+		</div>
 	{/if}
 	{else}
 		<div class="flash info">

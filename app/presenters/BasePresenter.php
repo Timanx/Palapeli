@@ -26,6 +26,7 @@ class BasePresenter extends Nette\Application\UI\Presenter
     const ENTRY_FEE_RETURN_DEADLINE = 1485385200 + self::ALMOST_DAY; ///26. 1. 2015
     const GAME_DATE = 1485558000; //28. 1. 2017
     const GAME_START = 1485590400 ; //28. 1. 2017 9:00
+    const GAME_END = self::GAME_START + 10 * 60 * 60 ; //28. 1. 2017 19:00
     const ENTRY_FEE_ACCOUNT = '237977821/0300';
 
     const BLUE = '#005BD0';
@@ -81,6 +82,7 @@ class BasePresenter extends Nette\Application\UI\Presenter
         $this->template->hasRegistrationEnded = $this->hasRegistrationEnded($now);
         $this->template->isRegistrationOpen = $this->isRegistrationOpen($now);
         $this->template->hasGameStarted = $this->hasGameStarted($now);
+        $this->template->hasGameEnded = $this->hasGameEnded($now);
     }
 
     public function getYearData() {
@@ -103,6 +105,13 @@ class BasePresenter extends Nette\Application\UI\Presenter
             $time = time();
         }
         return $time >= self::GAME_START;
+    }
+
+    public function hasGameEnded($time = null) {
+        if(!isset($time)) {
+            $time = time();
+        }
+        return $time >= self::GAME_END;
     }
 
     public function hasRegistrationStarted($time = null) {

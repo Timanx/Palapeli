@@ -499,6 +499,10 @@ textarea  {
     text-align: center;
 }
 
+.bold {
+    font-weight: 700;
+}
+
 .yearNumber {
     font-family: 'Source Sans Pro', sans-serif;
     font-size: 120%;
@@ -647,4 +651,48 @@ select {
 
 input[type="time"] {
     max-width: 100px;
+}
+
+
+.cipherForm textarea {
+    width: 500px;
+    height: 200px;
+}
+
+/** CIPHERS **/
+.ciphersList {
+    text-align: center;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #69B300;
+    margin-bottom: 20px;
+}
+
+.cipherLink {
+
+}
+
+img.cipherImage {
+    display: block;
+    margin: auto auto 20px auto;
+    max-width: 100%;
+    height: auto;
+}
+
+h2.cipherHeading {
+    text-align: center;
+}
+
+.cipherContainer {
+    text-align: center;
+}
+
+.displaySolution {
+    margin-top: 20px;
+    display: block;
+}
+
+.cipherDescription {
+    width: 50%;
+    text-align: justify;
+    margin: auto;
 }
