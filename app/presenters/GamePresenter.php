@@ -11,6 +11,8 @@ class GamePresenter extends BasePresenter
     /** @var Nette\Database\Context */
     private $database;
 
+    private $checkpoint;
+
     public function __construct(Nette\Database\Context $database)
     {
         $this->database = $database;
@@ -37,7 +39,7 @@ class GamePresenter extends BasePresenter
     {
         parent::render();
         $this->prepareHeading('Šifry');
-
+        $this->checkpoint = $checkpoint;
         $this->template->checkpointCount = $this->database->query('
             SELECT checkpoint_count
             FROM years
@@ -87,5 +89,9 @@ class GamePresenter extends BasePresenter
     {
         parent::render();
         $this->prepareHeading('Reportáže');
+    }
+
+    protected function createComponentDiscussion() {
+        return new \DiscussionControl($this->database, $this->session->getSection('team')->teamId, $this->session->getSection('team')->teamName, \DiscussionControl::CIPHER_THREAD_PREFIX . '_' . $this->selectedYear . '_' . $this->checkpoint);
     }
 }

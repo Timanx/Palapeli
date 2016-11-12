@@ -45,7 +45,7 @@
 						<a class="pdfLink" target="_blank" href="{$basePath}/{$cipherData['pdf_file']}">Stáhnout ve formátu PDF</a>
 					{/if}
 
-					<a class="displaySolution" id="solutionToggle" onclick="displaySolution(this)">
+					<a n:if="$cipherData['solution_description'] || $cipherData['solution'] || isset($cipherData['solution_image'])" class="displaySolution" id="solutionToggle" onclick="displaySolution(this)">
 						Zobrazit řešení
 					</a>
 					<div class="cipherSolution" id="solution" style="display:none;">
@@ -61,5 +61,9 @@
 					</div>
 				</div>
     		{/if}
+    		<h3 class="cipherHeading">
+    			Diskuse k šifře
+    		</h3>
+    		{control discussion, $checkpoint}
     	{/if}
 {/block}

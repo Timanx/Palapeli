@@ -1,50 +1,5 @@
 {block content}
 
-	<div class="discussionFormBlock">
-		{form discussionForm}
-
-		<div class="inlineBlock marginRight">
-            {label name /}<br>
-            {input name}
-		</div>
-		<div class="inlineBlock">
-			{label team /}<br>
-			{input team}
-		</div>
-		<div>
-		{label message /}
-		</div>
-		{input message}
-		<div class="submit">
-		{input submit}
-		</div>
-		{input thread}
-        {/form}
-	</div>
-
-	<div class="discussionData">
-	{foreach $data as $post}
-		<div class="discussionPost">
-			<div class="discussionContent"{if $post->team_id == App\Presenters\BasePresenter::ORG_TEAM_ID} style="border-left-color:{App\Presenters\BasePresenter::GREEN|noescape}"{/if}>
-				<div class="discussionPostHeader">
-					<div class="discussionPostSender">
-						{$post->name|noescape}
-						{if isset($post->team_name)}
-							<span class="discussionPostTeam">
-								&nbsp;({$post->team_name|noescape})
-							</span>
-						{/if}
-					</div>
-					<div class="discussionPostDate">
-						{date('j.&\nb\sp;n.&\nb\sp;Y,&\nb\sp;H:i', strtotime($post->created))|noescape}
-					</div>
-				</div>
-				<div class="discussionPostContent">
-					{$post->message|noescape}
-				</div>
-			</div>
-		</div>
-	{/foreach}
-	</div>
+	{control discussion}
 
 {/block}

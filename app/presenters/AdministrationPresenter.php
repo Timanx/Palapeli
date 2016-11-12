@@ -53,7 +53,7 @@ class AdministrationPresenter extends BasePresenter
     public function renderCiphers($checkpoint = null)
     {
         parent::render();
-        $this->prepareHeading('Šifry');
+        $this->prepareHeading('Vkládání šifer');
         $this->template->checkpoint = $checkpoint;
     }
 
