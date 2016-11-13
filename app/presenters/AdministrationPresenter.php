@@ -356,9 +356,9 @@ class AdministrationPresenter extends BasePresenter
         return $form;
     }
 
-    private function uploadFile(FileUpload $file, $path) {
+    private function uploadFile(FileUpload $file, $path,  $target_name) {
         if($file->getError() == UPLOAD_ERR_OK) {
-            $target_file = $path . basename($file->getName());
+            $target_file = $path . $target_name;
 
             $tmpFile = $file->getTemporaryFile();
 
@@ -366,9 +366,17 @@ class AdministrationPresenter extends BasePresenter
 
             $this->database->beginTransaction();
 
-            $this->database->query('
+            $id = $this->database->query('
+                SELECT id
+                FROM files
+                WHERE path = ? AND name = ?
+            ', $path, $target_name)->fetchField();
+
+            if(!$id) {
+                $this->database->query('
                 INSERT INTO files (path, name) VALUES (?, ?)
-            ', $path, $file->getName());
+            ', $path, $target_name);
+            }
 
             $id = $this->database->getInsertId();
 
@@ -397,9 +405,17 @@ class AdministrationPresenter extends BasePresenter
             mkdir($target_dir);
         }
 
-        $cipher_image_id = $this->uploadFile($values['cipher_image'], $target_dir);
-        $solution_image_id = $this->uploadFile($values['solution_image'], $target_dir);
-        $pdf_file_id = $this->uploadFile($values['pdf_file'], $target_dir);
+        $checkpointString = $checkpoint;
+        if($checkpoint < 10) {
+            $checkpointString = '0' . $checkpoint;
+        }
+
+        $pattern = '~.*(\.[^\.]*)~';
+        $replacement = 's' . $checkpointString . '$1';
+
+        $cipher_image_id = $this->uploadFile($values['cipher_image'], $target_dir, preg_replace($pattern, 'img_' . $replacement, $values['cipher_image']->getName()));
+        $solution_image_id = $this->uploadFile($values['solution_image'], $target_dir, preg_replace($pattern, 'sol_' . $replacement, $values['solution_image']->getName()));
+        $pdf_file_id = $this->uploadFile($values['pdf_file'], $target_dir, preg_replace($pattern, 'pdf_' . $replacement, $values['pdf_file']->getName()));
 
         $this->database->query('
             INSERT INTO ciphers (year, checkpoint_number, name, cipher_description,  solution_description, solution) VALUES

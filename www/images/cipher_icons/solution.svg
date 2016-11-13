@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" xml:space="preserve" width="30px" height="30px" version="1.1" style="shape-rendering:geometricPrecision; text-rendering:geometricPrecision; image-rendering:optimizeQuality; fill-rule:evenodd; clip-rule:evenodd"
+viewBox="0 0 250000 250000"
+ xmlns:xlink="http://www.w3.org/1999/xlink">
+ <g>
+  <rect style="fill: #FFF;" x="93546" y="183427" width="62912" height="10470"/>
+  <polygon style="fill: #FFF;" points="125795,108743 124205,108743 103457,101686 120110,178489 132221,178489 146672,101639 "/>
+  <path style="fill: #FFF;" d="M125005 25000c-36036,0 -65352,29308 -65352,65344 0,18204 3467,31911 21175,48143 10956,10052 11498,21963 11972,32477 118,2639 274,5124 541,7528l21722 0 -17350 -80026 3209 -2855 24080 8193 24080 -8193 3220 2789 -15058 80093 19436 1c126,-1137 256,-2308 385,-3542 1256,-11848 2966,-28069 12111,-36458 13454,-12356 21170,-29903 21170,-48148 1,-36038 -29310,-65346 -65341,-65346z"/>
+  <rect style="fill: #FFF;" x="93546" y="198832" width="62912" height="10465"/>
+  <rect style="fill: #FFF;" x="93546" y="214530" width="62912" height="10470"/>
+ </g>
+</svg>

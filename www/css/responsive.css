@@ -81,6 +81,10 @@
     .updatesTd {
         width: 500px;
     }
+
+    .cipherImage {
+        max-width: calc(50% - 24px);
+    }
 }
 
 @media only screen and (max-width: 940px) {
@@ -166,7 +170,7 @@
         margin: 0;
     }
 
-    .rules, .payment-info, .discussionPost, .teamBlock, .updatesPost, .information, .photos, .resultsTable, .resultsInfo, .resultsHint, .cipherDescription {
+    .rules, .payment-info, .discussionPost, .teamBlock, .updatesPost, .information, .photos, .resultsTable, .resultsInfo, .resultsHint, .cipherDescription, .cipherSubmenu {
         width: 100%;
     }
 
@@ -273,5 +277,15 @@
     .cipherForm textarea {
         width: calc(100% - 10px);
         height: 200px;
+    }
+
+    .cipherImage {
+        max-width: calc(100% - 24px);
+    }
+
+    .cipherSubmenuCell {
+        display: block !important;
+        width: calc(100% - 40px) !important;
+        margin-bottom: 10px;
     }
 }

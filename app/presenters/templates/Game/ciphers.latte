@@ -5,10 +5,10 @@
 
 				if(solution.style.display == 'block') {
 					solution.style.display = 'none';
-					toggle.innerHTML = 'Zobrazit řešení'
+					toggle.innerHTML = 'ŘEŠENÍ'
 				} else {
 					solution.style.display = 'block';
-					toggle.innerHTML = 'Skrýt řešení'
+					toggle.innerHTML = 'SKRÝT ŘEŠENÍ'
 				}
 
 
@@ -19,14 +19,12 @@
 			<div class="flash info">{$selectedYear}. ročník ještě neproběhl a šifry tedy ještě nejsou k dispozici.</div>
     	{else}
     		<div class="ciphersList">
-    			{for $i = 0; $i < $checkpointCount; $i++}
-					<a class="cipherLink" href="{plink Game:ciphers, $i}">{if $i == 0}Start{elseif $i == $checkpointCount - 1}Cíl{else}Šifra {$i}{/if}</a>{if $i != $checkpointCount - 1}&nbsp;|&nbsp;{/if}
-    			{/for}
+    			{for $i = 0; $i < $checkpointCount; $i++}<a class="cipherLink" {if $i == $checkpoint}style="color:white;background-color:{App\Presenters\BasePresenter::GAME_COLOR|noescape};"{/if} href="{plink Game:ciphers, $i}">{if $i == 0}S{elseif $i == $checkpointCount - 1}C{else}{$i}{/if}</a>{if $i != $checkpointCount - 1}<span class="cipherLinkDivider"></span>{/if}{/for}
     		</div>
 
 			{if $checkpoint >= 0 && $checkpoint < $checkpointCount}
 				<h2 class="cipherHeading">
-					{if $checkpoint == 0}Start{elseif $checkpoint == $checkpointCount - 1}Cíl{else}Šifra {$checkpoint}{/if}
+					{if $checkpoint == 0}START{elseif $checkpoint == $checkpointCount - 1}CÍL{else}<span class="cipherNumber">{$checkpoint}</span>. ŠIFRA{if isset($cipherData['name'])}&nbsp;&ndash;&nbsp;{$cipherData['name']|upper}{/if}{/if}
 				</h2>
 			{/if}
     		{if !$cipherData}
@@ -41,18 +39,34 @@
 					{if isset($cipherData['cipher_image'])}
 						<img class="cipherImage" src="{$basePath}/{$cipherData['cipher_image']}" />
 					{/if}
-					{if isset($cipherData['pdf_file'])}
-						<a class="pdfLink" target="_blank" href="{$basePath}/{$cipherData['pdf_file']}">Stáhnout ve formátu PDF</a>
+					{var $submenuItemsCount = 0}
+					{if $cipherData['solution_description'] || $cipherData['solution'] || isset($cipherData['solution_image'])}
+						{var $submenuItemsCount = $submenuItemsCount + 1}
 					{/if}
+					{if isset($showStats)}
+						{var $submenuItemsCount = $submenuItemsCount + 1}
+					{/if}
+					{if isset($cipherData['pdf_file'])}
+						{var $submenuItemsCount = $submenuItemsCount + 1}
+					{/if}
+					{var $calcOffset = (($submenuItemsCount - 1) * 20 + $submenuItemsCount * 40) / $submenuItemsCount}
+					<div class="cipherSubmenu"><!--
 
-					<a n:if="$cipherData['solution_description'] || $cipherData['solution'] || isset($cipherData['solution_image'])" class="displaySolution" id="solutionToggle" onclick="displaySolution(this)">
-						Zobrazit řešení
-					</a>
+							--><div style="width:calc({100/$submenuItemsCount|noescape}% - {$calcOffset|noescape}px); margin-right:20px;" class="cipherSubmenuLink displaySolution cipherSubmenuCell solution" n:if="$cipherData['solution_description'] || $cipherData['solution'] || isset($cipherData['solution_image'])" onclick="displaySolution(this)">
+									ŘEŠENÍ
+							</div><!--
+							--><div style="width:calc({100/$submenuItemsCount|noescape}% - {$calcOffset|noescape}px);{if isset($cipherData['pdf_file'])}margin-right:20px;{/if}" class="cipherSubmenuLink displayStats cipherSubmenuCell stats" n:if="isset($showStats)" onclick="displaySolution(this)">
+									STATISTIKY
+							</div><!--
+							--><div onclick="window.open('{$basePath|noescape}/{$cipherData['pdf_file']|noescape}')" style="width:calc({100/$submenuItemsCount|noescape}% - {$calcOffset|noescape}px)" n:if="isset($cipherData['pdf_file'])" class="cipherSubmenuCell download">
+									PDF
+							</div><!--
+					--></div>
 					<div class="cipherSolution" id="solution" style="display:none;">
 						<div n:if="$cipherData['solution_description']" class="cipherDescription">
 							{$cipherData['solution_description']|noescape}
 						</div>
-						<div class="bold" n:if="$cipherData['solution']" class="cipherDescription">
+						<div class="solution" n:if="$cipherData['solution']" class="cipherDescription">
 							Řešení: {$cipherData['solution']|noescape}
 						</div>
 						{if isset($cipherData['solution_image'])}
@@ -61,9 +75,9 @@
 					</div>
 				</div>
     		{/if}
-    		<h3 class="cipherHeading">
-    			Diskuse k šifře
-    		</h3>
+    		<h2 class="cipherHeading">
+    			DISKUSE K ŠIFŘE
+    		</h2>
     		{control discussion, $checkpoint}
     	{/if}
 {/block}

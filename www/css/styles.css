@@ -319,7 +319,8 @@ input[type="button"] {
 }
 
 input[type="submit"]:hover, input[type="button"]:hover {
-    background-color: #327BD9;
+    background-color: #327BD9 !important;
+    color: white !important;
 }
 
 form label {
@@ -663,36 +664,94 @@ input[type="time"] {
 .ciphersList {
     text-align: center;
     padding-bottom: 10px;
-    border-bottom: 2px solid #69B300;
     margin-bottom: 20px;
 }
 
 .cipherLink {
+    width: 30px;
+    height: 30px;
+    display: inline-block;
+    border: 2px solid #69B300;
+    -webkit-border-radius: 15px;
+    -moz-border-radius: 15px;
+    border-radius: 17px;
+    font-size: 16pt;
+}
 
+.cipherLink:hover {
+    background-color:  #69B300;
+    color: white !important;
+}
+
+.cipherLinkDivider {
+    display: inline-block;
+    height: 2px;
+    width: 20px;
+    background-color: #69B300;
+    position: relative;
+    top: -5px;
 }
 
 img.cipherImage {
     display: block;
     margin: auto auto 20px auto;
-    max-width: 100%;
     height: auto;
+    border: 2px solid #69B300;
+    padding: 10px;
 }
 
 .cipherHeading {
     text-align: center;
+    font-family: 'Raleway', sans-serif;
 }
 
 .cipherContainer {
     text-align: center;
+    margin-bottom: 60px;
 }
 
 .displaySolution {
-    margin-top: 20px;
-    display: block;
 }
 
 .cipherDescription {
     width: 50%;
     text-align: justify;
     margin: auto;
+}
+
+.pdfLink {
+    margin-bottom: 20px;
+}
+
+.cipherDiscussionHeading {
+    text-align: center;
+    font-weight: bold;
+    font-size: 120%;
+    margin-bottom: 20px;
+}
+
+.cipherSubmenu {
+    width: 50%;
+    margin: auto;
+    border-spacing: 0px;
+}
+
+.cipherSubmenuCell {
+    padding: 10px 5px 10px 35px;
+    font-weight: 700;
+    font-family: 'Raleway', sans-serif;
+    cursor: pointer;
+    display: inline-block;
+    color: white;
+    background: #69B300 no-repeat 4px;
+}
+
+.cipherSubmenuCell:hover {
+    background-color: #a1de4b;
+}
+
+.cipherNumber {
+    font-family: 'Source Sans Pro', sans-serif;
+    font-size: 21pt;
+    font-weight: 600;
 }
