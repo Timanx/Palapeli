@@ -55,6 +55,64 @@ class GamePresenter extends BasePresenter
             WHERE year = ? AND checkpoint_number = ?
         ', $this->selectedYear, $checkpoint)->fetch();
 
+        $this->template->fastestSolution = $this->database->query('
+            SELECT (results.exit_time - results.entry_time) / 100 AS time, GROUP_CONCAT(teams.name SEPARATOR \', \') AS name
+            FROM results
+            LEFT JOIN teams ON results.team_id = teams.id
+            WHERE checkpoint_number = ? AND year = ? AND results.exit_time IS NOT NULL  AND results.entry_time IS NOT NULL AND (results.exit_time - results.entry_time) = (SELECT MIN(results.exit_time - results.entry_time) FROM results WHERE checkpoint_number = ? AND year = ?)
+            GROUP BY time
+        ', $checkpoint, $this->selectedYear, $checkpoint, $this->selectedYear)->fetch();
+
+        $this->template->teamsTotal = $this->database->query('
+            SELECT COUNT(team_id) AS teams_total
+            FROM teamsyear
+            WHERE year = ?
+        ', $this->selectedYear)->fetchField('teams_total');
+
+        $this->template->teamsFilled = $this->database->query('
+            SELECT SUM(CASE WHEN team_filled > 0 THEN 1 ELSE 0 END) AS teams_filled FROM (
+
+            SELECT teams.id, (CASE WHEN (MAX(results.exit_time) IS NOT NULL AND MAX(results.exit_time) != \'00:00\' || EXISTS (SELECT 1 FROM results r WHERE r.year = teamsyear.year AND r.team_id = teams.id AND r.used_hint IS NOT NULL)) THEN 1 ELSE 0 END) AS team_filled
+            FROM teams
+              LEFT JOIN teamsyear ON teams.id = teamsyear.team_id
+              LEFT JOIN results ON results.year = ? AND teams.id = results.team_id AND results.year = ?
+            WHERE teamsyear.year = ?
+              GROUP BY teams.id
+            ) t
+        ', $this->selectedYear, $checkpoint, $this->selectedYear)->fetchField('teams_filled');
+
+        $this->template->teamsArrived = $this->database->query('
+            SELECT COUNT(results.team_id) AS teams_arrived
+            FROM results
+            WHERE checkpoint_number = ? AND year = ? AND results.entry_time IS NOT NULL
+        ', $checkpoint, $this->selectedYear)->fetchField('teams_arrived');
+
+        $this->template->usedHints = $this->database->query('
+            SELECT SUM(results.used_hint) AS used_hints
+            FROM results
+            WHERE checkpoint_number = ? AND year = ?
+        ', $checkpoint, $this->selectedYear)->fetchField('used_hints');
+
+
+
+        $this->template->teamsContinued = $this->database->query('
+            SELECT COUNT(DISTINCT results.team_id) AS teams_continued
+            FROM results
+            WHERE checkpoint_number > ? AND year = ?
+        ', $checkpoint, $this->selectedYear)->fetchField('teams_continued');
+
+        $this->template->teamsEnded = max($this->template->teamsArrived - $this->template->teamsContinued, 0); //max is in case when some teams do not have entry_time for given checkpoint
+
+        $this->template->usedHintsPercentage = ($this->template->teamsContinued > 0 ? ($this->template->usedHints / $this->template->teamsContinued) * 100 : 0);
+        $this->template->teamsEndedPercentage = ($this->template->teamsArrived > 0 ? ($this->template->teamsEnded / $this->template->teamsArrived) * 100 : 0);
+        $this->template->teamsArrivedPercentage = ($this->template->teamsTotal > 0 ? ($this->template->teamsArrived / $this->template->teamsTotal) * 100 : 100);
+
+        $this->template->missingData = $this->template->teamsArrived - $this->template->teamsFilled;
+
+
+
+
+
         $this->template->cipherData = $data;
 
         $this->template->checkpoint = $checkpoint;

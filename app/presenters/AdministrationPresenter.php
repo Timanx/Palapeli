@@ -95,7 +95,7 @@ class AdministrationPresenter extends BasePresenter
         $teamId = (isset($_GET['team']) ? $_GET['team'] : null);
         $this->getYearData();
         $teams = $this->database->query('
-            SELECT name, teams.id, (MAX(results.exit_time) IS NOT NULL AND MAX(results.exit_time) != \'00:00\' || EXISTS(SELECT 1 FROM results r WHERE r.year = teamsyear.year AND r.team_id = teams.id AND r.used_hint IS NOT NULL)) AS team_filled
+            SELECT name, teams.id, (MAX(results.exit_time) IS NOT NULL AND MAX(results.exit_time) != \'00:00\' || EXISTS (SELECT 1 FROM results r WHERE r.year = teamsyear.year AND r.team_id = teams.id AND r.used_hint IS NOT NULL)) AS team_filled
             FROM teams
             LEFT JOIN teamsyear ON teams.id = teamsyear.team_id
             LEFT JOIN results ON results.year = ? AND teams.id = results.team_id
@@ -206,8 +206,8 @@ class AdministrationPresenter extends BasePresenter
             ', $this->selectedYear)->fetch()->checkpoint_count;
 
         $options = [];
-        for ($i = 1; $i <= $checkpointCount; $i++){
-            $options[$i] = ($i == $checkpointCount - 1 ? 'Příchod do cíle' : ($i == $checkpointCount ? 'Vyřešení cílového hesla' : $i . '. stanoviště'));
+        for ($i = 0; $i <= $checkpointCount; $i++){
+            $options[$i] = ($i == $checkpointCount - 1 ? 'Příchod do cíle' : ($i == $checkpointCount ? 'Vyřešení cílového hesla' : ($i == 0 ? 'Start' : $i . '. stanoviště')));
         }
 
         $form = new UI\Form;
@@ -375,10 +375,11 @@ class AdministrationPresenter extends BasePresenter
             if(!$id) {
                 $this->database->query('
                 INSERT INTO files (path, name) VALUES (?, ?)
-            ', $path, $target_name);
-            }
+                ', $path, $target_name
+                );
 
-            $id = $this->database->getInsertId();
+                $id = $this->database->getInsertId();
+            }
 
             $this->database->commit();
 

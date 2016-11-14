@@ -694,7 +694,7 @@ input[type="time"] {
 
 img.cipherImage {
     display: block;
-    margin: auto auto 20px auto;
+    margin: 20px auto;
     height: auto;
     border: 2px solid #69B300;
     padding: 10px;
@@ -714,6 +714,13 @@ img.cipherImage {
 }
 
 .cipherDescription {
+    width: 50%;
+    text-align: justify;
+    margin: auto;
+    margin-bottom: 20px;
+}
+
+.cipherSolution, .cipherStats {
     width: 50%;
     text-align: justify;
     margin: auto;
@@ -754,4 +761,10 @@ img.cipherImage {
     font-family: 'Source Sans Pro', sans-serif;
     font-size: 21pt;
     font-weight: 600;
+}
+
+.statsExplanation {
+    font-style: italic;
+    margin-bottom: 0;
+    margin-top: 10px;
 }
