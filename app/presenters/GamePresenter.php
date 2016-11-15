@@ -96,11 +96,15 @@ class GamePresenter extends BasePresenter
             WHERE checkpoint_number > ? AND year = ? AND results.entry_time IS NOT NULL
         ', $checkpoint, $this->selectedYear)->fetchAssoc('teams_continued'));
 
-        $this->template->usedHints = $this->database->query('
+        if(count($teamsContinued) > 0) {
+            $this->template->usedHints = $this->database->query('
             SELECT SUM(results.used_hint) AS used_hints
             FROM results
             WHERE checkpoint_number = ? AND year = ? AND results.team_id IN (?)
         ', $checkpoint, $this->selectedYear, $teamsContinued)->fetchField('used_hints');
+        } else {
+            $this->template->usedHints = 0;
+        }
 
 
 
