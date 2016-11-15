@@ -20,5 +20,15 @@
 				<p class="menuText{if $presenter->isLinkCurrent('Administration:ciphers')} selected{/if}">Šifry</p>
 			</div>
 		</a>
+		<a href="{plink Administration:discussion}">
+			<div class="menuItemContainer">
+				<p class="menuText{if $presenter->isLinkCurrent('Administration:discussion')} selected{/if}">Diskuse (vše)</p>
+			</div>
+		</a>
+		<a href="{plink Administration:chat}">
+			<div class="menuItemContainer">
+				<p class="menuText{if $presenter->isLinkCurrent('Administration:chat')} selected{/if}">Org chat</p>
+			</div>
+		</a>
 	</div>
 </div>

@@ -74,6 +74,25 @@ class AdministrationPresenter extends BasePresenter
         $this->template->checkpoint = $checkpoint;
     }
 
+    public function renderDiscussion()
+    {
+        parent::render();
+        $this->prepareHeading('Kompletní diskuse');
+    }
+
+    public function renderChat()
+    {
+        parent::render();
+        $this->prepareHeading('Organizátorský chat');
+    }
+
+    protected function createComponentDiscussion() {
+        return new \DiscussionControl($this->database, $this->session->getSection('team')->teamId, $this->session->getSection('team')->teamName, \DiscussionControl::ANY_THREAD);
+    }
+
+    protected function createComponentChat() {
+        return new \DiscussionControl($this->database, $this->session->getSection('team')->teamId, $this->session->getSection('team')->teamName, \DiscussionControl::CHAT_THREAD);
+    }
 
     public function createComponentNewUpdateForm()
     {

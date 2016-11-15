@@ -15,6 +15,12 @@
 	{label message /}
 	</div>
 	{input message}
+	{if $isMasterDiscussion}
+		<div>
+		{label masterThread /}
+		</div>
+		{input masterThread}
+	{/if}
 	<div class="submit">
 	{input submit}
 	</div>
@@ -36,7 +42,7 @@
 					{/if}
 				</div>
 				<div class="discussionPostDate">
-					{date('j.&\nb\sp;n.&\nb\sp;Y,&\nb\sp;H:i', strtotime($post->created))|noescape}
+					{date('j.&\nb\sp;n.&\nb\sp;Y,&\nb\sp;H:i', strtotime($post->created))|noescape}{if $isMasterDiscussion}, <strong>{$post->thread}</strong>{/if}
 				</div>
 			</div>
 			<div class="discussionPostContent">
