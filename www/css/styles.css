@@ -722,7 +722,7 @@ img.cipherImage {
 
 .cipherSolution, .cipherStats {
     width: 50%;
-    text-align: justify;
+    text-align: left;
     margin: auto;
 }
 

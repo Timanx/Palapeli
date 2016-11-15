@@ -102,7 +102,7 @@
 						<div>
 							<span class="statName">Dorazilo týmů:</span>&nbsp;<span class="statData">{$teamsArrived} z&nbsp;{$teamsTotal} ({$teamsArrivedPercentage|number:0}&thinsp;%)</span><br>
 							<span class="statName">Skončilo týmů:</span>&nbsp;<span class="statData">{$teamsEnded} z&nbsp;{$teamsArrived} ({$teamsEndedPercentage|number:0}&thinsp;%)</span><br>
-							<span class="statName">Použito totálek:</span>&nbsp;<span class="statData">{$usedHints} z&nbsp;{$teamsContinued} ({$usedHintsPercentage|number:0}&thinsp;%)</span><br>
+							<span class="statName">Použito totálek:</span>&nbsp;<span class="statData">{$usedHints} z&nbsp;{$teamsFilledContinued} ({$usedHintsPercentage|number:0}&thinsp;%)</span><br>
 							<span class="statName">Nejrychlejší vyluštění:</span>&nbsp;<span class="statData">{$fastestSolution->name}&nbsp;({$fastestSolution->time}&nbsp;minut)</span><br>
 							{if $missingData > 0}<p class="statsExplanation">Data nejsou úplná, chybí údaje od {$missingData} tým{if $missingData == 1}u{else}ů{/if}.</p>{/if}
 

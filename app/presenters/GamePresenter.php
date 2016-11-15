@@ -69,8 +69,8 @@ class GamePresenter extends BasePresenter
             WHERE year = ?
         ', $this->selectedYear)->fetchField('teams_total');
 
-        $this->template->teamsFilled = $this->database->query('
-            SELECT SUM(CASE WHEN team_filled > 0 THEN 1 ELSE 0 END) AS teams_filled FROM (
+        $teamsFilled = array_keys($this->database->query('
+            SELECT id FROM (
 
             SELECT teams.id, (CASE WHEN (MAX(results.exit_time) IS NOT NULL AND MAX(results.exit_time) != \'00:00\' || EXISTS (SELECT 1 FROM results r WHERE r.year = teamsyear.year AND r.team_id = teams.id AND r.used_hint IS NOT NULL)) THEN 1 ELSE 0 END) AS team_filled
             FROM teams
@@ -79,7 +79,10 @@ class GamePresenter extends BasePresenter
             WHERE teamsyear.year = ?
               GROUP BY teams.id
             ) t
-        ', $this->selectedYear, $checkpoint, $this->selectedYear)->fetchField('teams_filled');
+            WHERE team_filled
+        ', $this->selectedYear, $checkpoint, $this->selectedYear)->fetchAssoc('id'));
+
+        $this->template->teamsFilled = count($teamsFilled);
 
         $this->template->teamsArrived = $this->database->query('
             SELECT COUNT(DISTINCT results.team_id) AS teams_arrived
@@ -87,27 +90,27 @@ class GamePresenter extends BasePresenter
             WHERE checkpoint_number >= ? AND year = ? AND results.entry_time IS NOT NULL
         ', $checkpoint, $this->selectedYear)->fetchField('teams_arrived');
 
+        $teamsContinued = array_keys($this->database->query('
+            SELECT DISTINCT (results.team_id) AS teams_continued
+            FROM results
+            WHERE checkpoint_number > ? AND year = ? AND results.entry_time IS NOT NULL
+        ', $checkpoint, $this->selectedYear)->fetchAssoc('teams_continued'));
+
         $this->template->usedHints = $this->database->query('
             SELECT SUM(results.used_hint) AS used_hints
             FROM results
-            WHERE checkpoint_number = ? AND year = ?
-        ', $checkpoint, $this->selectedYear)->fetchField('used_hints');
+            WHERE checkpoint_number = ? AND year = ? AND results.team_id IN (?)
+        ', $checkpoint, $this->selectedYear, $teamsContinued)->fetchField('used_hints');
 
-        $this->template->teamsContinued = $this->database->query('
-            SELECT COUNT(DISTINCT results.team_id) AS teams_continued
-            FROM results
-            WHERE checkpoint_number > ? AND year = ? AND results.entry_time IS NOT NULL
-        ', $checkpoint, $this->selectedYear)->fetchField('teams_continued');
 
-        $this->template->teamsContinuedFilled = $this->database->query('
-            SELECT COUNT(DISTINCT results.team_id) AS teams_continued
-            FROM results
-            WHERE checkpoint_number > ? AND year = ? AND results.entry_time IS NOT NULL AND (MAX(results.exit_time) IS NOT NULL AND MAX(results.exit_time) != \'00:00\' || EXISTS (SELECT 1 FROM results r WHERE r.year = teamsyear.year AND r.team_id = teams.id AND r.used_hint IS NOT NULL))
-        ', $checkpoint, $this->selectedYear)->fetchField('teams_continued');
+
+        $this->template->teamsContinued = count($teamsContinued);
+
+        $this->template->teamsFilledContinued = count(array_intersect($teamsFilled, $teamsContinued));
 
         $this->template->teamsEnded = $this->template->teamsArrived - $this->template->teamsContinued;
 
-        $this->template->usedHintsPercentage = ($this->template->teamsContinued > 0 ? ($this->template->usedHints / $this->template->teamsContinued) * 100 : 0);
+        $this->template->usedHintsPercentage = ($this->template->teamsFilledContinued > 0 ? ($this->template->usedHints / $this->template->teamsFilledContinued) * 100 : 0);
         $this->template->teamsEndedPercentage = ($this->template->teamsArrived > 0 ? ($this->template->teamsEnded / $this->template->teamsArrived) * 100 : 0);
         $this->template->teamsArrivedPercentage = ($this->template->teamsTotal > 0 ? ($this->template->teamsArrived / $this->template->teamsTotal) * 100 : 100);
 

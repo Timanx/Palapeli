@@ -170,7 +170,7 @@
         margin: 0;
     }
 
-    .rules, .payment-info, .discussionPost, .teamBlock, .updatesPost, .information, .photos, .resultsTable, .resultsInfo, .resultsHint, .cipherDescription, .cipherSubmenu {
+    .rules, .payment-info, .discussionPost, .teamBlock, .updatesPost, .information, .photos, .resultsTable, .resultsInfo, .resultsHint, .cipherDescription, .cipherSubmenu, .cipherSolution, .cipherStats {
         width: 100%;
     }
 
