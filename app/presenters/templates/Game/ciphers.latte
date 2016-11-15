@@ -41,7 +41,7 @@
 
 			{if $checkpoint >= 0 && $checkpoint < $checkpointCount}
 				<h2 class="cipherHeading">
-					{if $checkpoint == 0}START{elseif $checkpoint == $checkpointCount - 1}CÍL{else}<span class="cipherNumber">{$checkpoint}</span>. ŠIFRA{if isset($cipherData['name'])}&nbsp;&ndash;&nbsp;{$cipherData['name']|upper}{/if}{/if}
+					{if $checkpoint == 0}START{elseif $checkpoint == $checkpointCount - 1}CÍL{else}<span class="cipherNumber">{$checkpoint}</span>. ŠIFRA{if isset($cipherData['name']) && strlen($cipherData['name']) > 0}&nbsp;&ndash;&nbsp;{$cipherData['name']|upper}{/if}{/if}
 				</h2>
 			{/if}
     		{if !$cipherData && $teamsFilled == 0}
@@ -105,7 +105,6 @@
 							<span class="statName">Použito totálek:</span>&nbsp;<span class="statData">{$usedHints} z&nbsp;{$teamsContinued} ({$usedHintsPercentage|number:0}&thinsp;%)</span><br>
 							<span class="statName">Nejrychlejší vyluštění:</span>&nbsp;<span class="statData">{$fastestSolution->name}&nbsp;({$fastestSolution->time}&nbsp;minut)</span><br>
 							{if $missingData > 0}<p class="statsExplanation">Data nejsou úplná, chybí údaje od {$missingData} tým{if $missingData == 1}u{else}ů{/if}.</p>{/if}
-							{if $teamsArrived != $teamsEnded + $teamsContinued}<p class="statsExplanation">Nesedí celkový počet týmů u skončivších týmů a použitých totálek, pravděpodobně z toho důvodu, že u některého týmu není zadaný čas příchodu na stanoviště.</p>{/if}
 
 						</div>
 					</div>

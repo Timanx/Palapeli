@@ -29,6 +29,8 @@ class BasePresenter extends Nette\Application\UI\Presenter
     const GAME_END = self::GAME_START + 10 * 60 * 60 ; //28. 1. 2017 19:00
     const ENTRY_FEE_ACCOUNT = '237977821/0300';
 
+    const SHOW_TESTER_NOTIFICATION = true;
+
     const BLUE = '#005BD0';
     const RED = '#FF0000';
     const YELLOW = '#FFCA05';
@@ -83,6 +85,7 @@ class BasePresenter extends Nette\Application\UI\Presenter
         $this->template->isRegistrationOpen = $this->isRegistrationOpen($now);
         $this->template->hasGameStarted = $this->hasGameStarted($now);
         $this->template->hasGameEnded = $this->hasGameEnded($now);
+        $this->template->showTesterNotification = self::SHOW_TESTER_NOTIFICATION;
     }
 
     public function getYearData() {

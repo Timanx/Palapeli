@@ -33,6 +33,10 @@ class AdministrationPresenter extends BasePresenter
             WHERE year = ?
         ', $this->selectedYear)->fetch()->checkpoint_count;
 
+        $this->template->teamName = $this->database->query('
+            SELECT name FROM teams WHERE id = ?
+        ', $team)->fetchField('name');
+
         $this->template->team = $team;
     }
 
@@ -47,6 +51,12 @@ class AdministrationPresenter extends BasePresenter
             WHERE year = ?
         ', $this->selectedYear)->fetch()->teams_count;
 
+        $this->template->checkpointCount = $this->database->query('
+                SELECT checkpoint_count
+                FROM years
+                WHERE year = ?
+            ', $this->selectedYear)->fetch()->checkpoint_count;
+
         $this->template->checkpoint = $checkpoint;
     }
 
@@ -54,6 +64,13 @@ class AdministrationPresenter extends BasePresenter
     {
         parent::render();
         $this->prepareHeading('Vkládání šifer');
+
+        $this->template->checkpointCount = $this->database->query('
+                SELECT checkpoint_count
+                FROM years
+                WHERE year = ?
+            ', $this->selectedYear)->fetch()->checkpoint_count;
+
         $this->template->checkpoint = $checkpoint;
     }
 
@@ -111,9 +128,6 @@ class AdministrationPresenter extends BasePresenter
 
         $form = new UI\Form;
         $select = $form->addSelect('teams', null, $options, 1)->setPrompt('Vyberte tým')->setAttribute('onchange', 'this.form.submit()');
-        if(isset($teamId)) {
-            $select->setDefaultValue($teamId);
-        }
         $form->onSuccess[] = [$this, 'teamSelected'];
         return $form;
     }
@@ -210,17 +224,19 @@ class AdministrationPresenter extends BasePresenter
             $options[$i] = ($i == $checkpointCount - 1 ? 'Příchod do cíle' : ($i == $checkpointCount ? 'Vyřešení cílového hesla' : ($i == 0 ? 'Start' : $i . '. stanoviště')));
         }
 
+        array_unshift($options, 'Vyberte stanoviště');
+
         $form = new UI\Form;
 
-        $form->addCheckbox('previous', 'Řadit týmy podle příchodu na předchozí stanoviště')->setAttribute('onchange', 'this.form.submit()')->setDefaultValue($checked);
-        $form->addSelect('checkpoint', 'Vyberte stanoviště:', $options, 1)->setAttribute('onchange', 'this.form.submit()')->setDefaultValue($checkpoint);
+        $form->addCheckbox('previous', 'Řadit týmy podle příchodu na předchozí stanoviště')->setAttribute('onchange', 'this.form.submit()');
+        $form->addSelect('checkpoint', '', $options, 1)->setAttribute('onchange', 'this.form.submit()');
         $form->onSuccess[] = [$this, 'checkpointSelected'];
         return $form;
     }
 
     public function checkpointSelected(UI\Form $form, array $values)
     {
-        $this->redirect('this', ['checkpoint' => $values['checkpoint'], 'previous' => $values['previous']]);
+        $this->redirect('this', ['checkpoint' => ($values['checkpoint'] == 0 ? 0 : $values['checkpoint'] - 1), 'previous' => $values['previous']]);
     }
 
     public function createComponentSelectOnlyCheckpointForm()
@@ -238,16 +254,18 @@ class AdministrationPresenter extends BasePresenter
         for ($i = 0; $i < $checkpointCount; $i++){
             $options[$i] = ($i == $checkpointCount - 1 ? 'Cíl' : ($i == 0 ? 'Start' : $i . '. stanoviště'));
         }
+        array_unshift($options, 'Vyberte stanoviště');
+
 
         $form = new UI\Form;
-        $form->addSelect('checkpoint', 'Vyberte stanoviště:', $options, 1)->setAttribute('onchange', 'this.form.submit()')->setDefaultValue($checkpoint);
+        $form->addSelect('checkpoint', '', $options, 1)->setAttribute('onchange', 'this.form.submit()');
         $form->onSuccess[] = [$this, 'onlyCheckpointSelected'];
         return $form;
     }
 
     public function onlyCheckpointSelected(UI\Form $form, array $values)
     {
-        $this->redirect('this', ['checkpoint' => $values['checkpoint']]);
+        $this->redirect('this', ['checkpoint' => ($values['checkpoint'] == 0 ? 0 : $values['checkpoint'] - 1)]);
     }
 
     public function createComponentCheckpointCardForm()

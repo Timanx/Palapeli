@@ -700,7 +700,7 @@ img.cipherImage {
     padding: 10px;
 }
 
-.cipherHeading {
+.cipherHeading, .heading {
     text-align: center;
     font-family: 'Raleway', sans-serif;
 }

@@ -16,7 +16,9 @@
 				form.submit();
 			}
 		</script>
-
+		{if isset($checkpoint)}
+			<h2 class="heading">{if $checkpoint == 0}START{elseif $checkpoint == $checkpointCount}VYŘEŠENÍ CÍLOVÉHO HESLA{elseif $checkpoint == $checkpointCount - 1}PŘÍCHOD DO CÍLE{else}STANOVIŠTĚ {$checkpoint}{/if}</h2>
+		{/if}
 		{form checkpointCardForm}
 			<table class="card">
 				{for $i = 0; $i < $teamsCount; $i++}
