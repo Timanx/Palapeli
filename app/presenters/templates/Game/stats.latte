@@ -1,0 +1,111 @@
+{block content}
+{if $isSelectedYearCurrent && !$hasGameEnded}
+	<div class="flash info">
+		Hra ještě neproběhla a tedy nejsou k dispozici žádné statistiky.
+	</div>
+{else}
+
+	<h2 class="cipherHeading">
+		OBTÍŽNOST ŠIFER
+	</h2>
+	<p class="information">
+	Graf zobrazuje kolik týmů vyluštilo kterou šifru, kolik týmů na nich bralo totálky a kde kolik týmů skončilo.
+	</p>
+	<div class="chart">
+		<svg class="svgChart">
+			{var $height = 200}
+			{var $topOffset = 30}
+			{var $leftSpace = 7}
+			{for $j = 0; $j <= $teamsTotalCount; $j = $j + 10}
+				{var $tmpHeight = $height + $topOffset + 1 - ($height/$teamsTotalCount)*$j}
+				<text text-anchor="end" x="{$leftSpace - 1}%" y="{$tmpHeight + 4|noescape}">
+					{$j}
+				</text>
+				<line x1="{$leftSpace}%" y1="{$tmpHeight|noescape}" x2="100%" y2="{$tmpHeight|noescape}" class="secondaryLine"/>
+			{/for}
+
+			<line x1="{$leftSpace}%" y1="{$topOffset - 10}" x2="{$leftSpace}%" y2="{$height + $topOffset + 4}" class="line"/>
+			<line x1="{$leftSpace}%" y1="{$height + $topOffset + 2}" x2="100%" y2="{$height + $topOffset + 2}" class="line"/>
+
+			<svg x="{$leftSpace}%" y="{$topOffset}" width="{98 - $leftSpace}%">
+			{for $i = 0; $i < $checkpointCount; $i++}
+				{if isset($cipherData[$i])}
+
+					{var $width = (100 / $checkpointCount)/2}
+					{var $x = (100 / $checkpointCount) * $i + $width}
+					{var $solved = $cipherData[$i]['solved']}
+					{var $hint = $cipherData[$i]['hint']}
+					{var $dead = $cipherData[$i]['dead']}
+					{var $nodata = $cipherData[$i]['no-data']}
+
+
+					{var $sHeight = ($cipherData[$i]['solved'] / $teamsTotalCount) * $height}
+					{var $hHeight = ($cipherData[$i]['hint'] / $teamsTotalCount) * $height}
+					{var $dHeight = ($cipherData[$i]['dead'] / $teamsTotalCount) * $height}
+					{var $nHeight = ($cipherData[$i]['no-data'] / $teamsTotalCount) * $height}
+
+					<text text-anchor="middle" x="{$x + $width/2	|noescape}%" y="{$height + $topOffset - 10}">
+						{if $i == 0}S{elseif $i == $checkpointCount - 1}C{else}{$i}{/if}
+					</text>
+
+					<rect
+						class="solved"
+						height="{$sHeight|noescape}"
+						y="{$height - $sHeight|noescape}"
+						x="{$x|noescape}%"
+						style="width:{$width|noescape}%">
+						<title>{if $solved == 1}Vyřešil 1 tým{elseif $solved < 5 && $solved != 0}Vyřešily {$solved} týmy{else}Vyřešilo {$solved} týmů{/if}.</title>
+					</rect>
+					<rect
+						class="hint"
+						height="{$hHeight|noescape}"
+						y="{$height - $sHeight - $hHeight|noescape}"
+						x="{$x|noescape}%"
+						style="width:{$width|noescape}%">
+						<title>{if $hint == 1}Nápovědu použil 1 tým{elseif $hint < 5 && $hint != 0}Nápovědu použily {$hint} týmy{else}Nápovědu použilo {$hint} týmů{/if}.</title>
+					</rect>
+					<rect
+						class="dead"
+						height="{$dHeight|noescape}"
+						y="{$height - $sHeight - $hHeight - $dHeight|noescape}"
+						x="{$x|noescape}%"
+						style="width:{$width|noescape}%">
+						<title>{if $dead == 1}Skončil 1 tým{elseif $dead < 5 && $dead != 0}Skončily {$dead} týmy{else}Skončilo {$dead} týmů{/if}.</title>
+					</rect>
+					<rect
+						class="no-data"
+						height="{$nHeight|noescape}"
+						y="{$height - $sHeight - $hHeight - $dHeight - $nHeight|noescape}"
+						x="{$x|noescape}%"
+						style="width:{$width|noescape}%">
+						<title>{if $nodata == 1}Chybí data od 1 týmu{else}Chybí data od {$nodata} týmů{/if}.</title>
+					</rect>
+				{/if}
+			{/for}
+
+			{var $textX = 35}
+			{var $rectX = 30}
+			<rect  class="legend solved" y="240" x="{$rectX}%"/>
+			<text text-anchor="left" x="{$textX}%" y="255">
+								Týmy, které šifru vyluštily
+							</text>
+			<rect  class="legend hint" y="270" x="{$rectX}%" />
+					<text text-anchor="left" x="{$textX}%" y="285">
+										Týmy, které braly nápovědu
+									</text>
+			<rect  class="legend dead" y="300" x="{$rectX}%" />
+					<text text-anchor="left" x="{$textX}%" y="315">
+										Týmy, které na daném stanovišti skončily
+									</text>
+			<rect  class="legend no-data" y="330" x="{$rectX}%" />
+					<text text-anchor="left" x="{$textX}%" y="345">
+										Týmy, od kterých chybí data
+									</text>
+
+
+			</svg>
+		</svg>
+	</div>
+
+{/if}
+{/block}

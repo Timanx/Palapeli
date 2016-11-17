@@ -63,11 +63,7 @@ class GamePresenter extends BasePresenter
             GROUP BY time
         ', $checkpoint, $this->selectedYear, $checkpoint, $this->selectedYear)->fetch();
 
-        $this->template->teamsTotal = $this->database->query('
-            SELECT COUNT(team_id) AS teams_total
-            FROM teamsyear
-            WHERE year = ?
-        ', $this->selectedYear)->fetchField('teams_total');
+        $this->template->teamsTotal = $this->getTeamsTotalCount($this->selectedYear);
 
         $teamsFilled = array_keys($this->database->query('
             SELECT id FROM (
@@ -84,11 +80,7 @@ class GamePresenter extends BasePresenter
 
         $this->template->teamsFilled = count($teamsFilled);
 
-        $this->template->teamsArrived = $this->database->query('
-            SELECT COUNT(DISTINCT results.team_id) AS teams_arrived
-            FROM results
-            WHERE checkpoint_number >= ? AND year = ? AND results.entry_time IS NOT NULL
-        ', $checkpoint, $this->selectedYear)->fetchField('teams_arrived');
+        $this->template->teamsArrived = $this->getTeamsArrivedCount($this->selectedYear, $checkpoint);
 
         $teamsContinued = array_keys($this->database->query('
             SELECT DISTINCT (results.team_id) AS teams_continued
@@ -160,7 +152,75 @@ class GamePresenter extends BasePresenter
         $this->prepareHeading('Reportáže');
     }
 
+    public function renderStats()
+    {
+        parent::render();
+        $this->prepareHeading('Statistiky');
+
+        $teamsTotalCount = $this->getTeamsTotalCount($this->selectedYear);
+
+        $checkpointCount = $this->database->query('
+            SELECT checkpoint_count
+            FROM years
+            WHERE year = ?
+        ', $this->selectedYear)->fetchField('checkpoint_count');
+
+        $data = $this->database->query('
+            SELECT team_id, used_hint, entry_time, used_hint IS NOT NULL AS filled, checkpoint_number, EXISTS(SELECT 1 FROM results r WHERE r.team_id = results.team_id AND r.year = results.year AND r.checkpoint_number > results.checkpoint_number) AS continued
+            FROM results
+            WHERE year = ?
+        ', $this->selectedYear)->fetchAll();
+
+
+        $cipherData = [];
+
+        foreach($data as $row) {
+            if(!isset($cipherData[$row->checkpoint_number])) {
+                $cipherData[$row->checkpoint_number] = ['dead' => 0, 'hint' => 0, 'solved' => 0, 'no-data' => 0];
+            }
+            if($row->filled) {
+                if(!$row->continued) {
+                    $cipherData[$row->checkpoint_number]['dead']++;
+                } elseif ($row->used_hint) {
+                    $cipherData[$row->checkpoint_number]['hint']++;
+                } else {
+                    $cipherData[$row->checkpoint_number]['solved']++;
+                }
+            } else {
+                $cipherData[$row->checkpoint_number]['no-data']++;
+            }
+        }
+
+        for($i = 0; $i < count($cipherData) - 1; $i++) {
+            $nextSum = array_sum($cipherData[$i + 1]);
+            $thisSum = array_sum($cipherData[$i]);
+            if($nextSum > $thisSum) {
+                $cipherData[$i]['no-data'] += $nextSum - $thisSum;
+            }
+        }
+
+        $this->template->cipherData = $cipherData;
+        $this->template->teamsTotalCount = $teamsTotalCount;
+        $this->template->checkpointCount = $checkpointCount;
+    }
+
     protected function createComponentDiscussion() {
         return new \DiscussionControl($this->database, $this->session->getSection('team')->teamId, $this->session->getSection('team')->teamName, \DiscussionControl::CIPHER_THREAD_PREFIX . '_' . $this->selectedYear . '_' . $this->checkpoint);
+    }
+
+    private function getTeamsTotalCount($year) {
+        return $this->database->query('
+            SELECT COUNT(team_id) AS teams_total
+            FROM teamsyear
+            WHERE year = ?
+        ', $year)->fetchField('teams_total');
+    }
+
+    private function getTeamsArrivedCount($year, $checkpoint) {
+        return $this->database->query('
+            SELECT COUNT(DISTINCT results.team_id) AS teams_arrived
+            FROM results
+            WHERE checkpoint_number >= ? AND year = ? AND results.entry_time IS NOT NULL
+        ', $checkpoint, $year)->fetchField('teams_arrived');
     }
 }

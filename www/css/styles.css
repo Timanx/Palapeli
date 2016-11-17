@@ -768,3 +768,48 @@ img.cipherImage {
     margin-bottom: 0;
     margin-top: 10px;
 }
+
+/** STATS **/
+.chart {
+    width: 50%;
+    margin: auto;
+}
+
+.svgChart {
+    width: calc(100% - 4px);
+    height:380px;
+}
+
+.svgChart .solved {
+    fill: #69B300;
+}
+.svgChart .hint {
+    fill: #FFCA05;
+}
+
+.svgChart .dead {
+    fill: #FF0000;
+}
+
+.svgChart .no-data {
+    fill: #005BD0;
+}
+
+.svgChart .chartData {
+}
+
+.svgChart .line {
+    stroke: black;
+    stroke-width:4;
+}
+
+.svgChart .legend {
+    width: 20px;
+    height: 20px;
+}
+
+.svgChart .secondaryLine {
+    stroke: #EEE;
+    stroke-width:1;
+}
+
