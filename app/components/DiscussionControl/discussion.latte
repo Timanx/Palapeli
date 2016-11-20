@@ -1,33 +1,40 @@
 <div n:foreach="$flashes as $flash" n:class="flash, $flash->type">{$flash->message}</div>
 
-<div class="discussionFormBlock">
-	{form discussionForm}
+{form discussionForm}
+	<div n:foreach="$form->errors as $error" n:class="flash, error">{$error}</div>
+	<div class="discussionFormBlock">
 
-	<div class="inlineBlock marginRight">
-		{label name /}<br>
-		{input name}
-	</div>
-	<div class="inlineBlock">
-		{label team /}<br>
-		{input team}
-	</div>
-	<div>
-	{label message /}
-	</div>
-	{input message}
-	{if $isMasterDiscussion}
-		<div>
-		{label masterThread /}
+
+		<div class="inlineBlock marginRight">
+			{label name /}<br>
+			{input name}
 		</div>
-		{input masterThread}
-	{/if}
-	<div class="submit">
-	{input submit}
+		<div class="inlineBlock">
+			{label team /}<br>
+			{input team}
+		</div>
+		<div>
+		{label message /}
+		</div>
+		{input message}
+		{if $isMasterDiscussion}
+			<div>
+			{label masterThread /}
+			</div>
+			{input masterThread}
+		{/if}
+		{if $requireCaptcha}
+			<div>
+			{label captcha /}
+			</div>
+			{input captcha}
+		{/if}
+		<div class="submit">
+		{input submit}
+		</div>
+		{input thread}
 	</div>
-	{input thread}
-	{/form}
-</div>
-
+{/form}
 <div class="discussionData">
 {foreach $data as $post}
 	<div class="discussionPost">

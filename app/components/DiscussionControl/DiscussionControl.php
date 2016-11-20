@@ -51,6 +51,7 @@ class DiscussionControl extends Control
         }
 
         $template->data = $data;
+        $template->requireCaptcha = !isset($this->teamId);
         $template->isMasterDiscussion = $this->thread == self::ANY_THREAD;
         $template->render();
     }
@@ -71,6 +72,9 @@ class DiscussionControl extends Control
             $form->addText('team', 'Tým:')->setRequired(false)->addRule(UI\Form::MAX_LENGTH, 'Název týmu může mít maximálně 255 znaků', 255);
         }
         $form->addTextArea('message', 'Zpráva:')->setRequired('Nelze odeslat prázdnou zprávu.')->setAttribute('rows', 5)->addRule(UI\Form::MAX_LENGTH, 'Zpráva může mít maximálně 5000 znaků', 5000);
+        if (!isset($this->teamId)) {
+            $form->addText('captcha', 'Počet dílků puzzle na logu Palapeli:')->setRequired('Vyplňte prosím kontrolní otázku proti spamu.');
+        }
         if($this->thread == self::ANY_THREAD) {
             $form->addSelect('masterThread', 'Vlákno', $this->threads);
         }
@@ -91,19 +95,24 @@ class DiscussionControl extends Control
         $team = (isset($values['team']) ? $values['team'] : '');
         $team = strip_tags($team);
 
-        if(isset($values['masterThread'])) {
-            $thread = $this->threads[$values['masterThread']];
+        if(isset($values['captcha']) && $values['captcha'] != 4) {
+            $form->addError('Špatně vyplněná kontrolní otázka proti spamu.');
         } else {
-            $thread = $values['thread'];
-        }
 
-        $this->database->query('
+            if (isset($values['masterThread'])) {
+                $thread = $this->threads[$values['masterThread']];
+            } else {
+                $thread = $values['thread'];
+            }
+
+            $this->database->query('
             INSERT INTO discussion (name, team_id, unlogged_team_name, created, message, thread) VALUES (?, ?, ?, ?, ?, ?)
-        ', $name, $this->teamId, (!isset($teamId) && strlen($team) > 0 ? $team : NULL),  date('Y-m-d H:i:s', time()), $message, $thread);
+        ', $name, $this->teamId, (!isset($teamId) && strlen($team) > 0 ? $team : NULL), date('Y-m-d H:i:s', time()), $message, $thread);
 
 
-        $this->flashMessage('Příspěvek do diskuse byl úspěšně odeslán.', 'success');
-        $this->redirect('this');
+            $this->flashMessage('Příspěvek do diskuse byl úspěšně odeslán.', 'success');
+            $this->redirect('this');
+        }
     }
 
 }
