@@ -21,6 +21,10 @@ class TeamPresenter extends BasePresenter
     {
         parent::render();
         $this->prepareHeading('Registrace');
+
+        $teamsRegistered = TeamsModel::getTeamsCount($this->database);
+
+        $this->template->displayStandbyWarning = $teamsRegistered >= self::TEAM_LIMIT && self::TEAM_LIMIT > 0;
     }
 
     public function renderDefault()
@@ -149,7 +153,14 @@ class TeamPresenter extends BasePresenter
                             INSERT INTO teamsyear (team_id, year, paid, member1, member2, member3, member4, registered) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                         ', $teamId, self::CURRENT_YEAR, 0, "", null, null, null, date('Y-m-d H:i:s', time()));
                     }
-                    $this->flashMessage('Tým ' . $this->session->getSection('team')->teamName . ' byl úspěšně zaregistrován do aktuálního ročníku.', 'success');
+                    $teamsCount = TeamsModel::getTeamsCount($this->database);
+
+                    if($teamsCount > self::TEAM_LIMIT) {
+                        $this->flashMessage('Tým ' . $this->session->getSection('team')->teamName . ' byl úspěšně zaregistrován do aktuálního ročníku jako náhradní. Již je totiž naplněn limit počtu týmů, které se mohou hry zúčastnit. Jakmile se pro vás uvolní místo, ozveme se vám.', 'info');
+                    } else {
+                        $this->flashMessage('Tým ' . $this->session->getSection('team')->teamName . ' byl úspěšně zaregistrován do aktuálního ročníku.', 'success');
+                    }
+
                     $this->redirect('Team:edit');
                 }
             } else {
@@ -218,7 +229,13 @@ class TeamPresenter extends BasePresenter
                 INSERT INTO teamsyear (team_id, year, paid, member1, member2, member3, member4, registered) VALUES
                 (?,?,?,?,?,?,?,?)', $teamId, $year, 0, $values['member1'], $values['member2'], $values['member3'], $values['member4'], $registered);
 
-            $this->flashMessage('Tým ' . $values ['name'] . ' byl úspěšně zaregistrován a přihlášen.', 'success');
+            $teamsCount = TeamsModel::getTeamsCount($this->database);
+
+            if($teamsCount > self::TEAM_LIMIT) {
+                $this->flashMessage('Tým ' . $this->session->getSection('team')->teamName . ' byl úspěšně zaregistrován do aktuálního ročníku jako náhradní. Již je totiž naplněn limit počtu týmů, které se mohou hry zúčastnit. Jakmile se pro vás uvolní místo, ozveme se vám.', 'info');
+            } else {
+                $this->flashMessage('Tým ' . $values ['name'] . ' byl úspěšně zaregistrován a přihlášen.', 'success');
+            }
             $this->session->getSection('team')->teamId = $teamId;
             $this->session->getSection('team')->teamName = $values['name'];
             $this->redirect('Team:edit');
@@ -398,6 +415,10 @@ class TeamPresenter extends BasePresenter
             ->setSubject('Odhlášení týmu ' . $this->session->getSection('team')->teamName)
             ->setBody("Odhlásil se tým " . $this->session->getSection("team")->teamName . " s id " . $this->session->getSection("team")->teamId . "\nStartovné " . ($data[0]["paid"] ? "už bylo" : "ještě nebylo") . " zaplacené.\n\nAutomaticky generovaná zpráva z webu.");
 
+        $teamsCount = TeamsModel::getTeamsCount($this->database);
+
+        $playingTeams = TeamsModel::getPlayingTeamsIds($this->database);
+
         $this->database->query('
             DELETE
             FROM teamsyear
@@ -406,6 +427,27 @@ class TeamPresenter extends BasePresenter
 
         $mailer = new SendmailMailer;
         $mailer->send($mail);
+
+
+
+
+
+        if($teamsCount > self::TEAM_LIMIT && in_array($this->session->getSection("team")->teamId, $playingTeams)) {
+            $newTeam = TeamsModel::getFirstStandby($this->database);
+
+            if(isset($newTeam[0])) {
+
+                $mail = new Message;
+                $mail->setFrom('Palapeli Web <organizatori@palapeli.cz>')
+                    ->addTo($newTeam[0]->email1)
+                    ->addTo($newTeam[0]->email2)
+                    ->addReplyTo('organizatori@palapeli.cz')
+                    ->setSubject('Palapeli: Uvolnění místa na hře pro váš tým ' . $newTeam[0]->name)
+                    ->setBody("Odhlásil se jeden ze zaregistrovaných týmů, čímž se uvolnilo místo pro vás. Ozvěte se nám prosím co nejrychleji, zda máte o účast na hře stále zájem. Pokud jste již s účastí nepočítali a zúčastnit se nechcete, zrušte prosím v autentizované části na webu svoji účast na hře.\n\nDěkujeme a doufáme, že vás uvidíme na hře!\nVaši organizátoři\n\nAutomaticky generovaná zpráva z webu.");
+                $mailer->send($mail);
+            }
+
+        }
 
         $this->flashMessage('Účast týmu na hře byla úspěšně zrušena.', 'success');
         unset($this->session->getSection('team')->teamName);

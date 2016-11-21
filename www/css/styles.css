@@ -104,6 +104,14 @@ h1 {
 
 }
 
+.standby {
+    border-top: 4px solid #69B300;
+    text-align: center;
+    padding-top: 10px;
+    margin: 50px auto;
+    width: 50%
+}
+
 .teamsCount {
     text-align: center;
     font-size: 14pt;
@@ -130,6 +138,13 @@ h1 {
 .teamPayment {
     width:50px;
 }
+
+.teamRegistered {
+    width:150px;
+    vertical-align: top;
+    text-align: right;
+}
+
 
 .teamRegistrationInfo {
 

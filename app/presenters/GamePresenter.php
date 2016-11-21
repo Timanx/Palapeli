@@ -23,16 +23,32 @@ class GamePresenter extends BasePresenter
         parent::render();
         $this->prepareHeading('Seznam týmů');
         $data = $this->database->query('
+            SELECT * FROM (
             SELECT teams.id, LTRIM(teams.name) AS name, ty.paid, ty.member1, ty.member2, ty.member3, ty.member4, ty.registered
             FROM teams
             LEFT JOIN teamsyear ty ON teams.id = ty.team_id
             WHERE year = ?
+            ORDER BY registered
+            LIMIT ?
+            ) t
             ORDER BY LTRIM(name) COLLATE utf8_czech_ci',
-            $this->selectedYear
+            $this->selectedYear, self::TEAM_LIMIT
         )->fetchAll();
 
+        $standby = $this->database->query('
+            SELECT teams.id, LTRIM(teams.name) AS name, ty.paid, ty.member1, ty.member2, ty.member3, ty.member4, ty.registered
+            FROM teams
+            LEFT JOIN teamsyear ty ON teams.id = ty.team_id
+            WHERE year = ?
+            ORDER BY registered
+            LIMIT ? OFFSET ?
+            ',
+            $this->selectedYear, PHP_INT_MAX, self::TEAM_LIMIT
+        )->fetchAll();
         $this->template->data = $data;
-        $this->template->teamsCount = count($data);
+        $this->template->standby = $standby;
+        $this->template->teamsCount = count($data) + count($standby);
+        $this->template->standbyCount = count($standby);
     }
 
     public function renderCiphers($checkpoint = 0, $year = null)

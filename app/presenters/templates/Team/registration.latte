@@ -2,6 +2,9 @@
 
 	{if $isSelectedYearCurrent}
 		{if $hasRegistrationStarted && !$hasRegistrationEnded}
+			<div class="flash info" n:if="$displayStandbyWarning">
+				Již je naplněna kapacita maximálního možného počtu týmů na hře. Stále se však můžete zaregistrovat jako náhradníci. Nebo nám můžete pomoci s testováním - máte-li zájem, ozvěte se prosím na mail organizatori@palapeli.cz.
+			</div>
 			<p class="information">
 				Pokud jste se účastnili některého z předchozích ročníků, budete do aktuálního ročníku přihlášeni automaticky po přihlášení do účtu vašeho týmu. Přihlásit se můžete <a href="{plink Team:}">ZDE</a>.
 			</p>
