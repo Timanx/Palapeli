@@ -165,7 +165,7 @@ class BasePresenter extends Nette\Application\UI\Presenter
 
         $mail = new Message;
         if(strlen($values['sender']) > 0) {
-            $mail->setFrom('Palapeli Web <' . $values['sender'] . '>')
+            $mail->setFrom($values['sender'])
                 ->addReplyTo($values['sender'])
                 ->addTo('organizatori@palapeli.cz')
                 ->setSubject('Zpráva z webu: ' . $values['subject'])
