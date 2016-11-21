@@ -10,7 +10,7 @@
 				<p class="menuText{if $presenter->isLinkCurrent('Game:results')} selected{/if}">Výsledky</p>
 			</div>
 		</a>
-		<a href="{plink Game:ciphers}">
+		<a href="{plink Game:ciphers, 0, $selectedYear}">
 			<div class="menuItemContainer">
 				<p class="menuText{if $presenter->isLinkCurrent('Game:ciphers')} selected{/if}">Šifry</p>
 			</div>
