@@ -159,12 +159,27 @@ class BasePresenter extends Nette\Application\UI\Presenter
             $value = strip_tags($value);
         }
 
+
+
+
+
         $mail = new Message;
-        $mail->setFrom('Palapeli Web <'. $values['sender'] .'>')
-            ->addReplyTo($values['sender'])
-            ->addTo('organizatori@palapeli.cz')
-            ->setSubject('Zpráva z webu: ' . $values['subject'])
-            ->setBody(nl2br($values['message'] . '\n\nZpráva odeslaná z webu.'));
+        if(strlen($values['sender']) > 0) {
+            $mail->setFrom('Palapeli Web <' . $values['sender'] . '>')
+                ->addReplyTo($values['sender'])
+                ->addTo('organizatori@palapeli.cz')
+                ->setSubject('Zpráva z webu: ' . $values['subject'])
+                ->setBody($values['message'] . '
+
+Zpráva odeslaná z webu.');
+        } else {
+            $mail->setFrom('Palapeli Web <organizatori@palapeli.cz>')
+                ->addTo('organizatori@palapeli.cz')
+                ->setSubject('Zpráva z webu: ' . $values['subject'])
+                ->setBody($values['message'] . '
+
+Zpráva odeslaná z webu.');
+        }
 
         $mailer = new SendmailMailer;
         $mailer->send($mail);
