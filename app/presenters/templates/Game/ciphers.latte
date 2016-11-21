@@ -36,7 +36,7 @@
 			<div class="flash info">{$selectedYear}. ročník ještě neproběhl a šifry tedy ještě nejsou k dispozici.</div>
     	{else}
     		<div class="ciphersList">
-    			{for $i = 0; $i < $checkpointCount; $i++}<a class="cipherLink" {if $i == $checkpoint}style="color:white;background-color:{App\Presenters\BasePresenter::GAME_COLOR|noescape};"{/if} href="{plink Game:ciphers, $i}">{if $i == 0}S{elseif $i == $checkpointCount - 1}C{else}{$i}{/if}</a>{if $i != $checkpointCount - 1}<span class="cipherLinkDivider"></span>{/if}{/for}
+    			{for $i = 0; $i < $checkpointCount; $i++}<a class="cipherLink" {if $i == $checkpoint}style="color:white;background-color:{App\Presenters\BasePresenter::GAME_COLOR|noescape};"{/if} href="{plink Game:ciphers, $i, $selectedYear}">{if $i == 0}S{elseif $i == $checkpointCount - 1}C{else}{$i}{/if}</a>{if $i != $checkpointCount - 1}<span class="cipherLinkDivider"></span>{/if}{/for}
     		</div>
 
 			{if $checkpoint >= 0 && $checkpoint < $checkpointCount}

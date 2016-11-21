@@ -35,8 +35,12 @@ class GamePresenter extends BasePresenter
         $this->template->teamsCount = count($data);
     }
 
-    public function renderCiphers($checkpoint = 0)
+    public function renderCiphers($checkpoint = 0, $year = null)
     {
+        if(isset($year)) {
+            $this->session->getSection('selected')->year = $year;
+            $this->session->getSection('selected')->calendarYear = $year + 2011;
+        }
         parent::render();
         $this->prepareHeading('Šifry');
         $this->checkpoint = $checkpoint;
