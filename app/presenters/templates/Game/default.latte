@@ -1,4 +1,5 @@
 {block content}
+	{include ../Extras/yearArrows.latte}
 	{if $selectedYear > 1 && $selectedYear < 4}
 		<div class="flash info">Kvůli nedostatečné databázi ze starších ročníků nemáme pro 2. a 3. ročník k dispozici správné údaje o složení těch týmů, které se zúčastnily i 3. nebo 4. ročníku. Pokud si tedy pamatujete (nebo jste schopni dohledat) složení vašich týmů, budeme rádi, když jej upravíte <a href="{if isset($teamName)}{plink Team:edit}{else}{plink Team:}{/if}">ZDE</a>. Děkujeme.</div>
 	{/if}

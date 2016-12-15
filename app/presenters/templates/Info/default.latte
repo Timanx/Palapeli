@@ -1,25 +1,26 @@
 {block content}
-			<div class="updatesData">
-			{if count($updates) == 0}
-				<div class="flash info">Zatím nebyly vloženy žádné aktuality pro zvolený ročník</div>
-			{else}
-			<div n:if="$showTesterNotification" class="flash info">
-				Sháníme testery! Pokud už víte, že byste se hry nemohli zúčastnit, ale rádi byste si zaluštili někde v teple v klidu, ozvete se nám na mail organizatori@palapeli.cz. Budeme vám velmi vděční!
-			</div>
-			{foreach $updates as $post}
-				<div class="updatesPost">
-					<div class="updatesContent">
-						<div class="updatesPostHeader">
-							<span class="updatesPostDate">
-								{date('j.&\nb\sp;n.&\nb\sp;Y', strtotime($post->date))|noescape}
-							</span>
-						</div>
-						<div class="updatesPostContent">
-							{$post->message|noescape}
-						</div>
-					</div>
+	{include ../Extras/yearArrows.latte}
+	<div class="updatesData">
+	{if count($updates) == 0}
+		<div class="flash info">Zatím nebyly vloženy žádné aktuality pro zvolený ročník</div>
+	{else}
+	<div n:if="$showTesterNotification" class="flash info">
+		Sháníme testery! Pokud už víte, že byste se hry nemohli zúčastnit, ale rádi byste si zaluštili někde v teple v klidu, ozvete se nám na mail organizatori@palapeli.cz. Budeme vám velmi vděční!
+	</div>
+	{foreach $updates as $post}
+		<div class="updatesPost">
+			<div class="updatesContent">
+				<div class="updatesPostHeader">
+					<span class="updatesPostDate">
+						{date('j.&\nb\sp;n.&\nb\sp;Y', strtotime($post->date))|noescape}
+					</span>
 				</div>
-			{/foreach}
-			{/if}
+				<div class="updatesPostContent">
+					{$post->message|noescape}
+				</div>
 			</div>
+		</div>
+	{/foreach}
+	{/if}
+	</div>
 {/block}

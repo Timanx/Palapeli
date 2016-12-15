@@ -85,6 +85,28 @@
     .cipherImage {
         max-width: calc(50% - 24px);
     }
+
+    .yearArrow {
+        position: absolute;
+        top:300px;
+    }
+
+    .prevYear {
+        left: 30px;
+    }
+
+    .nextYear {
+        right: 30px;
+    }
+
+    .yearArrow polygon:hover {
+        fill: #EEE;
+    }
+
+    .yearArrow polygon {
+        fill: #F4F4F4;
+    }
+
 }
 
 @media only screen and (max-width: 940px) {
@@ -287,5 +309,9 @@
         display: block !important;
         width: calc(100% - 40px) !important;
         margin-bottom: 10px;
+    }
+
+    .yearArrow {
+        display: none;
     }
 }

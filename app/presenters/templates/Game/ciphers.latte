@@ -33,6 +33,7 @@
 		</script>
 
 		{if $isSelectedYearCurrent && !$hasGameEnded}
+			{include ../Extras/yearArrows.latte}
 			<div class="flash info">{$selectedYear}. ročník ještě neproběhl a šifry tedy ještě nejsou k dispozici.</div>
     	{else}
     		<div class="ciphersList">

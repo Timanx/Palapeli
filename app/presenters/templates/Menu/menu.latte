@@ -124,21 +124,20 @@
 
 		{if isset($teamName) || !$isSelectedYearCurrent}
 		<div class="menuItemContainer palapeliHeading">
-			{if isset($teamName)}<a href="{plink Team:edit}" title="Detail týmu {$teamName|noescape}">{/if}
+			{if isset($teamName)}{/if}
 				<div class="teamText"{if !$isSelectedYearCurrent} style="position:relative;top:-5px;"{/if}>
 					<span class="teamLabel"{if !$isSelectedYearCurrent} style="position:relative;top:1px;"{/if}>
 						<p class="teamLabel">
-							{if $isSelectedYearCurrent}TÝM{else}<span class="yearNumber">{$selectedYear}</span>.&nbsp;ROČNÍK{if isset($teamName)}&nbsp;|{/if}{/if}{if isset($teamName)}&nbsp;{/if}<!--
+							{if $isSelectedYearCurrent}TÝM{else}<a href="{plink Archive: $currentYear, $currentCalendarYear, $presenter->getAction(true)}" style="font-weight: 700" title="Přepnout na aktuální ročník"><span class="yearNumber">{$selectedYear}</span>.&nbsp;ROČNÍK</a>{if isset($teamName)}&nbsp;|{/if}{/if}{if isset($teamName)}&nbsp;{/if}<!--
 						--></p><!--
 					--></span><!--
 				-->{if isset($teamName)}<span class="loggedTeam"><!--
 					--><p><!--
-						-->{$teamNameUpper|noescape}
+						--><a href="{plink Team:edit}" style="font-weight: 400" title="Detail týmu {$teamName|noescape}">{$teamNameUpper|noescape}</a>
 						</p>
 					</span>
 					{/if}
 				</div>
-			{if isset($teamName)}</a>{/if}
 		</div>
 		{/if}
 		<div class="responsive responsiveMenuIcon" onclick="handleResponsiveMenu();">
