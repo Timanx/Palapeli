@@ -1,0 +1,11 @@
+{block content}
+	{if $orgLogged}
+		<div class="payments">
+			{control payments}
+		</div>
+	{else}
+		<div class="flash info">
+			Na tuto stránku mají přístup pouze organizátoři. Můžete se vrátit například <a href="{plink Team:}">na přihlašovací stránku</a>.
+		</div>
+	{/if}
+{/block}

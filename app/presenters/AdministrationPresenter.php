@@ -86,6 +86,12 @@ class AdministrationPresenter extends BasePresenter
         $this->prepareHeading('Organizátorský chat');
     }
 
+    public function renderPayments()
+    {
+        parent::render();
+        $this->prepareHeading('Platba startovného');
+    }
+
     protected function createComponentDiscussion() {
         return new \DiscussionControl($this->database, $this->session->getSection('team')->teamId, $this->session->getSection('team')->teamName, \DiscussionControl::ANY_THREAD);
     }
@@ -489,6 +495,41 @@ class AdministrationPresenter extends BasePresenter
         }
 
         $this->flashMessage('Šifra byla úspěšně vložena.', 'success');
+        $this->redirect('this');
+    }
+
+    public function createComponentPayments()
+    {
+        $this->getYearData();
+        $teams = $this->database->query('
+            SELECT id, name, paid
+            FROM teams
+            LEFT JOIN teamsyear ON teams.id = teamsyear.team_id
+            WHERE teamsyear.year = ?
+            ORDER BY LTRIM(name) COLLATE utf8_czech_ci
+        ', $this->selectedYear)->fetchAll();
+
+        $form = new UI\Form;
+        foreach ($teams as $team) {
+            $form->addRadioList($team->id, $team->name, [0 => 'Nezaplaceno', 1 => 'Zaplaceno', 2 => 'Platba na startu'])->setDefaultValue($team->paid);
+        }
+        $form->addSubmit('send', 'UPRAVIT PLATBY');
+
+
+        $form->onSuccess[] = [$this, 'editPayments'];
+        return $form;
+    }
+
+    public function editPayments(UI\Form $form, array $values)
+    {
+        foreach($values as $team_id => $paid) {
+            $this->database->query('
+                UPDATE teamsyear SET paid = ?
+                WHERE team_id = ? AND year = ?
+            ', $paid, $team_id, $this->selectedYear);
+        }
+
+        $this->flashMessage('Platby byly úspěšně uloženy', 'success');
         $this->redirect('this');
     }
 

@@ -675,6 +675,14 @@ input[type="time"] {
     height: 200px;
 }
 
+.payments th {
+    margin: 10px auto 5px auto;
+}
+
+.payments th label {
+    font-weight: 700;
+}
+
 /** CIPHERS **/
 .ciphersList {
     text-align: center;
@@ -827,4 +835,6 @@ img.cipherImage {
     stroke: #EEE;
     stroke-width:1;
 }
+
+
 
