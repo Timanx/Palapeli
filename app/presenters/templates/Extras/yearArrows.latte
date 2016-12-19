@@ -2,13 +2,13 @@
 
 	{if $selectedYear > 1}
 		<a class="yearArrow prevYear" title="Předchozí ročník" href="{plink Archive: $selectedYear - 1, $selectedCalendarYear - 1, $presenter->getAction(true)}">
-			{include ../../../Components/SVG/prev_year.svg}
+			{include ../../../components/SVG/prev_year.svg}
 		</a>
 	{/if}
 
 	{if !$isSelectedYearCurrent}
 		<a class="yearArrow nextYear" title="Následující ročník" href="{plink Archive: $selectedYear + 1, $selectedCalendarYear + 1, $presenter->getAction(true)}">
-			{include ../../../Components/SVG/next_year.svg}
+			{include ../../../components/SVG/next_year.svg}
 		</a>
 	{/if}
 

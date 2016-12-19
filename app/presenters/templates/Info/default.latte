@@ -4,9 +4,7 @@
 	{if count($updates) == 0}
 		<div class="flash info">Zatím nebyly vloženy žádné aktuality pro zvolený ročník</div>
 	{else}
-	<div n:if="$showTesterNotification" class="flash info">
-		Sháníme testery! Pokud už víte, že byste se hry nemohli zúčastnit, ale rádi byste si zaluštili někde v teple v klidu, ozvete se nám na mail organizatori@palapeli.cz. Budeme vám velmi vděční!
-	</div>
+	{include ../Extras/testerNotification.latte}
 	{foreach $updates as $post}
 		<div class="updatesPost">
 			<div class="updatesContent">
