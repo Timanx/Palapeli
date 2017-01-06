@@ -45,6 +45,23 @@ class GamePresenter extends BasePresenter
             ',
             $this->selectedYear, PHP_INT_MAX, self::TEAM_LIMIT
         )->fetchAll();
+
+        $this->template->paid = $this->database->query('
+            SELECT COUNT(*) AS paid
+            FROM teamsyear
+            WHERE year = ? AND paid = ?
+            ',
+            $this->selectedYear, self::PAY_OK
+        )->fetchField('paid');
+
+        $this->template->startPayment = $this->database->query('
+            SELECT COUNT(*) AS start
+            FROM teamsyear
+            WHERE year = ? AND paid = ?
+            ',
+            $this->selectedYear, self::PAY_START
+        )->fetchField('start');
+
         $this->template->data = $data;
         $this->template->standby = $standby;
         $this->template->teamsCount = count($data) + count($standby);

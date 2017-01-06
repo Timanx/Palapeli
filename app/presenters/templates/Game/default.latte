@@ -22,6 +22,11 @@
 			{else}<!--
 				-->.
 			{/if}
+			{if $paid > 0}
+				Startovné již zaplatil<!--
+				-->{if $paid == 1} 1 tým{elseif $paid < 5}y {$paid} týmy{else}o {$paid} týmů{/if}.<!--
+				-->{if $startPayment > 0} ({$startPayment} platí na startu){/if}
+			{/if}
 		{/if}
 	{else}
 		{if $teamsCount == 0}
