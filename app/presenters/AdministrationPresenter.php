@@ -92,6 +92,19 @@ class AdministrationPresenter extends BasePresenter
         $this->prepareHeading('Platba startovného');
     }
 
+    public function renderPaymentMail()
+    {
+        parent::render();
+        $this->prepareHeading('E-maily týmů s nezaplaceným startovným');
+
+        $this->template->emails = $emails =  $this->database->query('
+                SELECT CASE WHEN teams.email2 IS NULL OR teams.email2 = \'\' THEN email1 ELSE CONCAT(email1, \', \', email2) END AS email
+                FROM teams
+                LEFT JOIN teamsyear ON teamsyear.team_id = teams.id
+                WHERE year = ? AND paid = ?
+            ', $this->selectedYear, self::PAY_NOK)->fetchAll();
+    }
+
     protected function createComponentDiscussion() {
         return new \DiscussionControl($this->database, $this->session->getSection('team')->teamId, $this->session->getSection('team')->teamName, \DiscussionControl::ANY_THREAD);
     }
