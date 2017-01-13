@@ -102,7 +102,9 @@ class AdministrationPresenter extends BasePresenter
                 FROM teams
                 LEFT JOIN teamsyear ON teamsyear.team_id = teams.id
                 WHERE year = ? AND paid = ?
-            ', $this->selectedYear, self::PAY_NOK)->fetchAll();
+                ORDER BY registered
+                LIMIT ?
+            ', $this->selectedYear, self::PAY_NOK, (self::TEAM_LIMIT > 0 ? self::TEAM_LIMIT : PHP_INT_MAX))->fetchAll();
     }
 
     protected function createComponentDiscussion() {

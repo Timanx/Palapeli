@@ -32,7 +32,7 @@ class GamePresenter extends BasePresenter
             LIMIT ?
             ) t
             ORDER BY LTRIM(name) COLLATE utf8_czech_ci',
-            $this->selectedYear, self::TEAM_LIMIT
+            $this->selectedYear, (self::TEAM_LIMIT > 0 ? self::TEAM_LIMIT : PHP_INT_MAX)
         )->fetchAll();
 
         $standby = $this->database->query('
@@ -43,7 +43,7 @@ class GamePresenter extends BasePresenter
             ORDER BY registered
             LIMIT ? OFFSET ?
             ',
-            $this->selectedYear, PHP_INT_MAX, self::TEAM_LIMIT
+            $this->selectedYear, PHP_INT_MAX, (self::TEAM_LIMIT > 0 ? self::TEAM_LIMIT : PHP_INT_MAX)
         )->fetchAll();
 
         $this->template->paid = $this->database->query('

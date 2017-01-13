@@ -17,7 +17,7 @@ class BasePresenter extends Nette\Application\UI\Presenter
 
     const REGISTRATION_START = 1477580400; //27. 10. 2016 17:00
     const REGISTRATION_END = 1485039600 + self::ALMOST_DAY; //22. 1. 2017
-    const TEAM_LIMIT = 70;
+    const TEAM_LIMIT = 70; //-1 = no limit
     const CURRENT_YEAR = 6;
     const CURRENT_CALENDAR_YEAR = 2017;
 
