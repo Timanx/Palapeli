@@ -441,6 +441,7 @@ class TeamPresenter extends BasePresenter
                 $mail->setFrom('Palapeli Web <organizatori@palapeli.cz>')
                     ->addTo($newTeam[0]->email1)
                     ->addTo($newTeam[0]->email2)
+                    ->addBcc('organizatori@palapeli.cz')
                     ->addReplyTo('organizatori@palapeli.cz')
                     ->setSubject('Palapeli: Uvolnění místa na hře pro váš tým ' . $newTeam[0]->name)
                     ->setBody("Odhlásil se jeden ze zaregistrovaných týmů, čímž se uvolnilo místo pro vás. Ozvěte se nám prosím co nejrychleji, zda máte o účast na hře stále zájem. Pokud jste již s účastí nepočítali a zúčastnit se nechcete, zrušte prosím v autentizované části na webu svoji účast na hře.\n\nDěkujeme a doufáme, že vás uvidíme na hře!\nVaši organizátoři\n\nAutomaticky generovaná zpráva z webu.");
