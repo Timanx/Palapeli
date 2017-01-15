@@ -379,6 +379,10 @@ class AdministrationPresenter extends BasePresenter
                     );
                 }
 
+            } else {
+                $this->database->query('
+                    UPDATE results SET entry_time = NULL WHERE team_id = ? AND year = ? AND results.checkpoint_number = ?
+                ', $team['teamId'], $this->selectedYear, $checkpoint);
             }
         }
 

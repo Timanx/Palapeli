@@ -29,7 +29,7 @@ class BasePresenter extends Nette\Application\UI\Presenter
     const GAME_END = self::GAME_START + 10 * 60 * 60 ; //28. 1. 2017 19:00
     const ENTRY_FEE_ACCOUNT = '237977821/0300';
 
-    const SHOW_TESTER_NOTIFICATION = true;
+    const SHOW_TESTER_NOTIFICATION = false;
 
     const BLUE = '#005BD0';
     const RED = '#FF0000';
