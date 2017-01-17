@@ -98,13 +98,16 @@ class AdministrationPresenter extends BasePresenter
         $this->prepareHeading('E-maily týmů s nezaplaceným startovným');
 
         $this->template->emails = $emails =  $this->database->query('
-                SELECT CASE WHEN teams.email2 IS NULL OR teams.email2 = \'\' THEN email1 ELSE CONCAT(email1, \', \', email2) END AS email
+          SELECT * FROM (
+                SELECT CASE WHEN teams.email2 IS NULL OR teams.email2 = \'\' THEN email1 ELSE CONCAT(email1, \', \', email2) END AS email, paid
                 FROM teams
                 LEFT JOIN teamsyear ON teamsyear.team_id = teams.id
-                WHERE year = ? AND paid = ?
+                WHERE year = ?
                 ORDER BY registered
                 LIMIT ?
-            ', $this->selectedYear, self::PAY_NOK, (self::TEAM_LIMIT > 0 ? self::TEAM_LIMIT : PHP_INT_MAX))->fetchAll();
+                ) t
+                WHERE paid = ?
+            ', $this->selectedYear, (self::TEAM_LIMIT > 0 ? self::TEAM_LIMIT : PHP_INT_MAX), self::PAY_NOK)->fetchAll();
     }
 
     protected function createComponentDiscussion() {

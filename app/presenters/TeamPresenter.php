@@ -92,13 +92,22 @@ class TeamPresenter extends BasePresenter
         ', $this->session->getSection('team')->teamId, self::CURRENT_YEAR)->fetchAll();
 
         $registered = $this->database->query('
-            SELECT 1
+            SELECT registered
             FROM teamsyear ty
             WHERE team_id  = ? AND year = ?
-        ', $this->session->getSection('team')->teamId, self::CURRENT_YEAR)->fetchAll();
+        ', $this->session->getSection('team')->teamId, self::CURRENT_YEAR)->fetchField();
 
-            $this->template->registered = count($registered);
-            if(count($registered)) {
+            $this->template->registered = isset($registered);
+            if(isset($registered)) {
+
+                $order = $this->database->query('
+                    SELECT COUNT(team_id)
+                    FROM teamsyear
+                    WHERE registered < ? AND year = ?
+                ', $registered, self::CURRENT_YEAR)->fetchField();
+
+                $this->template->isSubstitute = $order >= self::TEAM_LIMIT;
+
                 $this->template->paid = $data[0]->paid;
             } else {
                 $this->template->paid = self::SHOULD_NOT_PAY;
@@ -438,13 +447,24 @@ class TeamPresenter extends BasePresenter
             if(isset($newTeam[0])) {
 
                 $mail = new Message;
-                $mail->setFrom('Palapeli Web <organizatori@palapeli.cz>')
-                    ->addTo($newTeam[0]->email1)
-                    ->addTo($newTeam[0]->email2)
-                    ->addBcc('organizatori@palapeli.cz')
-                    ->addReplyTo('organizatori@palapeli.cz')
-                    ->setSubject('Palapeli: Uvolnění místa na hře pro váš tým ' . $newTeam[0]->name)
-                    ->setBody("Odhlásil se jeden ze zaregistrovaných týmů, čímž se uvolnilo místo pro vás. Ozvěte se nám prosím co nejrychleji, zda máte o účast na hře stále zájem. Pokud jste již s účastí nepočítali a zúčastnit se nechcete, zrušte prosím v autentizované části na webu svoji účast na hře.\n\nDěkujeme a doufáme, že vás uvidíme na hře!\nVaši organizátoři\n\nAutomaticky generovaná zpráva z webu.");
+
+
+                if(strlen($newTeam[0]->email2) > 0) {
+                    $mail->setFrom('Palapeli Web <organizatori@palapeli.cz>')
+                        ->addTo($newTeam[0]->email1)
+                        ->addTo($newTeam[0]->email2)
+                        ->addBcc('organizatori@palapeli.cz')
+                        ->addReplyTo('organizatori@palapeli.cz')
+                        ->setSubject('Palapeli: Uvolnění místa na hře pro váš tým ' . $newTeam[0]->name)
+                        ->setBody("Odhlásil se jeden ze zaregistrovaných týmů, čímž se uvolnilo místo pro vás. Ozvěte se nám prosím co nejrychleji, zda máte o účast na hře stále zájem. Pokud jste již s účastí nepočítali a zúčastnit se nechcete, zrušte prosím v autentizované části na webu svoji účast na hře.\n\nDěkujeme a doufáme, že vás uvidíme na hře!\nVaši organizátoři\n\nAutomaticky generovaná zpráva z webu.");
+                } else {
+                    $mail->setFrom('Palapeli Web <organizatori@palapeli.cz>')
+                        ->addTo($newTeam[0]->email1)
+                        ->addBcc('organizatori@palapeli.cz')
+                        ->addReplyTo('organizatori@palapeli.cz')
+                        ->setSubject('Palapeli: Uvolnění místa na hře pro váš tým ' . $newTeam[0]->name)
+                        ->setBody("Odhlásil se jeden ze zaregistrovaných týmů, čímž se uvolnilo místo pro vás. Ozvěte se nám prosím co nejrychleji, zda máte o účast na hře stále zájem. Pokud jste již s účastí nepočítali a zúčastnit se nechcete, zrušte prosím v autentizované části na webu svoji účast na hře.\n\nDěkujeme a doufáme, že vás uvidíme na hře!\nVaši organizátoři\n\nAutomaticky generovaná zpráva z webu.");
+                }
                 $mailer->send($mail);
             }
 

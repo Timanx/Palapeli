@@ -34,6 +34,6 @@ class TeamsModel extends BasePresenter {
             WHERE year = ?
             ORDER BY registered
             LIMIT 1 OFFSET ?
-        ', self::CURRENT_YEAR, self::TEAM_LIMIT)->fetchAll();
+        ', self::CURRENT_YEAR, self::TEAM_LIMIT - 1)->fetchAll();
     }
 }

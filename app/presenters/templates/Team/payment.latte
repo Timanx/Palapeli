@@ -4,28 +4,32 @@
 		{if !$registered}
 			<div class="flash info">Do {$currentYear}. ročníku zatím nejste zaregistrovaní, takže se od vás neočekává platba startovného. Zaregistrovat se můžete automaticky kliknutím <a href="{plink Team:registerLogged}">SEM</a>.</div>
 		{else}
-			<div class="payment-info">
-				<div>
-					{if $paid == App\Presenters\BasePresenter::PAY_OK}
-						<span title="Zaplaceno">{include ../../../components/SVG/pay_ok.svg, dim => '200px'}</span>
-					{elseif $paid == App\Presenters\BasePresenter::PAY_NOK}
-						<span title="Nezaplaceno">{include ../../../components/SVG/pay_nok.svg, dim => '200px'}</span>
-					{elseif $paid == App\Presenters\BasePresenter::PAY_START}
-						<span title="Platba na startu">{include ../../../components/SVG/pay_start.svg, dim => '200px'}</span>
-					{/if}
+			{if $isSubstitute}
+				<div class="flash info">Jste mezi náhradníky, takže se do vás zatím neočekává platba startovného.</div>
+			{else}
+				<div class="payment-info">
+					<div>
+						{if $paid == App\Presenters\BasePresenter::PAY_OK}
+							<span title="Zaplaceno">{include ../../../components/SVG/pay_ok.svg, dim => '200px'}</span>
+						{elseif $paid == App\Presenters\BasePresenter::PAY_NOK}
+							<span title="Nezaplaceno">{include ../../../components/SVG/pay_nok.svg, dim => '200px'}</span>
+						{elseif $paid == App\Presenters\BasePresenter::PAY_START}
+							<span title="Platba na startu">{include ../../../components/SVG/pay_start.svg, dim => '200px'}</span>
+						{/if}
+					</div>
+					<div class="payment-info-text">
+						{if $paid == App\Presenters\BasePresenter::PAY_OK}
+							Startovné je zaplacené.
+						{elseif $paid == App\Presenters\BasePresenter::PAY_NOK}
+							Startovné ve výši {App\Presenters\BasePresenter::ENTRY_FEE} Kč zaplaťte prosím do {date('j.&\nb\sp;n.&\nb\sp;Y', App\Presenters\BasePresenter::ENTRY_FEE_DEADLINE)|noescape} na účet {App\Presenters\BasePresenter::ENTRY_FEE_ACCOUNT|noescape}. Ve zprávě prosím uveďte název vašeho týmu. V případě zrušení účasti na hře do {date('j.&\nb\sp;n.&\nb\sp;Y', App\Presenters\BasePresenter::ENTRY_FEE_RETURN_DEADLINE)|noescape} vám startovné vrátíme.
+						{elseif $paid == App\Presenters\BasePresenter::PAY_NOK}
+							Startovné ve výši {App\Presenters\BasePresenter::ENTRY_FEE} Kč budete platit na startu.
+						{else}
+							<div class="flash success">Neočekává se od vás platba startovného.</div>
+						{/if}
+					</div>
 				</div>
-				<div class="payment-info-text">
-					{if $paid == App\Presenters\BasePresenter::PAY_OK}
-						Startovné je zaplacené.
-					{elseif $paid == App\Presenters\BasePresenter::PAY_NOK}
-						Startovné ve výši {App\Presenters\BasePresenter::ENTRY_FEE} Kč zaplaťte prosím do {date('j.&\nb\sp;n.&\nb\sp;Y', App\Presenters\BasePresenter::ENTRY_FEE_DEADLINE)|noescape} na účet {App\Presenters\BasePresenter::ENTRY_FEE_ACCOUNT|noescape}. Ve zprávě prosím uveďte název vašeho týmu. V případě zrušení účasti na hře do {date('j.&\nb\sp;n.&\nb\sp;Y', App\Presenters\BasePresenter::ENTRY_FEE_RETURN_DEADLINE)|noescape} vám startovné vrátíme.
-					{elseif $paid == App\Presenters\BasePresenter::PAY_NOK}
-						Startovné ve výši {App\Presenters\BasePresenter::ENTRY_FEE} Kč budete platit na startu.
-					{else}
-						<div class="flash success">Neočekává se od vás platba startovného.</div>
-					{/if}
-				</div>
-			</div>
+			{/if}
 		{/if}
 	{else}
 		<div class="flash info">Momentálně máte zvolený {$selectedYear}. ročník, pro který již platba startovného není aktuální. Přepnout do aktuálního ročníku se můžete <a href="{plink Archive: $currentYear, $currentCalendarYear, $presenter->getAction(true)}">ZDE</a>.</div>
