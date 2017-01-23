@@ -110,6 +110,39 @@ class AdministrationPresenter extends BasePresenter
             ', $this->selectedYear, (self::TEAM_LIMIT > 0 ? self::TEAM_LIMIT : PHP_INT_MAX), self::PAY_NOK)->fetchAll();
     }
 
+    public function renderTeamMail()
+    {
+        parent::render();
+        $this->prepareHeading('E-maily na týmy');
+
+        $this->template->emails = $emails =  $this->database->query('
+                SELECT CASE WHEN teams.email2 IS NULL OR teams.email2 = \'\' THEN email1 ELSE CONCAT(email1, \', \', email2) END AS email, paid
+                FROM teams
+                LEFT JOIN teamsyear ON teamsyear.team_id = teams.id
+                WHERE year = ?
+                ORDER BY registered
+                LIMIT ?
+            ', $this->selectedYear, (self::TEAM_LIMIT > 0 ? self::TEAM_LIMIT : PHP_INT_MAX))->fetchAll();
+    }
+
+    public function renderTeamTable()
+    {
+        parent::render();
+        $this->prepareHeading('Tabulka údajů o týmech');
+
+        $this->template->data = $this->database->query('
+                SELECT * FROM (
+                SELECT id, name, phone1, phone2, email1, email2, member1, member2, member3, member4, paid, registered
+                FROM teams
+                LEFT JOIN teamsyear ON teamsyear.team_id = teams.id
+                WHERE year = ?
+                ORDER BY registered
+                LIMIT ?
+                ) t
+                ORDER BY LTRIM(name) COLLATE utf8_czech_ci
+            ', $this->selectedYear, (self::TEAM_LIMIT > 0 ? self::TEAM_LIMIT : PHP_INT_MAX))->fetchAll();
+    }
+
     protected function createComponentDiscussion() {
         return new \DiscussionControl($this->database, $this->session->getSection('team')->teamId, $this->session->getSection('team')->teamName, \DiscussionControl::ANY_THREAD);
     }
@@ -228,7 +261,10 @@ class AdministrationPresenter extends BasePresenter
         foreach($values as $number => $checkpoint) {
             $number = substr($number,10);
 
-            if($checkpoint['entryTime'] != '' || (isset($checkpoint['usedHint']) && $checkpoint['usedHint'])) {
+            if(($checkpoint['entryTime'] != '' && $checkpoint['entryTime'] != '--:--') || (isset($checkpoint['usedHint']) && $checkpoint['usedHint'])) {
+                if($checkpoint['exitTime'] == '--:--') {
+                    $checkpoint['exitTime'] = NULL;
+                }
 
                 $this->database->query('
                 INSERT INTO results (team_id, year, checkpoint_number, entry_time, exit_time, used_hint) VALUES
@@ -253,7 +289,7 @@ class AdministrationPresenter extends BasePresenter
     public function createComponentSelectCheckpointForm()
     {
         $checkpoint = (isset($_GET['checkpoint']) ? $_GET['checkpoint'] : null);
-        $checked = (isset($_GET['previous']) ? $_GET['previous'] : null);
+        $checked = (isset($_GET['previous']) ? $_GET['previous'] : false);
         $this->getYearData();
 
         $checkpointCount = $this->database->query('
@@ -273,13 +309,22 @@ class AdministrationPresenter extends BasePresenter
 
         $form->addCheckbox('previous', 'Řadit týmy podle příchodu na předchozí stanoviště')->setAttribute('onchange', 'this.form.submit()');
         $form->addSelect('checkpoint', '', $options, 1)->setAttribute('onchange', 'this.form.submit()');
+        $form->addHidden('currentCheckpoint', $checkpoint);
         $form->onSuccess[] = [$this, 'checkpointSelected'];
         return $form;
     }
 
     public function checkpointSelected(UI\Form $form, array $values)
     {
-        $this->redirect('this', ['checkpoint' => ($values['checkpoint'] == 0 ? 0 : $values['checkpoint'] - 1), 'previous' => $values['previous']]);
+        if($values['previous']) {
+            $checkpoint = $values['currentCheckpoint'];
+        } elseif($values['checkpoint'] == 0) {
+            $checkpoint = 0;
+        } else {
+            $checkpoint = $values['checkpoint'] - 1;
+        }
+
+        $this->redirect('this', ['checkpoint' => $checkpoint, 'previous' => $values['previous']]);
     }
 
     public function createComponentSelectOnlyCheckpointForm()
@@ -366,7 +411,7 @@ class AdministrationPresenter extends BasePresenter
 
         $checkpoint = $_GET['checkpoint'];
         foreach($values as $team) {
-            if($team['entryTime'] != '') {
+            if($team['entryTime'] != '' && $team['entryTime'] != '--:--') {
 
                 $this->database->query('
                     INSERT INTO results (team_id, year, checkpoint_number, entry_time) VALUES

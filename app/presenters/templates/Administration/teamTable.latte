@@ -1,0 +1,94 @@
+{block content}
+	{if $orgLogged}
+		<table class="teamTable">
+			<tr>
+				<th>
+					Id
+				</th>
+				<th>
+					Tým
+				</th>
+				<th>
+					Telefon 1
+				</th>
+				<th>
+					Telefon 2
+				</th>
+				<th>
+					E-mail 1
+				</th>
+				<th>
+					E-mail 2
+				</th>
+				<th>
+				 	Člen 1
+				</th>
+				<th>
+					Člen 2
+				</th>
+				<th>
+					Člen 3
+				</th>
+				<th>
+					Člen 4
+				</th>
+				<th>
+					Platba startovného
+				</th>
+				<th>
+					Čas registrace
+				</th>
+			</tr>
+			{foreach $data as $team}
+				<tr>
+					<td>
+						{$team->id}
+					</td>
+					<td>
+						{$team->name}
+					</td>
+					<td>
+						{$team->phone1}
+					</td>
+					<td>
+						{$team->phone2}
+					</td>
+					<td>
+						{$team->email1}
+					</td>
+					<td>
+						{$team->email2}
+					</td>
+					<td>
+						{$team->member1}
+					</td>
+					<td>
+						{$team->member2}
+					</td>
+					<td>
+						{$team->member3}
+					</td>
+					<td>
+						{$team->member4}
+					</td>
+					<td>
+						{if $team->paid == 0}
+							Ne
+						{elseif $team->paid == 1}
+							Ano
+						{else}
+							Na startu
+						{/if}
+					</td>
+					<td>
+						{$team->registered}
+					</td>
+				</tr>
+			{/foreach}
+		</table>
+	{else}
+		<div class="flash info">
+			Na tuto stránku mají přístup pouze organizátoři. Můžete se vrátit například <a href="{plink Team:}">na přihlašovací stránku</a>.
+		</div>
+	{/if}
+{/block}

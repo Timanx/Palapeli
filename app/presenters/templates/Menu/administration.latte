@@ -40,5 +40,15 @@
 				<p class="menuText{if $presenter->isLinkCurrent('Administration:paymentMail')} selected{/if}">Neplatiči</p>
 			</div>
 		</a>
+		<a href="{plink Administration:teamMail}">
+			<div class="menuItemContainer">
+				<p class="menuText{if $presenter->isLinkCurrent('Administration:teamMail')} selected{/if}">Maily týmů</p>
+			</div>
+		</a>
+		<a href="{plink Administration:teamTable}">
+			<div class="menuItemContainer">
+				<p class="menuText{if $presenter->isLinkCurrent('Administration:teamTable')} selected{/if}">Tabulka týmů</p>
+			</div>
+		</a>
 	</div>
 </div>
