@@ -86,7 +86,9 @@ class DiscussionControl extends Control
 
     public  function discussionFormSucceeded(UI\Form $form, array $values) {
         $message = $values['message'];
-        $message = strip_tags($message, 'a');
+        if($this->teamId != \App\Presenters\BasePresenter::ORG_TEAM_ID) {
+            $message = strip_tags($message, 'a');
+        }
         $message = nl2br($message);
 
         $name = $values['name'];

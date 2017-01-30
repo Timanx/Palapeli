@@ -179,6 +179,18 @@ class GamePresenter extends BasePresenter
             $this->selectedYear
         )->fetchAll();
 
+        $this->template->resultsPublic = $this->database->query('
+            SELECT results_public
+            FROM years
+            WHERE year = ?
+        ', $this->selectedYear)->fetchField();
+
+        $this->template->resultsFinal = $this->database->query('
+            SELECT results_final
+            FROM years
+            WHERE year = ?
+        ', $this->selectedYear)->fetchField();
+
         $this->template->data = $data;
 
     }

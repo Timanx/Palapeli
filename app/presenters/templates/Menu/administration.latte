@@ -50,5 +50,15 @@
 				<p class="menuText{if $presenter->isLinkCurrent('Administration:teamTable')} selected{/if}">Tabulka týmů</p>
 			</div>
 		</a>
+		<a href="{plink Administration:results}">
+			<div class="menuItemContainer">
+				<p class="menuText{if $presenter->isLinkCurrent('Administration:teamTable')} selected{/if}">Výsledky</p>
+			</div>
+		</a>
+		<a href="{plink Administration:noDataMail}">
+			<div class="menuItemContainer">
+				<p class="menuText{if $presenter->isLinkCurrent('Administration:noDataMail')} selected{/if}">Nevyplněnci</p>
+			</div>
+		</a>
 	</div>
 </div>

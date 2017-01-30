@@ -110,6 +110,24 @@ class AdministrationPresenter extends BasePresenter
             ', $this->selectedYear, (self::TEAM_LIMIT > 0 ? self::TEAM_LIMIT : PHP_INT_MAX), self::PAY_NOK)->fetchAll();
     }
 
+    public function renderNoDataMail()
+    {
+        parent::render();
+        $this->prepareHeading('E-maily týmů bez zapsaných výsledků');
+
+        $this->template->emails = $teams = $this->database->query('
+            SELECT * FROM (
+                SELECT CASE WHEN teams.email2 IS NULL OR teams.email2 = \'\' THEN email1 ELSE CONCAT(email1, \', \', email2) END AS email, (MAX(results.exit_time) IS NOT NULL AND MAX(results.exit_time) != \'00:00\' || EXISTS (SELECT 1 FROM results r WHERE r.year = teamsyear.year AND r.team_id = teams.id AND r.used_hint IS NOT NULL)) AS team_filled
+                FROM teams
+                LEFT JOIN teamsyear ON teams.id = teamsyear.team_id
+                LEFT JOIN results ON results.year = ? AND teams.id = results.team_id
+                WHERE teamsyear.year = ?
+                GROUP BY email
+            ) t
+            WHERE team_filled = 0
+        ', $this->selectedYear, $this->selectedYear)->fetchAll();
+    }
+
     public function renderTeamMail()
     {
         parent::render();
@@ -597,6 +615,57 @@ class AdministrationPresenter extends BasePresenter
         }
 
         $this->flashMessage('Platby byly úspěšně uloženy', 'success');
+        $this->redirect('this');
+    }
+
+    public function renderResults()
+    {
+        parent::render();
+        $this->prepareHeading('Výsledky');
+
+        $data = $this->database->query('
+            SELECT teams.name, MAX(results.checkpoint_number) AS max_checkpoint, SUM(results.used_hint) AS total_hints, TIME_FORMAT(MAX(results.entry_time), \'%H:%i\') AS finish_time
+            FROM results
+            LEFT JOIN teams ON teams.id = results.team_id
+            WHERE year = ?
+            GROUP BY teams.name
+            ORDER BY (MAX(results.checkpoint_number) - SUM(results.used_hint)) DESC, MAX(results.checkpoint_number) DESC, MAX(results.entry_time) ASC',
+            $this->selectedYear
+        )->fetchAll();
+
+        $this->template->resultsPublic = $this->database->query('
+            SELECT results_public
+            FROM years
+            WHERE year = ?
+        ', $this->selectedYear)->fetchField();
+
+        $this->template->data = $data;
+
+    }
+
+    public function createComponentPublishResults()
+    {
+
+        $this->getYearData();
+
+        $form = new UI\Form;
+        $form->addSubmit('send', 'PUBLIKOVAT VÝSLEDKY');
+
+
+        $form->onSuccess[] = [$this, 'publishResults'];
+        return $form;
+    }
+
+    public function publishResults(UI\Form $form, array $values)
+    {
+        $this->getYearData();
+
+        $this->database->query('
+            UPDATE years SET results_public = 1
+            WHERE year = ?
+        ', $this->selectedYear);
+
+        $this->flashMessage('Výsledky byly úspěšně zveřejněny', 'success');
         $this->redirect('this');
     }
 
