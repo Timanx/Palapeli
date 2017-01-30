@@ -305,6 +305,10 @@
         max-width: calc(100% - 24px);
     }
 
+    .solutionImage {
+        max-width: calc(100% - 24px);
+    }
+
     .cipherSubmenuCell {
         display: block !important;
         width: calc(100% - 40px) !important;
