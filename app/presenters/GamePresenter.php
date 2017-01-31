@@ -199,6 +199,27 @@ class GamePresenter extends BasePresenter
     {
         parent::render();
         $this->prepareHeading('Reportáže');
+
+        $this->template->years = $this->database->query('
+            SELECT year, calendar_year, word_numbering
+            FROM years
+            ORDER BY year DESC
+        ')->fetchAll();
+
+        $data = $this->database->query('
+            SELECT reports.year, reports.link, reports.name, reports.description, teams.name AS team
+            FROM reports
+            LEFT JOIN teams ON reports.team_id = teams.id
+            ORDER BY reports.year
+        ')->fetchAll();
+
+        $reports = [];
+
+        foreach($data as $report) {
+            $reports[$report->year][] = $report;
+        }
+
+        $this->template->reports = $reports;
     }
 
     public function renderStats()

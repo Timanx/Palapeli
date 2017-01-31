@@ -275,6 +275,10 @@ h1 {
     word-break: break-word;
 }
 
+.flash.inner {
+    width: calc(100% - 80px) !important;
+}
+
 .flash.success {
     background-color: #69B300;
 }
@@ -536,7 +540,7 @@ textarea  {
     text-align: center;
 }
 
-.photos h3 {
+.photos h3, .reports h3 {
     margin-top: 00px;
     margin-bottom: 0px;
     padding-top: 10px;
@@ -553,6 +557,39 @@ textarea  {
     font-family: 'Source Sans Pro', sans-serif;
     font-size: 110%;
     font-weight: 600;
+}
+
+/** REPORTS **/
+.reports {
+    width: 50%;
+    margin: auto;
+}
+
+.reportBlock {
+    background-color: #F8F8F8;
+    border-left: 4px solid #69B300;
+    padding: 8px;
+    word-break: break-word;
+    width: 100%;
+    margin: 30px auto;
+}
+
+.reportBlock:hover {
+    background-color: #EEE;
+}
+
+.reportName {
+    font-weight: 700;
+    font-size: 120%;
+}
+
+.reportLink {
+    font-weight: 300;
+    font-size: 80%;
+}
+
+.reportDescription {
+    font-weight: 500;
 }
 
 /** RESULTS **/

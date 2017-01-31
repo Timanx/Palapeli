@@ -86,6 +86,10 @@
         max-width: calc(50% - 24px);
     }
 
+    .solutionImage {
+        max-width: calc(100% - 24px);
+    }
+
     .yearArrow {
         position: absolute;
         top:300px;
@@ -192,7 +196,7 @@
         margin: 0;
     }
 
-    .rules, .payment-info, .discussionPost, .teamBlock, .updatesPost, .information, .photos, .resultsTable, .resultsInfo, .resultsHint, .cipherDescription, .cipherSubmenu, .cipherSolution, .cipherStats, .chart, .standby {
+    .rules, .payment-info, .discussionPost, .teamBlock, .updatesPost, .information, .photos, .resultsTable, .resultsInfo, .resultsHint, .cipherDescription, .cipherSubmenu, .cipherSolution, .cipherStats, .chart, .standby, .reports {
         width: 100%;
     }
 

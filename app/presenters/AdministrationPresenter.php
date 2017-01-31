@@ -669,4 +669,55 @@ class AdministrationPresenter extends BasePresenter
         $this->redirect('this');
     }
 
+
+
+    public function renderReports()
+    {
+        parent::render();
+        $this->prepareHeading('Přidání reportáže');
+    }
+
+    public function createComponentAddReport()
+    {
+
+        $this->getYearData();
+
+
+        $form = new UI\Form;
+
+
+        $form->addText('year', 'Ročník*')->setType('number')->setDefaultValue($this->selectedYear)->setRequired();
+        $form->addText('team', 'Autor (tým)*')->setRequired();
+        $form->addText('name', 'Název repotráže');
+        $form->addText('link', 'Odkaz na reportáž*');
+        $form->addTextArea('description', 'Popis', 50, 10);
+        $form->addSubmit('send', 'VLOŽIT REPORTÁŽ');
+
+        $form->onSuccess[] = [$this, 'addReportSucceeded'];
+        return $form;
+    }
+
+    public function addReportSucceeded(UI\Form $form, array $values)
+    {
+        $this->getYearData();
+
+        $teamId = $this->database->query('
+            SELECT id
+            FROM teams
+            LEFT JOIN teamsyear ON teams.id = teamsyear.team_id
+            WHERE year = ? AND name = ?
+        ', $values['year'], $values['team'])->fetchField();
+
+        if(!$teamId) {
+            $form->addError('Tým se zadaným názvem neexistuje');
+        }
+
+        $this->database->query('
+            INSERT INTO reports (year, link, team_id, name, description) VALUES (?, ?, ?, ?, ?)
+        ', $values['year'], $values['link'], $teamId, $values['name'], $values['description']);
+
+        $this->flashMessage('Reportáž byla úspěšně přidána', 'success');
+        $this->redirect('this');
+    }
+
 }

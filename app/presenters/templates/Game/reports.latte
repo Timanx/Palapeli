@@ -1,8 +1,32 @@
 {block content}
 {include ../Extras/yearArrows.latte}
-		{if $isSelectedYearCurrent}
-			<div class="flash info">{$selectedYear}. ročník ještě neproběhl a nikdo tedy zatím nenapsal žádnou reportáž.</div>
-    	{else}
-    		<div class="flash info">Pro zvolený ročník zatím nejsou reportáže doplněny. Přepnout do aktuálního ročníku se můžete <a href="{plink Archive: $currentYear, $currentCalendarYear, $presenter->getAction(true)}">ZDE</a>.</div>
-    	{/if}
+	<div class="reports">
+		{foreach $years as $year}
+			<h3>{$year->word_numbering|upper} ROČNÍK <span class="calendarYearNumber">({$year->calendar_year})</span></h3>
+			{if $year->year == $currentYear && !$hasGameEnded}
+				<div class="flash info inner">{$year->year}. ročník ještě neproběhl a nikdo tedy zatím nenapsal žádnou reportáž.</div>
+			{elseif !isset($reports[$year->year])}
+				<div class="flash info inner">Z {$year->year}. ročníku není k dispozici žádná reportáž. Buďto nikdo žádnou nenapsal, nebo již nejsou dostupné.</div>
+			{else}
+				{foreach $reports[$year->year] as $report}
+					<a href="{$report->link}" target="_blank">
+						<table class="reportBlock">
+							<tr>
+								<td class="reportName">{$report->team|noescape}{if isset($report->name) && strlen($report->name) >0}: {$report->name|noescape}{/if}</td>
+							</tr>
+							<tr n:if="$report->description">
+								<td class="reportDescription">
+									{$report->description|noescape}
+								</td>
+							</tr>
+
+							<tr>
+								<td class="reportLink" style="font-weight:normal">{$report->link|noescape}</td>
+							</tr>
+						</table>
+					</a>
+				{/foreach}
+			{/if}
+		{/foreach}
+	</div>
 {/block}
