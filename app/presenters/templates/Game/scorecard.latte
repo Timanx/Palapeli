@@ -32,10 +32,10 @@
 					</th>
 					{for $j = 0; $j < $totalCheckpoints; $j++}
 						<th class="colI" title="{if $j == 0}Start{elseif $j == $totalCheckpoints - 1}Příchod do cíle{else}Příchod na stanoviště {$j}{/if}">
-							{if $j == 0}S{elseif $j == $totalCheckpoints - 1}C{else}{$j}{/if}I
+							{if $j == 0}S{elseif $j == $totalCheckpoints - 1}C{else}{$j}{/if} in
 						</th>
 						<th class="colO" title="{if $j == 0}Odchod ze startu{elseif $j == $totalCheckpoints - 1}Vyřešení cílového hesla{else}Odchod ze stanoviště {$j}{/if}">
-							{if $j == 0}S{elseif $j == $totalCheckpoints - 1}C{else}{$j}{/if}O
+							{if $j == 0}S{elseif $j == $totalCheckpoints - 1}C{else}{$j}{/if} out
 						</th>
 					{/for}
 				</tr>
