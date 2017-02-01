@@ -1,0 +1,67 @@
+{block content}
+{include ../Extras/yearArrows.latte, positionTop => 100}
+	{if !$hasGameStarted}
+		<div class="flash info">{$selectedYear}. ročník ještě neproběhl a výsledky tedy ještě nejsou k dispozici.</div>
+	{elseif !$hasGameEnded}
+		<div class="flash info">{$selectedYear}. ročník ještě neskončil a výsledky tedy ještě nejsou k dispozici.</div>
+	{elseif !$resultsPublic}
+		<div class="flash info">Výsledky {$selectedYear}. ročníku ještě nejsou zvěřejněny, pracujeme na jejich doplnění.</div>
+	{else}
+		{if !$resultsFinal}
+			<div class="flash info">Výsledky ještě nejsou finální, protože nám chybí data od velkého počtu týmů. Prosíme týmy, které nám neodevzdaly kartu týmů a totálky, ať je naskenované pošlou na mail organizatori@palapeli.cz.</div>
+		{/if}
+		<div title="Kliknutím zobrazíte princip počítání výsledků." id="resultsHint" class="resultsHint" onclick="document.getElementById('resultsInfo').style.display = 'block';this.style.display='none'">Jak byly výsledky spočítány?</div>
+		<div title="Kliknutím text zavřete." id="resultsInfo" style="display: none;" class="resultsInfo" onclick="document.getElementById('resultsHint').style.display = 'block';this.style.display='none'">
+			Pořadí týmů je vytvořeno podle následujících kritérií:
+			<ol>
+				<li>Nejvyšší navštívené stanoviště (příchod do cíle a vyluštění cílového hesla se berou jako
+				dvě samostatná stanoviště) mínus počet totálek.</li>
+				<li>Nejvyšší navštívené stanoviště bez ohledu na počet totálek.</li>
+				<li>Čas příchodu na nejvyšší navštívené stanoviště.</li>
+			</ol>
+			Pokud tým neodevzdal kartu týmu a kartu s totálkami, nemáme o jeho průchodu trasy dost informací na to, abychom ho zařadili do výsledků, a tak se nachází až na chvostu tabulky. Pokud je váš tým mezi nimi, prosíme vás o urychlené zaslání karet týmu a totálek.
+		</div>
+		<table class="resultsTable">
+			{var $i = 1}
+				<tr>
+					<th class="col1" title="Výsledné pořadí týmu">
+						<span class="largeScreen">Pořadí</span><span class="responsive">#</span>
+					</th>
+					<th class="col2" title="Název týmu">
+						Tým
+					</th>
+					{for $j = 0; $j < $totalCheckpoints; $j++}
+						<th class="colI" title="{if $j == 0}Start{elseif $j == $totalCheckpoints - 1}Příchod do cíle{else}Příchod na stanoviště {$j}{/if}">
+							{if $j == 0}S{elseif $j == $totalCheckpoints - 1}C{else}{$j}{/if}I
+						</th>
+						<th class="colO" title="{if $j == 0}Odchod ze startu{elseif $j == $totalCheckpoints - 1}Vyřešení cílového hesla{else}Odchod ze stanoviště {$j}{/if}">
+							{if $j == 0}S{elseif $j == $totalCheckpoints - 1}C{else}{$j}{/if}O
+						</th>
+					{/for}
+				</tr>
+			{foreach $teams as $id => $team}
+				<tr>
+					<td>
+						{$i}.
+					</td>
+					<td class="team col2">
+						{$team['name']|noescape}
+					</td>
+					{if isset($results[$id])}
+					{var $maxEntry = end($results[$id])}
+					{var $maxCheckpoint = key($results[$id])}
+					{/if}
+					{for $j = 0; $j < $totalCheckpoints; $j++}
+						<td class="cI" {if $maxCheckpoint >= $j || $maxCheckpoint == $totalCheckpoints - 1}title="{$team['name']|noescape}: {if $j == 0}start{elseif $j == $totalCheckpoints - 1}příchod do cíle{else}odchod ze stanoviště {$j}{/if}{if isset($results[$id][$j]) && isset($results[$id][$j]['entry_time'])} v {$results[$id][$j]['entry_time']}{else} (nezadaný čas){/if}"{/if} style="background-color:{if isset($results[$id][$j]) && $maxCheckpoint == $j && ($j != $totalCheckpoints - 1 || !isset($results[$id][$j]['exit_time']))}{\App\Presenters\BasePresenter::RED_TINT|noescape}{elseif isset($results[$id][$j])}{$results[$id][$j]['background_color']|noescape}{elseif $maxCheckpoint >=  $j && !isset($maxEntry['used_hint'])}{\App\Presenters\BasePresenter::BLUE_TINT|noescape}{/if};">
+							{if isset($results[$id][$j])}{$results[$id][$j]['entry_time']}{/if}
+						</td>
+						<td class="cO" {if $maxCheckpoint > $j || ($maxCheckpoint == $totalCheckpoints - 1 && isset($results[$id][$j]) && isset($results[$id][$j]['exit_game']))}title="{$team['name']|noescape}: {if isset($results[$id][$j]) && $results[$id][$j]['used_hint'] == 1}totálka na stanovišti{elseif $j == 0}odchod ze startu{elseif $j == $totalCheckpoints - 1}vyřešení cílového hesla{else}odchod ze stanoviště {$j}{/if}{if isset($results[$id][$j]) && isset($results[$id][$j]['exit_time'])} v {$results[$id][$j]['exit_time']}{else} (nezadaný čas){/if}"{/if} style="background-color:{if $maxCheckpoint ==  $j && !isset($maxEntry['used_hint'])}initial{elseif isset($results[$id][$j])}{$results[$id][$j]['background_color']|noescape}{elseif $maxCheckpoint >=  $j && !isset($maxEntry['used_hint'])}{\App\Presenters\BasePresenter::BLUE_TINT|noescape}{/if};">
+							{if isset($results[$id][$j])}{$results[$id][$j]['exit_time']}{/if}
+						</td>
+					{/for}
+				</tr>
+				{var $i = $i + 1}
+			{/foreach}
+		</table>
+	{/if}
+{/block}

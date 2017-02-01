@@ -92,7 +92,7 @@ h1 {
     border-top-width: 4px;
     border-top-style: solid;
     text-align: center;
-    width: 300px;
+    width: 360px;
     margin: auto;
     padding: 20px 0 40px 0;
 }
@@ -628,6 +628,13 @@ textarea  {
 
 .resultsHint:hover {
     text-decoration: underline;
+}
+
+.resultsTable .col2 {
+    max-width: 110px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 /** ADMINISTRATION **/

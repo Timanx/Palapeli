@@ -293,4 +293,46 @@ class GamePresenter extends BasePresenter
             WHERE checkpoint_number >= ? AND year = ? AND results.entry_time IS NOT NULL
         ', $checkpoint, $year)->fetchField('teams_arrived');
     }
+
+    public function renderScorecard()
+    {
+        parent::render();
+        $this->prepareHeading('Podrobné výsledky');
+
+        $this->template->totalCheckpoints = $totalCheckpoints = $this->database->query('
+            SELECT checkpoint_count
+            FROM years
+            WHERE year = ?',
+            $this->selectedYear
+        )->fetchField();
+
+        $this->template->teams = $this->database->query('
+            SELECT teams.id, teams.name, MAX(results.checkpoint_number) AS max_checkpoint, SUM(results.used_hint) AS total_hints, TIME_FORMAT(MAX(results.entry_time), \'%H:%i\') AS finish_time
+            FROM results
+            LEFT JOIN teams ON teams.id = results.team_id
+            WHERE year = ?
+            GROUP BY teams.name
+            ORDER BY (MAX(results.checkpoint_number) - SUM(results.used_hint)) DESC, MAX(results.checkpoint_number) DESC, MAX(results.entry_time) ASC',
+            $this->selectedYear
+        )->fetchAssoc('id');
+
+        $this->template->results = $results = $this->database->query('
+            SELECT team_id, checkpoint_number, TIME_FORMAT(results.entry_time, \'%H:%i\') AS entry_time, TIME_FORMAT(results.exit_time, \'%H:%i\') AS exit_time, CASE WHEN used_hint = 1 THEN ? WHEN used_hint = 0 THEN ? ELSE ? END AS background_color, results.used_hint
+            FROM results
+            WHERE year = ?',
+            BasePresenter::YELLOW_TINT, 'initial', BasePresenter::BLUE_TINT, $this->selectedYear
+        )->fetchAssoc('team_id|checkpoint_number');
+
+        $this->template->resultsPublic = $this->database->query('
+            SELECT results_public
+            FROM years
+            WHERE year = ?
+        ', $this->selectedYear)->fetchField();
+
+        $this->template->resultsFinal = $this->database->query('
+            SELECT results_final
+            FROM years
+            WHERE year = ?
+        ', $this->selectedYear)->fetchField();
+    }
 }

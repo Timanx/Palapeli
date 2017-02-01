@@ -1,13 +1,13 @@
 <div class="yearSwitcher">
 
 	{if $selectedYear > 1}
-		<a class="yearArrow prevYear" title="Předchozí ročník" href="{plink Archive: $selectedYear - 1, $selectedCalendarYear - 1, $presenter->getAction(true)}">
+		<a class="yearArrow prevYear" {if isset($positionTop)}style="top:{$positionTop}px"{/if} title="Předchozí ročník" href="{plink Archive: $selectedYear - 1, $selectedCalendarYear - 1, $presenter->getAction(true)}">
 			{include ../../../components/SVG/prev_year.svg}
 		</a>
 	{/if}
 
 	{if !$isSelectedYearCurrent}
-		<a class="yearArrow nextYear" title="Následující ročník" href="{plink Archive: $selectedYear + 1, $selectedCalendarYear + 1, $presenter->getAction(true)}">
+		<a class="yearArrow nextYear" {if isset($positionTop)}style="top:{$positionTop}px"{/if} title="Následující ročník" href="{plink Archive: $selectedYear + 1, $selectedCalendarYear + 1, $presenter->getAction(true)}">
 			{include ../../../components/SVG/next_year.svg}
 		</a>
 	{/if}
