@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" xml:space="preserve" width="10px" height="10px" version="1.1" style="shape-rendering:geometricPrecision; text-rendering:geometricPrecision; image-rendering:optimizeQuality; fill-rule:evenodd; clip-rule:evenodd"
+viewBox="0 0 100000 100000"
+ xmlns:xlink="http://www.w3.org/1999/xlink">
+ <g>
+  <polygon class="fillblack" points="15021,0 100000,84979 84979,100000 0,15021 "/>
+  <polygon class="fillblack" points="100000,15021 15021,100000 0,84979 84979,0 "/>
+ </g>
+</svg>

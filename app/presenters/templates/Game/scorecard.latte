@@ -7,6 +7,33 @@
 	{elseif !$resultsPublic}
 		<div class="flash info">Výsledky {$selectedYear}. ročníku ještě nejsou zvěřejněny, pracujeme na jejich doplnění.</div>
 	{else}
+		<script>
+			function displayTooltip(text) {
+				var tooltip = document.getElementById('tooltip');
+				if(tooltip) {
+					var tooltipText = document.getElementById('tooltipText');
+
+					if(tooltip.style.display == 'block' && tooltipText.innerHTML === text) {
+						tooltip.style.display = 'none';
+						tooltipText.innerHTML = '';
+					} else {
+						tooltipText.innerHTML = text;
+						tooltip.style.display = 'block';
+					}
+				}
+			}
+
+			function hideTooltip() {
+				var tooltip = document.getElementById('tooltip');
+				if(tooltip) {
+					var tooltipText = document.getElementById('tooltipText');
+					tooltipText.innerHTML = '';
+					tooltip.style.display = 'none';
+				}
+			}
+		</script>
+
+		<div id="tooltip" onclick="hideTooltip()" class="tooltip responsive" style="display:none;"><span id="tooltipText"></span><div class="closingX">{include ../../../components/SVG/cross.svg}</div></div>
 		{if !$resultsFinal}
 			<div class="flash info">Výsledky ještě nejsou finální, protože nám chybí data od velkého počtu týmů. Prosíme týmy, které nám neodevzdaly kartu týmů a totálky, ať je naskenované pošlou na mail organizatori@palapeli.cz.</div>
 		{/if}
@@ -21,6 +48,7 @@
 			</ol>
 			Pokud tým neodevzdal kartu týmu a kartu s totálkami, nemáme o jeho průchodu trasy dost informací na to, abychom ho zařadili do výsledků, a tak se nachází až na chvostu tabulky. Pokud je váš tým mezi nimi, prosíme vás o urychlené zaslání karet týmu a totálek.
 		</div>
+		<div class="scorecardContainer">
 		<table class="resultsTable">
 			{var $i = 1}
 				<tr>
@@ -52,10 +80,13 @@
 					{var $maxCheckpoint = key($results[$id])}
 					{/if}
 					{for $j = 0; $j < $totalCheckpoints; $j++}
-						<td class="cI" {if $maxCheckpoint >= $j || $maxCheckpoint == $totalCheckpoints - 1}title="{$team['name']|noescape}: {if $j == 0}start{elseif $j == $totalCheckpoints - 1}příchod do cíle{else}příchod na stanoviště {$j}{/if}{if isset($results[$id][$j]) && isset($results[$id][$j]['entry_time'])} v {$results[$id][$j]['entry_time']}{else} (nezadaný čas){/if}"{/if} style="background-color:{if isset($results[$id][$j]) && $maxCheckpoint == $j && ($j != $totalCheckpoints - 1 || !isset($results[$id][$j]['exit_time']))}{\App\Presenters\BasePresenter::RED_TINT|noescape}{elseif isset($results[$id][$j])}{$results[$id][$j]['background_color']|noescape}{elseif $maxCheckpoint >=  $j && !isset($maxEntry['used_hint'])}{\App\Presenters\BasePresenter::BLUE_TINT|noescape}{/if};">
+						{capture $titleIn}{if $j == 0}start{elseif $j == $totalCheckpoints - 1}příchod do cíle{else}příchod na stanoviště {$j}{/if}{if isset($results[$id][$j]) && isset($results[$id][$j]['entry_time'])} v {$results[$id][$j]['entry_time']}{else} (nezadaný čas){/if}{/capture}
+						{capture $titleOut}{if isset($results[$id][$j]) && $results[$id][$j]['used_hint'] == 1}totálka na stanovišti {$j}{elseif $j == 0}odchod ze startu{elseif $j == $totalCheckpoints - 1}vyřešení cílového hesla{else}odchod ze stanoviště {$j}{/if}{if isset($results[$id][$j]) && isset($results[$id][$j]['exit_time'])} v {$results[$id][$j]['exit_time']}{else} (nezadaný čas){/if}{/capture}
+
+						<td onclick="displayTooltip('<strong>{$team['name']|noescape}</strong><br />{$titleIn|noescape}')" class="cI" {if $maxCheckpoint >= $j || $maxCheckpoint == $totalCheckpoints - 1}title="{$team['name']|noescape}: {$titleIn|striptags|noescape}"{/if} style="background-color:{if isset($results[$id][$j]) && $maxCheckpoint == $j && ($j != $totalCheckpoints - 1 || !isset($results[$id][$j]['exit_time']))}{\App\Presenters\BasePresenter::RED_TINT|noescape}{elseif isset($results[$id][$j])}{$results[$id][$j]['background_color']|noescape}{elseif $maxCheckpoint >=  $j && !isset($maxEntry['used_hint'])}{\App\Presenters\BasePresenter::BLUE_TINT|noescape}{/if};">
 							{if isset($results[$id][$j])}{$results[$id][$j]['entry_time']}{/if}
 						</td>
-						<td class="cO" {if $maxCheckpoint > $j || ($maxCheckpoint == $totalCheckpoints - 1 && isset($results[$id][$j]) && isset($results[$id][$j]['exit_game']))}title="{$team['name']|noescape}: {if isset($results[$id][$j]) && $results[$id][$j]['used_hint'] == 1}totálka na stanovišti {$j}{elseif $j == 0}odchod ze startu{elseif $j == $totalCheckpoints - 1}vyřešení cílového hesla{else}odchod ze stanoviště {$j}{/if}{if isset($results[$id][$j]) && isset($results[$id][$j]['exit_time'])} v {$results[$id][$j]['exit_time']}{else} (nezadaný čas){/if}"{/if} style="background-color:{if $maxCheckpoint ==  $j && !isset($maxEntry['used_hint'])}initial{elseif isset($results[$id][$j])}{$results[$id][$j]['background_color']|noescape}{elseif $maxCheckpoint >=  $j && !isset($maxEntry['used_hint'])}{\App\Presenters\BasePresenter::BLUE_TINT|noescape}{/if};">
+						<td onclick="displayTooltip('<strong>{$team['name']|noescape}</strong><br />{$titleOut|noescape}')"  class="cO" {if $maxCheckpoint > $j || ($maxCheckpoint == $totalCheckpoints - 1 && isset($results[$id][$j]) && isset($results[$id][$j]['exit_game']))}title="{$team['name']|noescape}: {$titleOut|striptags|noescape}"{/if} style="background-color:{if $maxCheckpoint ==  $j && !isset($maxEntry['used_hint'])}initial{elseif isset($results[$id][$j])}{$results[$id][$j]['background_color']|noescape}{elseif $maxCheckpoint >=  $j && !isset($maxEntry['used_hint'])}{\App\Presenters\BasePresenter::BLUE_TINT|noescape}{/if};">
 							{if isset($results[$id][$j])}{$results[$id][$j]['exit_time']}{/if}
 						</td>
 					{/for}
@@ -63,5 +94,6 @@
 				{var $i = $i + 1}
 			{/foreach}
 		</table>
+		</div>
 	{/if}
 {/block}
