@@ -260,8 +260,8 @@ class AdministrationPresenter extends BasePresenter
 
         for ($i = 0; $i < $checkpointCount; $i++) {
             $checkpoint = $form->addContainer('checkpoint' . $i);
-            $checkpoint->addText('entryTime', ($i == 0 ? 'Začátek hry:' : ($i == $checkpointCount-1 ? 'Příchod do cíle:' : 'Příchod na ' . $i . '. stanoviště:')))->setType('time')->setDefaultValue((isset($results[$i]) && isset($results[$i]['entry_time']) ? $results[$i]['entry_time'] : ($i == 0 && isset($gameStart) ? $gameStart : '--:--')));
-            $checkpoint->addText('exitTime', ($i == 0 ? 'Odchod ze startu:' : ($i == $checkpointCount-1 ? 'Vyřešení cílového hesla:' : 'Odchod z ' . $i . '. stanoviště:')))->setType('time')->setDefaultValue((isset($results[$i]) && isset($results[$i]['exit_time']) ? $results[$i]['exit_time'] : '--:--'));;
+            $checkpoint->addText('entryTime', ($i == 0 ? 'Začátek hry:' : ($i == $checkpointCount-1 ? 'Příchod do cíle:' : 'Příchod na ' . $i . '. stanoviště:')))->setType('time')->setDefaultValue((isset($results[$i]) && isset($results[$i]['entry_time']) ? $results[$i]['entry_time'] : ($i == 0 && isset($gameStart) ? $gameStart : self::EMPTY_TIME_VALUE)));
+            $checkpoint->addText('exitTime', ($i == 0 ? 'Odchod ze startu:' : ($i == $checkpointCount-1 ? 'Vyřešení cílového hesla:' : 'Odchod z ' . $i . '. stanoviště:')))->setType('time')->setDefaultValue((isset($results[$i]) && isset($results[$i]['exit_time']) ? $results[$i]['exit_time'] : self::EMPTY_TIME_VALUE));;
             if($i != $checkpointCount-1) {
                 $checkpoint->addCheckbox('usedHint')->setDefaultValue((isset($results[$i]) && isset($results[$i]['used_hint']) ? $results[$i]['used_hint'] : 0))->setRequired(false);
             }
@@ -279,19 +279,32 @@ class AdministrationPresenter extends BasePresenter
         foreach($values as $number => $checkpoint) {
             $number = substr($number,10);
 
-            if(($checkpoint['entryTime'] != '' && $checkpoint['entryTime'] != '--:--') || (isset($checkpoint['usedHint']) && $checkpoint['usedHint'])) {
-                if($checkpoint['exitTime'] == '--:--') {
+            if  (   isset($checkpoint['usedHint']) &&
+                    $checkpoint['usedHint']
+                 ||
+                    $checkpoint['exitTime'] != '' &&
+                    $checkpoint['exitTime'] != self::EMPTY_TIME_VALUE
+                 ||
+                    $checkpoint['entryTime'] != '' &&
+                    $checkpoint['entryTime'] != self::EMPTY_TIME_VALUE
+
+
+            ) {
+                if($checkpoint['exitTime'] == self::EMPTY_TIME_VALUE || strlen($checkpoint['exitTime']) == 0) {
                     $checkpoint['exitTime'] = NULL;
+                }                
+                if($checkpoint['entryTime'] == self::EMPTY_TIME_VALUE || strlen($checkpoint['entryTime']) == 0) {
+                    $checkpoint['entryTime'] = NULL;
                 }
 
                 $this->database->query('
                 INSERT INTO results (team_id, year, checkpoint_number, entry_time, exit_time, used_hint) VALUES
                 (?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE entry_time = ?, exit_time = ?, used_hint = ?
-            ', $teamId, $this->selectedYear, $number, ($checkpoint['entryTime'] == '' ? NULL : $checkpoint['entryTime']), ($checkpoint['exitTime'] == '' ? NULL : $checkpoint['exitTime']), (isset($checkpoint['usedHint']) && $checkpoint['usedHint'] ? 1 : 0), ($checkpoint['entryTime'] == '' ? NULL : $checkpoint['entryTime']), ($checkpoint['exitTime'] == '' ? NULL : $checkpoint['exitTime']), (isset($checkpoint['usedHint']) && $checkpoint['usedHint'] ? 1 : 0));
+            ', $teamId, $this->selectedYear, $number, (strlen($checkpoint['entryTime']) == 0 ? NULL : $checkpoint['entryTime']), (strlen($checkpoint['exitTime']) == 0 ? NULL : $checkpoint['exitTime']), (isset($checkpoint['usedHint']) && $checkpoint['usedHint'] ? 1 : 0), (strlen($checkpoint['entryTime']) == 0 ? NULL : $checkpoint['entryTime']), (strlen($checkpoint['exitTime']) == 0 ? NULL : $checkpoint['exitTime']), (isset($checkpoint['usedHint']) && $checkpoint['usedHint'] ? 1 : 0));
             }
 
             //Handle finish
-            if ($number == count($values) - 1 && $checkpoint['exitTime'] != '') {
+            if ($number == count($values) - 1 && $checkpoint['exitTime'] != '' && $checkpoint['exitTime'] != self::EMPTY_TIME_VALUE) {
                 $this->database->query('
                 INSERT INTO results (team_id, year, checkpoint_number, entry_time) VALUES
                 (?, ?, ?, ?) ON DUPLICATE KEY UPDATE entry_time = ?
@@ -405,7 +418,7 @@ class AdministrationPresenter extends BasePresenter
 
         for ($i = 0; $i < count($data); $i++) {
             $teamContainer = $form->addContainer('team' . $i);
-            $teamName = $teamContainer->addText('entryTime', $data[$i]['name'])->setType('time')->setDefaultValue((isset($data[$i]['entry_time']) ? $data[$i]['entry_time'] : '--:--'));
+            $teamName = $teamContainer->addText('entryTime', $data[$i]['name'])->setType('time')->setDefaultValue((isset($data[$i]['entry_time']) ? $data[$i]['entry_time'] : self::EMPTY_TIME_VALUE));
             if($checkpoint > 1 && !$data[$i]['visited_previous']) {
                 $teamName->getLabelPrototype()->addAttributes(['class' => 'dead', 'title' => 'Tým nemá vyplněný příchod na předchozím stanovišti']);
             }
@@ -429,7 +442,7 @@ class AdministrationPresenter extends BasePresenter
 
         $checkpoint = $_GET['checkpoint'];
         foreach($values as $team) {
-            if($team['entryTime'] != '' && $team['entryTime'] != '--:--') {
+            if($team['entryTime'] != '' && $team['entryTime'] != self::EMPTY_TIME_VALUE) {
 
                 $this->database->query('
                     INSERT INTO results (team_id, year, checkpoint_number, entry_time) VALUES

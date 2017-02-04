@@ -15,11 +15,13 @@ class BasePresenter extends Nette\Application\UI\Presenter
 
     const ALMOST_DAY = 86399; //End dates should be inclusive
 
+
     const REGISTRATION_START = 1477580400; //27. 10. 2016 17:00
     const REGISTRATION_END = 1485039600 + self::ALMOST_DAY; //22. 1. 2017
     const TEAM_LIMIT = 70; //-1 = no limit
     const CURRENT_YEAR = 6;
     const CURRENT_CALENDAR_YEAR = 2017;
+
 
     const ENTRY_FEE = 240; //CZK
     const ENTRY_FEE_DEADLINE = 1485212400 + self::ALMOST_DAY; //24. 1. 2017
@@ -45,6 +47,8 @@ class BasePresenter extends Nette\Application\UI\Presenter
     const RED_TINT = '#FFB1B1';
     const YELLOW_TINT = '#FFEBA2';
     const GREEN_TINT = '#D7FF9F';
+
+    const EMPTY_TIME_VALUE = '--:--';
 
     const ORG_TEAM_ID = -1;
 
