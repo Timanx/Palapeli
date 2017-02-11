@@ -2,6 +2,9 @@
 
 namespace App\Presenters;
 
+use App\Models\ResultsModel;
+use App\Models\TeamsModel;
+use App\Models\YearsModel;
 use Nette;
 use Nette\Application\UI;
 use Nette\Mail\Message;
@@ -10,14 +13,13 @@ use Nette\Mail\SendmailMailer;
 
 class BasePresenter extends Nette\Application\UI\Presenter
 {
-    public $selectedYear;
-    public $selectedCalendarYear;
+
 
     const ALMOST_DAY = 86399; //End dates should be inclusive
 
 
     const REGISTRATION_START = 1477580400; //27. 10. 2016 17:00
-    const REGISTRATION_END = 1485039600 + self::ALMOST_DAY; //22. 1. 2017
+    const REGISTRATION_END = 1585039600 + self::ALMOST_DAY; //22. 1. 2017
     const TEAM_LIMIT = 70; //-1 = no limit
     const CURRENT_YEAR = 6;
     const CURRENT_CALENDAR_YEAR = 2017;
@@ -56,6 +58,9 @@ class BasePresenter extends Nette\Application\UI\Presenter
     const PAY_NOK = 0;
     const PAY_START = 2;
     const SHOULD_NOT_PAY = 3;
+
+    public $selectedYear;
+    public $selectedCalendarYear;
 
     public function render()
     {
@@ -162,10 +167,6 @@ class BasePresenter extends Nette\Application\UI\Presenter
         foreach($values as &$value) {
             $value = strip_tags($value);
         }
-
-
-
-
 
         $mail = new Message;
         if(strlen($values['sender']) > 0) {

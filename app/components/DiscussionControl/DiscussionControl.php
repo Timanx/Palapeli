@@ -1,6 +1,7 @@
 <?php
 use Nette\Application\UI\Control;
 use Nette\Application\UI;
+use App\Models\TeamsModel;
 
 class DiscussionControl extends Control
 {
@@ -13,6 +14,8 @@ class DiscussionControl extends Control
 
     /** @var Nette\Database\Context */
     private $database;
+    /** @var TeamsModel */
+    private $teamsModel;
     private $thread;
     private $teamId;
     private $teamName;
@@ -20,12 +23,25 @@ class DiscussionControl extends Control
     private $threads;
 
 
-    public function __construct(Nette\Database\Context $database, $teamId = null, $teamName = null, $thread = self::MAIN_THREAD)
+    public function __construct(Nette\Database\Context $database, TeamsModel $teamsModel)
     {
         $this->database = $database;
+        $this->teamsModel = $teamsModel;
+    }
+
+    public function setThread($thread)
+    {
         $this->thread = $thread;
-        $this->teamName = $teamName;
+    }
+
+    public function setTeamId($teamId)
+    {
         $this->teamId = $teamId;
+    }
+
+    public function setTeamName($teamName)
+    {
+        $this->teamName = $teamName;
     }
 
     public function render()

@@ -1,5 +1,6 @@
-{block content}
-	{if $orgLogged}
+{layout '@layout.latte'}
+
+{block administrationBlock}
 	<div class="information">Vybraný ročník: {$selectedYear}. ({$selectedCalendarYear})</div>
 	<div class="selectForm">
 		{control selectCheckpointForm}
@@ -48,10 +49,5 @@
 				</tr>
 			</table>
 		{/form}
-	{/if}
-	{else}
-		<div class="flash info">
-			Na tuto stránku mají přístup pouze organizátoři. Můžete se vrátit například <a href="{plink Team:}">na přihlašovací stránku</a>.
-		</div>
 	{/if}
 {/block}

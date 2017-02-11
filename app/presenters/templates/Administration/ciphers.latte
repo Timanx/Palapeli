@@ -1,5 +1,6 @@
-{block content}
-	{if $orgLogged}
+{layout '@layout.latte'}
+
+{block administrationBlock}
 	<div class="information">Vybraný ročník: {$selectedYear}. ({$selectedCalendarYear})</div>
 	<div class="selectForm">
 		{control selectOnlyCheckpointForm}
@@ -9,11 +10,6 @@
 			<h2 class="heading">{if $checkpoint == 0}START{elseif $checkpoint == $checkpointCount - 1}CÍL{else}STANOVIŠTĚ {$checkpoint}{/if}</h2>
 		<div class="cipherForm">
 			{control cipherForm}
-		</div>
-	{/if}
-	{else}
-		<div class="flash info">
-			Na tuto stránku mají přístup pouze organizátoři. Můžete se vrátit například <a href="{plink Team:}">na přihlašovací stránku</a>.
 		</div>
 	{/if}
 {/block}

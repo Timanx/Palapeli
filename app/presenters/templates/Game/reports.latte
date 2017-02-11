@@ -8,19 +8,19 @@
 				<div class="flash info inner">Z {$year->year}. ročníku není k dispozici žádná reportáž. Buďto nikdo žádnou nenapsal, nebo již nejsou dostupné.</div>
 			{else}
 				{foreach $reports[$year->year] as $report}
-					<a href="{$report->link}" target="_blank">
+					<a href="{$report['link']}" target="_blank">
 						<table class="reportBlock">
 							<tr>
-								<td class="reportName">{$report->team|noescape}{if isset($report->name) && strlen($report->name) >0}: {$report->name|noescape}{/if}</td>
+								<td class="reportName">{$report['team']|noescape}{if isset($report['name']) && strlen($report['name']) >0}: {$report['name']|noescape}{/if}</td>
 							</tr>
-							<tr n:if="$report->description">
+							<tr n:if="$report['description']">
 								<td class="reportDescription">
-									{$report->description|noescape}
+									{$report['description']|noescape}
 								</td>
 							</tr>
 
 							<tr>
-								<td class="reportLink" style="font-weight:normal">{$report->link|noescape}</td>
+								<td class="reportLink" style="font-weight:normal">{$report['link']|noescape}</td>
 							</tr>
 						</table>
 					</a>

@@ -1,13 +1,9 @@
-{block content}
-	{if $orgLogged}
-		<div class="noDataMail">
-			{foreach $emails as $email}
-				{$email->email|noescape}{if !$iterator->isLast()}, {/if}
-			{/foreach}
-		</div>
-	{else}
-		<div class="flash info">
-			Na tuto stránku mají přístup pouze organizátoři. Můžete se vrátit například <a href="{plink Team:}">na přihlašovací stránku</a>.
-		</div>
-	{/if}
+{layout '@layout.latte'}
+
+{block administrationBlock}
+	<div class="noDataMail">
+		{foreach $emails as $email}
+			{$email->email|noescape}{if !$iterator->isLast()}, {/if}
+		{/foreach}
+	</div>
 {/block}

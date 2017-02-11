@@ -1,0 +1,175 @@
+<?php
+
+namespace App\Models;
+
+use App\Presenters\BasePresenter;
+use Nette;
+
+class ResultsModel {
+
+    /**
+     * @var Nette\Database\Context
+     */
+    private $database;
+
+    private $year;
+
+    public function __construct(Nette\Database\Context $database)
+    {
+        $this->database = $database;
+    }
+
+    public function setYear($year)
+    {
+        $this->year = $year;
+    }
+
+    public function getTeamStandings()
+    {
+        return $this->database->query('
+            SELECT teams.id, teams.name, MAX(results.checkpoint_number) AS max_checkpoint, SUM(results.used_hint) AS total_hints, TIME_FORMAT(MAX(results.entry_time), \'%H:%i\') AS finish_time
+            FROM results
+            LEFT JOIN teams ON teams.id = results.team_id
+            WHERE year = ?
+            GROUP BY teams.name
+            ORDER BY (MAX(results.checkpoint_number) - SUM(results.used_hint)) DESC, MAX(results.checkpoint_number) DESC, MAX(results.entry_time) ASC',
+            $this->year
+        )->fetchAssoc('id');
+    }
+
+    public function getCompleteResults()
+    {
+        return $this->database->query('
+            SELECT team_id, checkpoint_number, TIME_FORMAT(results.entry_time, \'%H:%i\') AS entry_time, TIME_FORMAT(results.exit_time, \'%H:%i\') AS exit_time, CASE WHEN used_hint = 1 THEN ? WHEN used_hint = 0 THEN ? ELSE ? END AS background_color, results.used_hint
+            FROM results
+            WHERE year = ?',
+            BasePresenter::YELLOW_TINT, 'initial', BasePresenter::BLUE_TINT, $this->year
+        )->fetchAssoc('team_id|checkpoint_number');
+    }
+
+    public function getResultsPublic()
+    {
+        return $this->database->query('
+            SELECT results_public
+            FROM years
+            WHERE year = ?
+        ', $this->year)->fetchField();
+    }
+
+    public function getResultsFinal()
+    {
+        return $this->database->query('
+            SELECT results_final
+            FROM years
+            WHERE year = ?
+        ', $this->year)->fetchField();
+    }
+
+    public function getStatsData()
+    {
+        return $this->database->query('
+            SELECT team_id, used_hint, entry_time, used_hint IS NOT NULL AS filled, checkpoint_number, EXISTS(SELECT 1 FROM results r WHERE r.team_id = results.team_id AND r.year = results.year AND r.checkpoint_number > results.checkpoint_number) AS continued
+            FROM results
+            WHERE year = ?
+        ', $this->year)->fetchAll();
+    }
+
+    public function getFastestSolution($checkpoint)
+    {
+        return $this->database->query('
+            SELECT TIME_TO_SEC(TIMEDIFF(results.exit_time, results.entry_time)) / 60 AS time, GROUP_CONCAT(teams.name SEPARATOR \', \') AS name
+            FROM results
+            LEFT JOIN teams ON results.team_id = teams.id
+            WHERE checkpoint_number = ? AND year = ? AND results.exit_time IS NOT NULL AND NOT results.used_hint AND results.entry_time IS NOT NULL AND (results.exit_time - results.entry_time) = (SELECT MIN(exit_time - entry_time) FROM results WHERE checkpoint_number = ? AND year = ? AND NOT used_hint)
+            GROUP BY time
+        ', $checkpoint, $this->year, $checkpoint, $this->year)->fetch();
+    }
+
+    public function getTeamsFilledCount($checkpoint)
+    {
+        return $this->database->query('
+            SELECT COUNT(id) AS teams_filled FROM (
+
+            SELECT teams.id, (CASE WHEN (MAX(results.exit_time) IS NOT NULL AND MAX(results.exit_time) != \'00:00\' || EXISTS (SELECT 1 FROM results r WHERE r.year = teamsyear.year AND r.team_id = teams.id AND r.used_hint IS NOT NULL)) THEN 1 ELSE 0 END) AS team_filled
+            FROM teams
+              LEFT JOIN teamsyear ON teams.id = teamsyear.team_id
+              LEFT JOIN results ON results.year = ? AND teams.id = results.team_id AND results.checkpoint_number = ?
+            WHERE teamsyear.year = ?
+              GROUP BY teams.id
+            ) t
+            WHERE team_filled
+        ', $this->year, $checkpoint, $this->year)->fetchField();
+    }
+
+    public function getTeamsFilledIds($checkpoint)
+    {
+        return array_keys($this->database->query('
+            SELECT id
+            FROM (
+
+            SELECT teams.id,
+              (
+                CASE WHEN
+                  MAX(results.exit_time) IS NOT NULL AND
+                  MAX(results.exit_time) != \'00:00\'
+
+                  OR
+
+                  EXISTS (
+                    SELECT 1
+                    FROM results r
+                    WHERE r.year = teamsyear.year AND r.team_id = teams.id AND r.used_hint IS NOT NULL
+                  )
+
+
+                  OR
+
+                    NOT EXISTS (
+                      SELECT 1
+                      FROM results r2
+                      WHERE r2.year = teamsyear.year AND r2.team_id = teams.id AND r2.checkpoint_number > results.checkpoint_number
+                  )
+                  THEN 1 ELSE 0 END) AS team_filled
+            FROM teams
+              LEFT JOIN teamsyear ON teams.id = teamsyear.team_id
+              LEFT JOIN results ON results.year = ? AND teams.id = results.team_id
+            WHERE teamsyear.year = ? AND results.checkpoint_number = ?
+              GROUP BY teams.id
+            ) t
+            WHERE team_filled
+        ', $this->year, $this->year, $checkpoint)->fetchAssoc('id')
+
+        );
+    }
+
+    public function geTeamsArrivedCount($checkpoint)
+    {
+        return $this->database->query('
+            SELECT COUNT(DISTINCT results.team_id) AS teams_arrived
+            FROM results
+            WHERE checkpoint_number >= ? AND year = ? AND results.entry_time IS NOT NULL
+        ', $checkpoint, $this->year)->fetchField();
+    }
+
+    public function getTeamsContinuedIds($checkpoint)
+    {
+        return $this->database->query('
+            SELECT DISTINCT (results.team_id) AS teams_continued
+            FROM results
+            WHERE checkpoint_number > ? AND year = ? AND results.entry_time IS NOT NULL
+        ', $checkpoint, $this->year)->fetchAssoc('teams_continued');
+    }
+
+    public function getUsedHintsCount($checkpoint, $teamIds)
+    {
+        if(count($teamIds) == 0) {
+            return 0;
+        }
+
+        return $this->database->query('
+            SELECT SUM(results.used_hint) AS used_hints
+            FROM results
+            WHERE checkpoint_number = ? AND year = ? AND results.team_id IN (?)
+        ', $checkpoint, $this->year, $teamIds)->fetchField('used_hints');
+    }
+}

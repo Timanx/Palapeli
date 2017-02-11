@@ -5,6 +5,7 @@ use Nette;
 use Nette\Application\UI;
 use Nette\Mail\Message;
 use Nette\Mail\SendmailMailer;
+use App\Models\TeamsModel;
 
 
 class TeamPresenter extends BasePresenter
@@ -437,17 +438,12 @@ class TeamPresenter extends BasePresenter
         $mailer = new SendmailMailer;
         $mailer->send($mail);
 
-
-
-
-
         if($teamsCount > self::TEAM_LIMIT && in_array($this->session->getSection("team")->teamId, $playingTeams)) {
             $newTeam = TeamsModel::getFirstStandby($this->database);
 
             if(isset($newTeam[0])) {
 
                 $mail = new Message;
-
 
                 if(strlen($newTeam[0]->email2) > 0) {
                     $mail->setFrom('Palapeli Web <organizatori@palapeli.cz>')

@@ -1,6 +1,7 @@
 <?php
 namespace App\Presenters;
 
+use DiscussionControl;
 use Nette;
 use Nette\Application\UI;
 use Nette\Http\FileUpload;
@@ -10,10 +11,13 @@ class AdministrationPresenter extends BasePresenter
 {
     /** @var Nette\Database\Context */
     private $database;
+    /** @var  \IDiscussionControlFactory */
+    private $discussionControlFactory;
 
-    public function __construct(Nette\Database\Context $database)
+    public function __construct(Nette\Database\Context $database, \IDiscussionControlFactory $discussionControlFactory)
     {
         $this->database = $database;
+        $this->discussionControlFactory = $discussionControlFactory;
     }
 
     public function renderDefault()
@@ -162,11 +166,27 @@ class AdministrationPresenter extends BasePresenter
     }
 
     protected function createComponentDiscussion() {
-        return new \DiscussionControl($this->database, $this->session->getSection('team')->teamId, $this->session->getSection('team')->teamName, \DiscussionControl::ANY_THREAD);
+
+        /** @var DiscussionControl $control */
+        $control = $this->discussionControlFactory->create();
+
+        $control->setTeamId($this->session->getSection('team')->teamId);
+        $control->setTeamName($this->session->getSection('team')->teamName);
+        $control->setThread(\DiscussionControl::ANY_THREAD);
+
+        return $control;
     }
 
     protected function createComponentChat() {
-        return new \DiscussionControl($this->database, $this->session->getSection('team')->teamId, $this->session->getSection('team')->teamName, \DiscussionControl::CHAT_THREAD);
+
+        /** @var DiscussionControl $control */
+        $control = $this->discussionControlFactory->create();
+
+        $control->setTeamId($this->session->getSection('team')->teamId);
+        $control->setTeamName($this->session->getSection('team')->teamName);
+        $control->setThread(\DiscussionControl::CHAT_THREAD);
+
+        return $control;
     }
 
     public function createComponentNewUpdateForm()

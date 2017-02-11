@@ -54,7 +54,7 @@
 						height="{$sHeight|noescape}"
 						y="{$height - $sHeight|noescape}"
 						x="{$x|noescape}%"
-						style="width:{$width|noescape}%">
+						width="{$width|noescape}%">
 						<title>{if $solved == 1}Vyřešil 1 tým{elseif $solved < 5 && $solved != 0}Vyřešily {$solved} týmy{else}Vyřešilo {$solved} týmů{/if}.</title>
 					</rect>
 					<rect
@@ -62,7 +62,7 @@
 						height="{$hHeight|noescape}"
 						y="{$height - $sHeight - $hHeight|noescape}"
 						x="{$x|noescape}%"
-						style="width:{$width|noescape}%">
+						width="{$width|noescape}%">
 						<title>{if $hint == 1}Nápovědu použil 1 tým{elseif $hint < 5 && $hint != 0}Nápovědu použily {$hint} týmy{else}Nápovědu použilo {$hint} týmů{/if}.</title>
 					</rect>
 					<rect
@@ -70,7 +70,7 @@
 						height="{$dHeight|noescape}"
 						y="{$height - $sHeight - $hHeight - $dHeight|noescape}"
 						x="{$x|noescape}%"
-						style="width:{$width|noescape}%">
+						width="{$width|noescape}%">
 						<title>{if $dead == 1}Skončil 1 tým{elseif $dead < 5 && $dead != 0}Skončily {$dead} týmy{else}Skončilo {$dead} týmů{/if}.</title>
 					</rect>
 					<rect
@@ -78,7 +78,7 @@
 						height="{$nHeight|noescape}"
 						y="{$height - $sHeight - $hHeight - $dHeight - $nHeight|noescape}"
 						x="{$x|noescape}%"
-						style="width:{$width|noescape}%">
+						width="{$width|noescape}%">
 						<title>{if $nodata == 1}Chybí data od 1 týmu{else}Chybí data od {$nodata} týmů{/if}.</title>
 					</rect>
 				{/if}
@@ -86,19 +86,19 @@
 
 			{var $textX = 35}
 			{var $rectX = 30}
-			<rect  class="legend solved" y="240" x="{$rectX}%"/>
+			<rect  class="legend solved" width="20px" height="20px" y="240" x="{$rectX}%"/>
 			<text text-anchor="left" x="{$textX}%" y="255">
 								Týmy, které šifru vyluštily
 							</text>
-			<rect  class="legend hint" y="270" x="{$rectX}%" />
+			<rect  class="legend hint" width="20px" height="20px" y="270" x="{$rectX}%" />
 					<text text-anchor="left" x="{$textX}%" y="285">
 										Týmy, které braly nápovědu
 									</text>
-			<rect  class="legend dead" y="300" x="{$rectX}%" />
+			<rect  class="legend dead" width="20px" height="20px" y="300" x="{$rectX}%" />
 					<text text-anchor="left" x="{$textX}%" y="315">
 										Týmy, které na daném stanovišti skončily
 									</text>
-			<rect  class="legend no-data" y="330" x="{$rectX}%" />
+			<rect  class="legend no-data" width="20px" height="20px" y="330" x="{$rectX}%" />
 					<text text-anchor="left" x="{$textX}%" y="345">
 										Týmy, od kterých chybí data
 									</text>
