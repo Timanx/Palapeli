@@ -24,4 +24,11 @@ class ReportsModel {
             ORDER BY reports.year
         ')->fetchAssoc('year[]');
     }
+
+    public function insertReport($year, $link, $teamId, $name, $description)
+    {
+        $this->database->query('
+            INSERT INTO reports (year, link, team_id, name, description) VALUES (?, ?, ?, ?, ?)
+        ', $year, $link, $teamId, $name, $description);
+    }
 }

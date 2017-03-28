@@ -50,6 +50,7 @@ class BasePresenter extends Nette\Application\UI\Presenter
     const YELLOW_TINT = '#FFEBA2';
     const GREEN_TINT = '#D7FF9F';
 
+    const ORG_MAIL_FORMAT = 'Palapeli Web <organizatori@palapeli.cz>';
     const EMPTY_TIME_VALUE = '--:--';
 
     const ORG_TEAM_ID = -1;
@@ -61,6 +62,8 @@ class BasePresenter extends Nette\Application\UI\Presenter
 
     public $selectedYear;
     public $selectedCalendarYear;
+
+    protected $teamId;
 
     public function render()
     {
@@ -74,6 +77,7 @@ class BasePresenter extends Nette\Application\UI\Presenter
 
         if($this->session->hasSection('team') && !empty($this->session->getSection('team')->teamId)) {
             $this->template->teamId = $this->session->getSection('team')->teamId;
+            $this->teamId = $this->session->getSection('team')->teamId;
         }
 
         if($this->session->hasSection('team') && !empty($this->session->getSection('team')->teamId) && $this->session->getSection('team')->teamId == self::ORG_TEAM_ID) {

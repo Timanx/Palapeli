@@ -56,6 +56,14 @@ class ResultsModel {
         ', $this->year)->fetchField();
     }
 
+    public function publishResults()
+    {
+        $this->database->query('
+            UPDATE years SET results_public = 1
+            WHERE year = ?
+        ', $this->year);
+    }
+
     public function getResultsFinal()
     {
         return $this->database->query('
@@ -171,5 +179,102 @@ class ResultsModel {
             FROM results
             WHERE checkpoint_number = ? AND year = ? AND results.team_id IN (?)
         ', $checkpoint, $this->year, $teamIds)->fetchField('used_hints');
+    }
+
+    public function getTeamsWithFilledStatus()
+    {
+        return $this->database->query('
+            SELECT name, teams.id, (MAX(results.exit_time) IS NOT NULL AND MAX(results.exit_time) != \'00:00\' || EXISTS (SELECT 1 FROM results r WHERE r.year = teamsyear.year AND r.team_id = teams.id AND r.used_hint IS NOT NULL)) AS team_filled
+            FROM teams
+            LEFT JOIN teamsyear ON teams.id = teamsyear.team_id
+            LEFT JOIN results ON results.year = ? AND teams.id = results.team_id
+            WHERE teamsyear.year = ?
+            GROUP BY name, teams.id
+            ORDER BY LTRIM(name) COLLATE utf8_czech_ci
+        ', $this->year, $this->year)->fetchAll();
+    }
+
+    public function getTeamResults($teamId)
+    {
+        return $this->database->query('
+            SELECT TIME_FORMAT(results.entry_time, \'%H:%i\') AS entry_time,TIME_FORMAT(results.exit_time, \'%H:%i\') AS exit_time, used_hint, checkpoint_number
+            FROM results
+            WHERE team_id = ? AND year = ?
+            ORDER BY checkpoint_number
+        ', $teamId, $this->year)->fetchAssoc('checkpoint_number');
+    }
+
+    public function insertResultsRow($teamId, $checkpointNumber, $entryTime = NULL, $exitTime = NULL, $usedHint = NULL)
+    {
+        $this->database->query('
+                INSERT IGNORE INTO results (team_id, year, checkpoint_number) VALUES
+                (?, ?, ?)
+            ',
+            $teamId,
+            $this->year,
+            $checkpointNumber
+        );
+
+        if($entryTime !== NULL) {
+            $this->database->query('
+                UPDATE results SET entry_time = ? WHERE team_id = ? AND year = ? AND checkpoint_number = ?
+            ',
+                (strlen($entryTime) == 0 ? NULL : $entryTime),
+                $teamId,
+                $this->year,
+                $checkpointNumber
+            );
+        }
+
+        if($exitTime !== NULL) {
+            $this->database->query('
+                UPDATE results SET exit_time = ? WHERE team_id = ? AND year = ? AND checkpoint_number = ?
+            ',
+                (strlen($exitTime) == 0 ? NULL : $exitTime),
+                $teamId,
+                $this->year,
+                $checkpointNumber
+            );
+        }
+
+        if($usedHint !== NULL) {
+            $this->database->query('
+                UPDATE results SET used_hint = ? WHERE team_id = ? AND year = ? AND checkpoint_number = ?
+            ',
+                ($usedHint ? 1 : 0),
+                $teamId,
+                $this->year,
+                $checkpointNumber
+            );
+        }
+    }
+
+    public function getCheckpointEntryTimes($checkpointNumber, $orderByPrevious = false)
+    {
+        if($orderByPrevious) {
+            return $this->database->query('
+            SELECT TIME_FORMAT(results.entry_time, \'%H:%i\') AS entry_time, teams.id, teams.name, previous_results.entry_time IS NOT NULL AS visited_previous
+            FROM teamsyear
+            LEFT JOIN results ON teamsyear.year = results.year AND teamsyear.team_id = results.team_id AND results.checkpoint_number = ?
+            LEFT JOIN teams ON teamsyear.team_id = teams.id
+            LEFT JOIN results AS previous_results ON previous_results.year = ? AND previous_results.checkpoint_number = ? AND previous_results.team_id = teamsyear.team_id
+            WHERE teamsyear.year = ?
+            ORDER BY results.entry_time, previous_results.entry_time IS NOT NULL DESC, previous_results.entry_time, LTRIM(name) COLLATE utf8_czech_ci ASC
+        ', $checkpointNumber, $this->year, ($checkpointNumber == 0 ? 0 : $checkpointNumber - 1), $this->year)->fetchAll();
+        } else {
+            return $this->database->query('
+            SELECT TIME_FORMAT(results.entry_time, \'%H:%i\') AS entry_time, teams.id, teams.name, previous_results.entry_time IS NOT NULL AS visited_previous
+            FROM teamsyear
+            LEFT JOIN results ON teamsyear.year = results.year AND teamsyear.team_id = results.team_id AND results.checkpoint_number = ?
+            LEFT JOIN teams ON teamsyear.team_id = teams.id
+            LEFT JOIN results AS previous_results ON previous_results.year = ? AND previous_results.checkpoint_number = ? AND previous_results.team_id = teamsyear.team_id
+            WHERE teamsyear.year = ?
+            ORDER BY results.entry_time, LTRIM(name) COLLATE utf8_czech_ci ASC
+        ', $checkpointNumber, $this->year, ($checkpointNumber == 0 ? 0 : $checkpointNumber - 1), $this->year)->fetchAll();
+        }
+
+
+
+
     }
 }

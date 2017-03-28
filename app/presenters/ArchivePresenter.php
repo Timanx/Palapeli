@@ -3,10 +3,8 @@ namespace App\Presenters;
 
 use Nette;
 
-
 class ArchivePresenter extends BasePresenter
 {
-
     public function renderDefault($year, $calendarYear, $link)
     {
         $this->session->getSection('selected')->year = $year;

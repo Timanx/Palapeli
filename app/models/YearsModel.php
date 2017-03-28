@@ -32,6 +32,16 @@ class YearsModel {
         )->fetchField();
     }
 
+    public function getYearData()
+    {
+        return $this->database->query('
+            SELECT *
+            FROM years
+            WHERE year = ?',
+            $this->year
+        )->fetch();
+    }
+
     public function getYearNames()
     {
         return $this->database->query('

@@ -1,30 +1,26 @@
 <?php
 namespace App\Presenters;
 
+use App\Models\UpdatesModel;
 use Nette;
 
 
 class InfoPresenter extends BasePresenter
 {
-    /** @var Nette\Database\Context */
-    private $database;
+    /** @var UpdatesModel */
+    private $updatesModel;
 
-    public function __construct(Nette\Database\Context $database)
+    public function __construct(UpdatesModel $updatesModel)
     {
-        $this->database = $database;
+        $this->updatesModel = $updatesModel;
     }
 
     public function renderDefault()
     {
         parent::render();
         $this->prepareHeading('Aktuality');
-        $data = $this->database->query('
-            SELECT *
-            FROM updates
-            WHERE year = ?
-            ORDER BY date DESC
-        ', $this->selectedYear)->fetchAll();
-
+        $this->updatesModel->setYear($this->selectedYear);
+        $data = $this->updatesModel->getUpdates();
         $this->template->updates = $data;
 
     }

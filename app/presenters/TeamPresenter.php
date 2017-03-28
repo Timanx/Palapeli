@@ -10,22 +10,22 @@ use App\Models\TeamsModel;
 
 class TeamPresenter extends BasePresenter
 {
-    /** @var Nette\Database\Context */
-    private $database;
+    /** @var  TeamsModel */
+    private $teamsModel;
 
-    public function __construct(Nette\Database\Context $database)
+    public function __construct( TeamsModel $teamsModel)
     {
-        $this->database = $database;
+        parent::__construct();
+        $this->teamsModel = $teamsModel;
     }
 
     public function renderRegistration()
     {
         parent::render();
         $this->prepareHeading('Registrace');
+        $this->teamsModel->setYear($this->selectedYear);
 
-        $teamsRegistered = TeamsModel::getTeamsCount($this->database);
-
-        $this->template->displayStandbyWarning = $teamsRegistered >= self::TEAM_LIMIT && self::TEAM_LIMIT > 0;
+        $this->template->displayStandbyWarning = $this->teamsModel->getTeamsCount() >= self::TEAM_LIMIT && self::TEAM_LIMIT > 0;
     }
 
     public function renderDefault()
@@ -39,19 +39,12 @@ class TeamPresenter extends BasePresenter
         parent::render();
         $this->prepareHeading('Zrušení účasti');
 
-        if(isset($this->session->getSection('team')->teamId)) {
-
-            $data = $this->database->query('
-            SELECT 1
-            FROM teamsyear ty
-            WHERE team_id  = ? AND year = ?
-        ', $this->session->getSection('team')->teamId, $this->selectedYear)->fetchAll();
-
-            $this->template->registered = count($data);
+        if(isset($this->teamId)) {
+            $this->teamsModel->setYear($this->selectedYear);
+            $this->template->registered = $this->teamsModel->isTeamRegistered($this->teamId);
         } else {
             $this->template->registered = false;
         }
-
     }
 
     public function renderPassword()
@@ -65,15 +58,9 @@ class TeamPresenter extends BasePresenter
         parent::render();
         $this->prepareHeading('Úprava údajů');
 
-        if(isset($this->session->getSection('team')->teamId)) {
-
-            $data = $this->database->query('
-            SELECT 1
-            FROM teamsyear ty
-            WHERE team_id  = ? AND year = ?
-        ', $this->session->getSection('team')->teamId, $this->selectedYear)->fetchAll();
-
-            $this->template->registered = count($data);
+        if(isset($this->teamId)) {
+            $this->teamsModel->setYear($this->selectedYear);
+            $this->template->registered = $this->teamsModel->isTeamRegistered($this->teamId);
         } else {
             $this->template->registered = false;
         }
@@ -84,36 +71,16 @@ class TeamPresenter extends BasePresenter
         parent::render();
         $this->prepareHeading('Platba startovného');
 
-        if(isset($this->session->getSection('team')->teamId)) {
+        if(isset($this->teamId)) {
+            $this->teamsModel->setYear($this->selectedYear);
+            $this->template->registered = $registered = $this->teamsModel->isTeamRegistered($this->teamId);
 
-        $data = $this->database->query('
-            SELECT paid
-            FROM teamsyear ty
-            WHERE team_id  = ? AND year = ?
-        ', $this->session->getSection('team')->teamId, self::CURRENT_YEAR)->fetchAll();
-
-        $registered = $this->database->query('
-            SELECT registered
-            FROM teamsyear ty
-            WHERE team_id  = ? AND year = ?
-        ', $this->session->getSection('team')->teamId, self::CURRENT_YEAR)->fetchField();
-
-            $this->template->registered = isset($registered);
-            if(isset($registered)) {
-
-                $order = $this->database->query('
-                    SELECT COUNT(team_id)
-                    FROM teamsyear
-                    WHERE registered < ? AND year = ?
-                ', $registered, self::CURRENT_YEAR)->fetchField();
-
-                $this->template->isSubstitute = $order >= self::TEAM_LIMIT;
-
-                $this->template->paid = $data[0]->paid;
+            if($registered) {
+                $this->template->isSubstitute = $this->teamsModel->getTeamRegistrationOrder($this->teamId) >= self::TEAM_LIMIT;
+                $this->template->paid = $this->teamsModel->getTeamPaymentStatus($this->teamId);
             } else {
                 $this->template->paid = self::SHOULD_NOT_PAY;
             }
-
         } else {
             $this->template->registered = false;
             $this->template->paid = self::SHOULD_NOT_PAY;
@@ -131,48 +98,33 @@ class TeamPresenter extends BasePresenter
 
     public function actionRegisterLogged()
     {
+        $this->teamsModel->setYear($this->selectedYear);
+        
         if(!$this->isRegistrationOpen()) {
             $this->flashMessage('Registrace do ' . $this->selectedYear . '. ročníku je uzavřena.');
             $this->redirect('Info:');
         }
         if(isset($this->session->getSection('team')->teamId)) {
             $teamId = $this->session->getSection('team')->teamId;
-            $isInSelectedYear = $this->database->query('
-                    SELECT 1
-                    FROM teamsyear
-                    WHERE team_id = ? AND year = ?
-                ', $teamId, self::CURRENT_YEAR)->fetchAll();
+            $registered = $this->teamsModel->isTeamRegistered($teamId);
 
-            if(!count($isInSelectedYear)) {
-                if (count($isInSelectedYear) == 0) {
-                    $teamData = $this->database->query('
-                      SELECT *
-                      FROM teamsyear
-                      WHERE team_id = ' . $teamId . '
-                      ORDER BY year DESC'
-                    )->fetchAll();
+            if(!$registered) {
+                $teamData = $this->teamsModel->getMostRecentTeamYearData($teamId);
 
-                    if (count($teamData) != 0) {
-                        $teamData = $teamData[0];
-                        $this->database->query('
-                            INSERT INTO teamsyear (team_id, year, paid, member1, member2, member3, member4, registered) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                        ', $teamId, self::CURRENT_YEAR, 0, $teamData->member1, $teamData->member2, $teamData->member3, $teamData->member4, date('Y-m-d H:i:s', time()));
-
-                    } else {
-                        $this->database->query('
-                            INSERT INTO teamsyear (team_id, year, paid, member1, member2, member3, member4, registered) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                        ', $teamId, self::CURRENT_YEAR, 0, "", null, null, null, date('Y-m-d H:i:s', time()));
-                    }
-                    $teamsCount = TeamsModel::getTeamsCount($this->database);
-
-                    if($teamsCount > self::TEAM_LIMIT) {
-                        $this->flashMessage('Tým ' . $this->session->getSection('team')->teamName . ' byl úspěšně zaregistrován do aktuálního ročníku jako náhradní. Již je totiž naplněn limit počtu týmů, které se mohou hry zúčastnit. Jakmile se pro vás uvolní místo, ozveme se vám.', 'info');
-                    } else {
-                        $this->flashMessage('Tým ' . $this->session->getSection('team')->teamName . ' byl úspěšně zaregistrován do aktuálního ročníku.', 'success');
-                    }
-
-                    $this->redirect('Team:edit');
+                if (isset($teamData)) {
+                    $this->teamsModel->registerTeam($teamId, $teamData->member1, $teamData->member2, $teamData->member3, $teamData->member4);
+                } else {
+                    $this->teamsModel->registerTeam($teamId);
                 }
+                $teamsCount = $this->teamsModel->getTeamsCount();
+
+                if($teamsCount > self::TEAM_LIMIT && self::TEAM_LIMIT >= 0) {
+                    $this->flashMessage('Tým ' . $this->session->getSection('team')->teamName . ' byl úspěšně zaregistrován do aktuálního ročníku jako náhradní. Již je totiž naplněn limit počtu týmů, které se mohou hry zúčastnit. Jakmile se pro vás uvolní místo, ozveme se vám.', 'info');
+                } else {
+                    $this->flashMessage('Tým ' . $this->session->getSection('team')->teamName . ' byl úspěšně zaregistrován do aktuálního ročníku.', 'success');
+                }
+
+                $this->redirect('Team:edit');
             } else {
                 $this->flashMessage('Do ' . self::CURRENT_YEAR . '. ročníku už jste zaregistrováni.', 'info');
                 $this->redirect('Team:edit');
@@ -214,10 +166,7 @@ class TeamPresenter extends BasePresenter
 
     public function registrationFormSucceeded(UI\Form $form, array $values)
     {
-        $takenNames = array_keys($this->database->query('
-            SELECT name
-            FROM teams'
-        )->fetchAssoc('name'));
+        $takenNames = $this->teamsModel->getTakenNames();
 
         if (in_array($values['name'], $takenNames)) {
             $form->addError(Nette\Utils\Html::el('div', ['class' => 'flash info'])->setHtml('Tým s tímto jménem již existuje. Pokud se jedná o Váš tým, můžete se do aktuálního ročníku přihlásit v sekci <a href="/team">Přihlášení</a>. Pokud si nepamatujete heslo ani e-mail, na který byste si nechali vygenerovat nové heslo, kontaktujte prosím organizátory na e-mailu organizatori@palapeli.cz. Pokud se nejedná o Váš tým, použijte prosím jiné jméno týmu.'));
@@ -228,20 +177,13 @@ class TeamPresenter extends BasePresenter
                 $value = strip_tags($value);
             }
 
-            $this->database->query('
-                INSERT INTO teams (name, password, phone1, phone2, email1, email2) VALUES
-                (?,?,?,?,?,?)',$values['name'], $password, $values['phone1'], $values['phone2'], $values['email1'], $values['email2']);
+            $teamId = $this->teamsModel->addNewTeam($values['name'], $password, $values['phone1'], $values['phone2'], $values['email1'], $values['email2']);
 
-            $teamId = $this->database->getInsertId();
-            $year = self::CURRENT_YEAR;
-            $registered = date('Y-m-d H:i:s', time());
-            $this->database->query('
-                INSERT INTO teamsyear (team_id, year, paid, member1, member2, member3, member4, registered) VALUES
-                (?,?,?,?,?,?,?,?)', $teamId, $year, 0, $values['member1'], $values['member2'], $values['member3'], $values['member4'], $registered);
+            $this->teamsModel->registerTeam($teamId, $values['member1'], $values['member2'], $values['member3'], $values['member4']);
 
-            $teamsCount = TeamsModel::getTeamsCount($this->database);
+            $teamsCount = $this->teamsModel->getTeamsCount();
 
-            if($teamsCount > self::TEAM_LIMIT) {
+            if($teamsCount > self::TEAM_LIMIT && self::TEAM_LIMIT >= 0) {
                 $this->flashMessage('Tým ' . $this->session->getSection('team')->teamName . ' byl úspěšně zaregistrován do aktuálního ročníku jako náhradní. Již je totiž naplněn limit počtu týmů, které se mohou hry zúčastnit. Jakmile se pro vás uvolní místo, ozveme se vám.', 'info');
             } else {
                 $this->flashMessage('Tým ' . $values ['name'] . ' byl úspěšně zaregistrován a přihlášen.', 'success');
@@ -257,26 +199,13 @@ class TeamPresenter extends BasePresenter
         if(!$this->selectedYear) {
             parent::getYearData();
         }
-        $password = hash('ripemd160', $values['password']);
+        $teamId = $this->teamsModel->getTeamId($values['name']);
 
-        $teamId = array_keys($this->database->query('
-            SELECT id
-            FROM teams
-            WHERE name = ?', $values['name']
-        )->fetchAssoc('id'));
-
-        if (count($teamId) == 0) {
+        if (!isset($teamId)) {
             $form->addError(Nette\Utils\Html::el('div', ['class' => 'flash info'])->setHtml('Tým se zadaným názvem neexistuje.'));
         } else {
-            $teamId = $teamId[0];
-            $teamData = $this->database->query('
-                SELECT 1
-                FROM teams
-                WHERE password = ? AND id = ?',
-                $password, $teamId
-            )->fetchAll();
-
-            if (count($teamData) == 0) {
+            $password = hash('ripemd160', $values['password']);
+            if (!$this->teamsModel->checkPassword($teamId, $password)) {
                 $form->addError(Nette\Utils\Html::el('div', ['class' => 'flash info'])->setHtml('Nesprávně zadané heslo.'));
             } else {
                 if($teamId == self::ORG_TEAM_ID) {
@@ -285,46 +214,36 @@ class TeamPresenter extends BasePresenter
                     $this->session->getSection('team')->teamName = $values['name'];
                     $this->redirect('Administration:');
                 } else {
+                    $registered = $this->teamsModel->isTeamRegistered($teamId);
 
-                    $isInSelectedYear = $this->database->query('
-                    SELECT 1
-                    FROM teamsyear
-                    WHERE team_id = ? AND year = ?
-                ', $teamId, $this->selectedYear)->fetchAll();
-
-                    if (!count($isInSelectedYear) && $this->selectedYear == self::CURRENT_YEAR) {
+                    if (!$registered && $this->selectedYear == self::CURRENT_YEAR) {
                         if (!$this->isRegistrationOpen()) {
-                            $this->flashMessage('Tým ' . $values ['name'] . ' byl úspěšně přihlášen.', 'success');
+                            $this->flashMessage('Tým ' . $values ['name'] . ' byl úspěšně přihlášen. Registrace do aktuálního ročníku je však již uzavřena. Pro úpravu údajů z jiných ročníků prosíme vyberte jiný ročník.', 'success');
                             $this->session->getSection('team')->teamId = $teamId;
                             $this->session->getSection('team')->teamName = $values['name'];
                             $this->redirect('Info:');
                         } else {
-                            if (count($isInSelectedYear) == 0) {
-                                $teamData = $this->database->query('
-                                      SELECT *
-                                      FROM teamsyear
-                                      WHERE team_id = ' . $teamId . '
-                                      ORDER BY year DESC'
-                                )->fetchAll();
+                            $teamData = $this->teamsModel->getMostRecentTeamYearData($teamId);
 
-                                if (count($teamData) != 0) {
-                                    $teamData = $teamData[0];
-                                    $this->database->query('
-                            INSERT INTO teamsyear (team_id, year, paid, member1, member2, member3, member4, registered) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                        ', $teamId, self::CURRENT_YEAR, 0, $teamData->member1, $teamData->member2, $teamData->member3, $teamData->member4, date('Y-m-d H:i:s', time()));
-
-                                } else {
-                                    $this->database->query('
-                            INSERT INTO teamsyear (team_id, year, paid, member1, member2, member3, member4, registered) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                        ', $teamId, self::CURRENT_YEAR, 0, "", null, null, null, date('Y-m-d H:i:s', time()));
-                                }
-                                $this->flashMessage('Tým ' . $values ['name'] . ' byl úspěšně zaregistrován do aktuálního ročníku a přihlášen.', 'success');
-                                $this->session->getSection('team')->teamId = $teamId;
-                                $this->session->getSection('team')->teamName = $values['name'];
-                                $this->redirect('Team:edit');
+                            if (isset($teamData)) {
+                                $this->teamsModel->registerTeam($teamId, $teamData->member1, $teamData->member2, $teamData->member3, $teamData->member4);
+                            } else {
+                                $this->teamsModel->registerTeam($teamId);
                             }
+
+                            $this->session->getSection('team')->teamId = $teamId;
+                            $this->session->getSection('team')->teamName = $values['name'];
+
+                            $teamsCount = $this->teamsModel->getTeamsCount();
+
+                            if($teamsCount > self::TEAM_LIMIT && self::TEAM_LIMIT >= 0) {
+                                $this->flashMessage('Tým ' . $this->session->getSection('team')->teamName . ' byl úspěšně zaregistrován do aktuálního ročníku jako náhradní. Již je totiž naplněn limit počtu týmů, které se mohou hry zúčastnit. Jakmile se pro vás uvolní místo, ozveme se vám.', 'info');
+                            } else {
+                                $this->flashMessage('Tým ' . $this->session->getSection('team')->teamName . ' byl úspěšně zaregistrován do aktuálního ročníku.', 'success');
+                            }
+                            $this->redirect('Team:edit');
                         }
-                    } elseif (!count($isInSelectedYear) && $this->selectedYear != self::CURRENT_YEAR) {
+                    } elseif (!$registered && $this->selectedYear != self::CURRENT_YEAR) {
                         $this->flashMessage('Tým ' . $values ['name'] . ' byl úspěšně přihlášen. ' . $this->selectedYear . '. ročníku se však neúčastnil, pro úpravu údajů z jiných ročníků prosíme vyberte jiný ročník.', 'success');
                         $this->session->getSection('team')->teamId = $teamId;
                         $this->session->getSection('team')->teamName = $values['name'];
@@ -346,14 +265,11 @@ class TeamPresenter extends BasePresenter
             parent::getYearData();
         }
 
+        $this->teamsModel->setYear($this->selectedYear);
+
         $teamId = $this->session->getSection('team')->teamId;
 
-        $data = $this->database->query('
-            SELECT *
-            FROM teams t
-            LEFT JOIN teamsyear ty ON t.id = ty.team_id AND ty.year = ?
-            WHERE t.id = ?
-        ', $this->selectedYear, $teamId)->fetchAll();
+        $data = $this->teamsModel->getTeamData($teamId);
 
         $data = $data[0];
 
@@ -379,20 +295,22 @@ class TeamPresenter extends BasePresenter
             parent::getYearData();
         }
 
+        $this->teamsModel->setYear($this->selectedYear);
+
         $teamId = $this->session->getSection('team')->teamId;
 
         $password = null;
         if(strlen($values['password']) > 0) {
             $password = hash('ripemd160', $values['password']);
-            $this->database->query('UPDATE teams SET password = ? WHERE id = ?', $password, $teamId);
+            $this->teamsModel->updatePassword($teamId, $password);
         }
 
         foreach($values as &$value) {
             $value = strip_tags($value);
         }
 
-        $this->database->query('UPDATE teamsyear SET member1 = ?, member2 = ?, member3 = ?, member4 = ? WHERE team_id = ? AND year  =?', $values['member1'], $values['member2'], $values['member3'], $values['member4'], $teamId, $this->selectedYear);
-        $this->database->query('UPDATE teams SET email1 = ?, email2 = ?, phone1 = ?, phone2 = ? WHERE id = ?', $values['email1'], $values['email2'], $values['phone1'], $values['phone2'], $teamId);
+        $this->teamsModel->updateTeamMembers($teamId, $values['member1'], $values['member2'], $values['member3'], $values['member4']);
+        $this->teamsModel->updateTeamContactInfo($teamId, $values['email1'], $values['email2'], $values['phone1'], $values['phone2']);
 
 
         $this->flashMessage('Údaje o vašem týmu byly úspěšně změněny.', 'success');
@@ -413,57 +331,43 @@ class TeamPresenter extends BasePresenter
     public  function cancelFormSucceeded(UI\Form $form, array $values) {
 
         $teamId = $this->session->getSection('team')->teamId;
-        $data = $this->database->query('
-            SELECT paid
-            FROM teamsyear
-            WHERE year = ? AND team_id = ?
-        ', self::CURRENT_YEAR, $teamId)->fetchAll();
+
+        $this->teamsModel->setYear($this->selectedYear);
+
+        $paid = $this->teamsModel->getTeamPaymentStatus($teamId);
 
         $mail = new Message;
         $mail->setFrom('Palapeli Web <organizatori@palapeli.cz>')
             ->addTo('organizatori@palapeli.cz')
             ->setSubject('Odhlášení týmu ' . $this->session->getSection('team')->teamName)
-            ->setBody("Odhlásil se tým " . $this->session->getSection("team")->teamName . " s id " . $this->session->getSection("team")->teamId . "\nStartovné " . ($data[0]["paid"] ? "už bylo" : "ještě nebylo") . " zaplacené.\n\nAutomaticky generovaná zpráva z webu.");
-
-        $teamsCount = TeamsModel::getTeamsCount($this->database);
-
-        $playingTeams = TeamsModel::getPlayingTeamsIds($this->database);
-
-        $this->database->query('
-            DELETE
-            FROM teamsyear
-            WHERE year = ? AND team_id = ?
-        ', self::CURRENT_YEAR, $teamId);
-
+            ->setBody("Odhlásil se tým " . $this->session->getSection("team")->teamName . " s id " . $this->session->getSection("team")->teamId . "\nStartovné " . ($paid == 1 ? "už bylo" : "ještě nebylo") . " zaplacené.\n\nAutomaticky generovaná zpráva z webu.");
+        $teamsCount = $this->teamsModel->getTeamsCount();
         $mailer = new SendmailMailer;
         $mailer->send($mail);
 
-        if($teamsCount > self::TEAM_LIMIT && in_array($this->session->getSection("team")->teamId, $playingTeams)) {
-            $newTeam = TeamsModel::getFirstStandby($this->database);
+        $this->teamsModel->deleteTeamRegistration($teamId);
+        
+        $playingTeams = $this->teamsModel->getPlayingTeamsIds();
 
-            if(isset($newTeam[0])) {
+        if($teamsCount > self::TEAM_LIMIT && in_array($this->session->getSection("team")->teamId, $playingTeams)) {
+            $newTeam = $this->teamsModel->getFirstStandby();
+
+            if(isset($newTeam)) {
 
                 $mail = new Message;
 
-                if(strlen($newTeam[0]->email2) > 0) {
-                    $mail->setFrom('Palapeli Web <organizatori@palapeli.cz>')
-                        ->addTo($newTeam[0]->email1)
-                        ->addTo($newTeam[0]->email2)
-                        ->addBcc('organizatori@palapeli.cz')
-                        ->addReplyTo('organizatori@palapeli.cz')
-                        ->setSubject('Palapeli: Uvolnění místa na hře pro váš tým ' . $newTeam[0]->name)
-                        ->setBody("Odhlásil se jeden ze zaregistrovaných týmů, čímž se uvolnilo místo pro vás. Ozvěte se nám prosím co nejrychleji, zda máte o účast na hře stále zájem. Pokud jste již s účastí nepočítali a zúčastnit se nechcete, zrušte prosím v autentizované části na webu svoji účast na hře.\n\nDěkujeme a doufáme, že vás uvidíme na hře!\nVaši organizátoři\n\nAutomaticky generovaná zpráva z webu.");
-                } else {
-                    $mail->setFrom('Palapeli Web <organizatori@palapeli.cz>')
-                        ->addTo($newTeam[0]->email1)
-                        ->addBcc('organizatori@palapeli.cz')
-                        ->addReplyTo('organizatori@palapeli.cz')
-                        ->setSubject('Palapeli: Uvolnění místa na hře pro váš tým ' . $newTeam[0]->name)
-                        ->setBody("Odhlásil se jeden ze zaregistrovaných týmů, čímž se uvolnilo místo pro vás. Ozvěte se nám prosím co nejrychleji, zda máte o účast na hře stále zájem. Pokud jste již s účastí nepočítali a zúčastnit se nechcete, zrušte prosím v autentizované části na webu svoji účast na hře.\n\nDěkujeme a doufáme, že vás uvidíme na hře!\nVaši organizátoři\n\nAutomaticky generovaná zpráva z webu.");
+                $mail->setFrom(self::ORG_MAIL_FORMAT)
+                    ->addTo($newTeam->email1)
+                    ->addBcc('organizatori@palapeli.cz')
+                    ->addReplyTo('organizatori@palapeli.cz')
+                    ->setSubject('Palapeli: Uvolnění místa na hře pro váš tým ' . $newTeam->name)
+                    ->setBody("Odhlásil se jeden ze zaregistrovaných týmů, čímž se uvolnilo místo pro vás. Ozvěte se nám prosím co nejrychleji, zda máte o účast na hře stále zájem. Pokud jste již s účastí nepočítali a zúčastnit se nechcete, zrušte prosím v autentizované části na webu svoji účast na hře.\n\nDěkujeme a doufáme, že vás uvidíme na hře!\nVaši organizátoři\n\nAutomaticky generovaná zpráva z webu.");
+
+                if(strlen($newTeam->email2) > 0) {
+                    $mail->addTo($newTeam->email2);
                 }
                 $mailer->send($mail);
             }
-
         }
 
         $this->flashMessage('Účast týmu na hře byla úspěšně zrušena.', 'success');
@@ -483,17 +387,11 @@ class TeamPresenter extends BasePresenter
     }
 
     public  function forgottenPasswordFormSucceeded(UI\Form $form, array $values) {
-        $data = $this->database->query('
-            SELECT email1, email2
-            FROM teams
-            WHERE name = ?
-        ', $values['name']
-        )->fetchAll();
+        $data = $this->teamsModel->getEmailsByName($values['name']);
 
-        if(count($data) == 0) {
+        if(!isset($data)) {
             $form->addError(Nette\Utils\Html::el('div', ['class' => 'flash info'])->setHtml('Tým se zadaným názvem neexistuje.'));
         } else {
-            $data = $data[0];
             srand(time());
             $newPassword = '';
             $newPassword .= chr(rand(97, 122));
@@ -506,18 +404,16 @@ class TeamPresenter extends BasePresenter
 
             $newPasswordHash = hash('ripemd160', $newPassword);
 
-            $this->database->query('
-            UPDATE teams SET password = ? WHERE name = ?
-        ', $newPasswordHash, $values['name']);
+            $this->teamsModel->updatePassword($data->id, $newPasswordHash);
 
             $mail = new Message;
-            $mail->setFrom('Palapeli Web <organizatori@palapeli.cz>')
-                ->addReplyTo('Palapeli Web <organizatori@palapeli.cz>')
-                ->addTo($data['email1'])
+            $mail->setFrom(self::ORG_MAIL_FORMAT)
+                ->addReplyTo(self::ORG_MAIL_FORMAT)
+                ->addTo($data->email1)
                 ->setSubject('Palapeli - změna hesla pro tým ' . $values['name'])
                 ->sethTMLBody("Ahoj!<br>Někdo (pravděpodobně vy) požádal na stránkách šifrovací hry Palapeli o změnu hesla týmu " . $values['name'] . ". Bylo vám vygenerováno toto nové heslo: \"" . $newPassword . "\" (bez uvozovek). Pomocí hesla se můžete přihlásit do autentizované sekce <a href='http://palapeli.cz/team'>na stránkách Palapeli</a>.<br><br>Těšíme se na vás na hře,<br>vaši organizátoři.");
-            if (isset($data['email2']) && strlen($data['email2']) > 0) {
-                $mail->addTo($data['email2']);
+            if (strlen($data->email2) > 0) {
+                $mail->addTo($data->email2);
             }
 
             $mailer = new SendmailMailer;
@@ -527,5 +423,4 @@ class TeamPresenter extends BasePresenter
             $this->redirect('Team:');
         }
     }
-
 }

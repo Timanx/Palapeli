@@ -10,6 +10,7 @@ class CiphersModel {
     /** @var Nette\Database\Context */
     private $database;
 
+    private $checkpoint = 1;
     private $year = BasePresenter::CURRENT_YEAR;
 
     public function __construct(Nette\Database\Context $database)
@@ -22,6 +23,11 @@ class CiphersModel {
         $this->year = $year;
     }
 
+    public function setCheckpoint($checkpoint)
+    {
+        $this->checkpoint = $checkpoint;
+    }
+
     public function getCipher($checkpoint)
     {
         return $this->database->query('
@@ -32,5 +38,41 @@ class CiphersModel {
             LEFT JOIN files AS pdf_file ON pdf_file.id = ciphers.pdf_file_id
             WHERE year = ? AND checkpoint_number = ?
         ', $this->year, $checkpoint)->fetch();
+    }
+
+    public function upsertCipher($checkpoint, $name, $cipherDescription, $solutionDescription, $solution)
+    {
+        $this->database->query('
+            INSERT INTO ciphers (year, checkpoint_number, name, cipher_description,  solution_description, solution) VALUES
+            (?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE name = ?, cipher_description = ?, solution_description = ?, solution = ?
+        ', $this->year, $checkpoint, $name, $cipherDescription, $solutionDescription, $solution, $name, $cipherDescription, $solutionDescription, $solution
+        );
+    }
+
+    public function updateSolutionImage($solutionImageId)
+    {
+        $this->database->query('
+                UPDATE ciphers
+                SET solution_image_id = ?
+                WHERE year = ? AND checkpoint_number = ?
+            ', $solutionImageId, $this->year, $this->checkpoint);
+    }
+
+    public function updateCipherImage($cipherImageId)
+    {
+        $this->database->query('
+                UPDATE ciphers
+                SET cipher_image_id = ?
+                WHERE year = ? AND checkpoint_number = ?
+            ', $cipherImageId, $this->year, $this->checkpoint);
+    }
+
+    public function updatePDF($pdfId)
+    {
+        $this->database->query('
+                UPDATE ciphers
+                SET pdf_file_id = ?
+                WHERE year = ? AND checkpoint_number = ?
+            ', $pdfId, $this->year, $this->checkpoint);
     }
 }

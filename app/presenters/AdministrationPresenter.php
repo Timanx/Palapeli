@@ -1,6 +1,13 @@
 <?php
 namespace App\Presenters;
 
+use App\Models\CiphersModel;
+use App\Models\FilesModel;
+use App\Models\ReportsModel;
+use App\Models\ResultsModel;
+use App\Models\TeamsModel;
+use App\Models\UpdatesModel;
+use App\Models\YearsModel;
 use DiscussionControl;
 use Nette;
 use Nette\Application\UI;
@@ -9,15 +16,41 @@ use Nette\Http\FileUpload;
 
 class AdministrationPresenter extends BasePresenter
 {
-    /** @var Nette\Database\Context */
-    private $database;
+
+    /** @var  YearsModel */
+    private $yearsModel;
+    /** @var  TeamsModel */
+    private $teamsModel;
+    /** @var  UpdatesModel */
+    private $updatesModel;
+    /** @var  ReportsModel */
+    private $reportsModel;
+    /** @var  ResultsModel */
+    private $resultsModel;
+    /** @var  CiphersModel */
+    private $ciphersModel;
+    /** @var  FilesModel */
+    private $filesModel;
     /** @var  \IDiscussionControlFactory */
     private $discussionControlFactory;
 
-    public function __construct(Nette\Database\Context $database, \IDiscussionControlFactory $discussionControlFactory)
+    public function __construct(\IDiscussionControlFactory $discussionControlFactory,
+                                YearsModel $yearsModel,
+                                TeamsModel $teamsModel,
+                                ReportsModel $reportsModel,
+                                ResultsModel $resultsModel,
+                                UpdatesModel $updatesModel,
+                                CiphersModel $ciphersModel,
+                                FilesModel $filesModel)
     {
-        $this->database = $database;
         $this->discussionControlFactory = $discussionControlFactory;
+        $this->yearsModel = $yearsModel;
+        $this->teamsModel = $teamsModel;
+        $this->updatesModel = $updatesModel;
+        $this->resultsModel = $resultsModel;
+        $this->reportsModel = $reportsModel;
+        $this->ciphersModel = $ciphersModel;
+        $this->filesModel = $filesModel;
     }
 
     public function renderDefault()
@@ -26,41 +59,28 @@ class AdministrationPresenter extends BasePresenter
         $this->prepareHeading('Přidání aktuality');
     }
 
-    public function renderTeamCard($team = null)
+    public function renderTeamCard($teamId = null)
     {
         parent::render();
         $this->prepareHeading('Karta týmu');
 
-        $this->template->checkpointCount = $this->database->query('
-            SELECT checkpoint_count
-            FROM years
-            WHERE year = ?
-        ', $this->selectedYear)->fetch()->checkpoint_count;
+        $this->yearsModel->setYear($this->selectedYear);
 
-        $this->template->teamName = $this->database->query('
-            SELECT name FROM teams WHERE id = ?
-        ', $team)->fetchField('name');
-
-        $this->template->team = $team;
+        $this->template->checkpointCount = $this->yearsModel->getCheckpointCount();
+        $this->template->teamName = $this->teamsModel->getTeamName($teamId);
+        $this->template->teamId = $teamId;
     }
 
-    public function renderCheckpointCard($checkpoint = null, $previous = null)
+    public function renderCheckpointCard($checkpoint = null)
     {
         parent::render();
         $this->prepareHeading('Karta stanoviště');
 
-        $this->template->teamsCount = $this->database->query('
-            SELECT COUNT(team_id) AS teams_count
-            FROM teamsyear
-            WHERE year = ?
-        ', $this->selectedYear)->fetch()->teams_count;
+        $this->teamsModel->setYear($this->selectedYear);
+        $this->yearsModel->setYear($this->selectedYear);
 
-        $this->template->checkpointCount = $this->database->query('
-                SELECT checkpoint_count
-                FROM years
-                WHERE year = ?
-            ', $this->selectedYear)->fetch()->checkpoint_count;
-
+        $this->template->teamsCount = $this->teamsModel->getTeamsCount();
+        $this->template->checkpointCount = $this->yearsModel->getCheckpointCount();
         $this->template->checkpoint = $checkpoint;
     }
 
@@ -69,12 +89,9 @@ class AdministrationPresenter extends BasePresenter
         parent::render();
         $this->prepareHeading('Vkládání šifer');
 
-        $this->template->checkpointCount = $this->database->query('
-                SELECT checkpoint_count
-                FROM years
-                WHERE year = ?
-            ', $this->selectedYear)->fetch()->checkpoint_count;
+        $this->yearsModel->setYear($this->selectedYear);
 
+        $this->template->checkpointCount = $this->yearsModel->getCheckpointCount();
         $this->template->checkpoint = $checkpoint;
     }
 
@@ -101,17 +118,9 @@ class AdministrationPresenter extends BasePresenter
         parent::render();
         $this->prepareHeading('E-maily týmů s nezaplaceným startovným');
 
-        $this->template->emails = $emails =  $this->database->query('
-          SELECT * FROM (
-                SELECT CASE WHEN teams.email2 IS NULL OR teams.email2 = \'\' THEN email1 ELSE CONCAT(email1, \', \', email2) END AS email, paid
-                FROM teams
-                LEFT JOIN teamsyear ON teamsyear.team_id = teams.id
-                WHERE year = ?
-                ORDER BY registered
-                LIMIT ?
-                ) t
-                WHERE paid = ?
-            ', $this->selectedYear, (self::TEAM_LIMIT > 0 ? self::TEAM_LIMIT : PHP_INT_MAX), self::PAY_NOK)->fetchAll();
+        $this->teamsModel->setYear($this->selectedYear);
+
+        $this->template->emails = $this->teamsModel->getUnpaidTeamsData();
     }
 
     public function renderNoDataMail()
@@ -119,17 +128,9 @@ class AdministrationPresenter extends BasePresenter
         parent::render();
         $this->prepareHeading('E-maily týmů bez zapsaných výsledků');
 
-        $this->template->emails = $teams = $this->database->query('
-            SELECT * FROM (
-                SELECT CASE WHEN teams.email2 IS NULL OR teams.email2 = \'\' THEN email1 ELSE CONCAT(email1, \', \', email2) END AS email, (MAX(results.exit_time) IS NOT NULL AND MAX(results.exit_time) != \'00:00\' || EXISTS (SELECT 1 FROM results r WHERE r.year = teamsyear.year AND r.team_id = teams.id AND r.used_hint IS NOT NULL)) AS team_filled
-                FROM teams
-                LEFT JOIN teamsyear ON teams.id = teamsyear.team_id
-                LEFT JOIN results ON results.year = ? AND teams.id = results.team_id
-                WHERE teamsyear.year = ?
-                GROUP BY email
-            ) t
-            WHERE team_filled = 0
-        ', $this->selectedYear, $this->selectedYear)->fetchAll();
+        $this->teamsModel->setYear($this->selectedYear);
+
+        $this->template->emails = $this->teamsModel->getUnfilledTeamsData();
     }
 
     public function renderTeamMail()
@@ -137,14 +138,9 @@ class AdministrationPresenter extends BasePresenter
         parent::render();
         $this->prepareHeading('E-maily na týmy');
 
-        $this->template->emails = $emails =  $this->database->query('
-                SELECT CASE WHEN teams.email2 IS NULL OR teams.email2 = \'\' THEN email1 ELSE CONCAT(email1, \', \', email2) END AS email, paid
-                FROM teams
-                LEFT JOIN teamsyear ON teamsyear.team_id = teams.id
-                WHERE year = ?
-                ORDER BY registered
-                LIMIT ?
-            ', $this->selectedYear, (self::TEAM_LIMIT > 0 ? self::TEAM_LIMIT : PHP_INT_MAX))->fetchAll();
+        $this->teamsModel->setYear($this->selectedYear);
+
+        $this->template->emails = $this->teamsModel->getPlayingTeamsEmails();
     }
 
     public function renderTeamTable()
@@ -152,17 +148,9 @@ class AdministrationPresenter extends BasePresenter
         parent::render();
         $this->prepareHeading('Tabulka údajů o týmech');
 
-        $this->template->data = $this->database->query('
-                SELECT * FROM (
-                SELECT id, name, phone1, phone2, email1, email2, member1, member2, member3, member4, paid, registered
-                FROM teams
-                LEFT JOIN teamsyear ON teamsyear.team_id = teams.id
-                WHERE year = ?
-                ORDER BY registered
-                LIMIT ?
-                ) t
-                ORDER BY LTRIM(name) COLLATE utf8_czech_ci
-            ', $this->selectedYear, (self::TEAM_LIMIT > 0 ? self::TEAM_LIMIT : PHP_INT_MAX))->fetchAll();
+        $this->teamsModel->setYear($this->selectedYear);
+
+        $this->teamsModel->getPlayingTeams();
     }
 
     protected function createComponentDiscussion() {
@@ -209,13 +197,13 @@ class AdministrationPresenter extends BasePresenter
 
     public function newUpdateFormSucceeded(UI\Form $form, array $values)
     {
+        if(!isset($this->selectedYear)) {
+            $this->getYearData();
+        }
 
-        $this->database->query('
-            INSERT INTO updates (date, year, message)
-              VALUES (?, ?, ?)
+        $this->updatesModel->setYear($this->selectedYear);
 
-        ', $values['date'], $values['year'], nl2br($values['message']));
-
+        $this->updatesModel->addUpdate($values['date'], $values['message']);
 
         $this->flashMessage('Aktualita byla úspěšně vložena.', 'success');
         $this->redirect('this');
@@ -223,17 +211,15 @@ class AdministrationPresenter extends BasePresenter
 
     public function createComponentSelectTeamForm()
     {
+        if(!isset($this->selectedYear)) {
+            $this->getYearData();
+        }
+
         $teamId = (isset($_GET['team']) ? $_GET['team'] : null);
-        $this->getYearData();
-        $teams = $this->database->query('
-            SELECT name, teams.id, (MAX(results.exit_time) IS NOT NULL AND MAX(results.exit_time) != \'00:00\' || EXISTS (SELECT 1 FROM results r WHERE r.year = teamsyear.year AND r.team_id = teams.id AND r.used_hint IS NOT NULL)) AS team_filled
-            FROM teams
-            LEFT JOIN teamsyear ON teams.id = teamsyear.team_id
-            LEFT JOIN results ON results.year = ? AND teams.id = results.team_id
-            WHERE teamsyear.year = ?
-            GROUP BY name, teams.id
-            ORDER BY LTRIM(name) COLLATE utf8_czech_ci
-        ', $this->selectedYear, $this->selectedYear)->fetchAll();
+
+        $this->resultsModel->setYear($this->selectedYear);
+
+        $teams = $this->resultsModel->getTeamsWithFilledStatus();
 
         $options = ['Nevyplněné týmy' => [], 'Vyplněné týmy' => []];
         foreach ($teams as $team) {
@@ -241,7 +227,7 @@ class AdministrationPresenter extends BasePresenter
         }
 
         $form = new UI\Form;
-        $select = $form->addSelect('teams', null, $options, 1)->setPrompt('Vyberte tým')->setAttribute('onchange', 'this.form.submit()');
+        $form->addSelect('teams', null, $options, 1)->setPrompt('Vyberte tým')->setAttribute('onchange', 'this.form.submit()');
         $form->onSuccess[] = [$this, 'teamSelected'];
         return $form;
     }
@@ -254,47 +240,40 @@ class AdministrationPresenter extends BasePresenter
     public function createComponentTeamCardForm()
     {
         $teamId = $_GET['team'];
-        $this->getYearData();
-        $results = $this->database->query('
-                SELECT TIME_FORMAT(results.entry_time, \'%H:%i\') AS entry_time,TIME_FORMAT(results.exit_time, \'%H:%i\') AS exit_time, used_hint, checkpoint_number
-                FROM results
-                WHERE team_id = ? AND year = ?
-                ORDER BY checkpoint_number
-            ', $teamId, $this->selectedYear)->fetchAssoc('checkpoint_number');
+        if(!isset($this->selectedYear)) {
+            $this->getYearData();
+        }
 
-        $gameStart = $this->database->query('
-            SELECT TIME_FORMAT(game_start, \'%H:%i\') AS game_start
-            FROM years
-            WHERE year = ?
-        ', $this->selectedYear)->fetch()->game_start;
+        $this->resultsModel->setYear($this->selectedYear);
+        $teamId->yearsModel->setYear($this->selectedYear);
 
-        $checkpointCount = $this->database->query('
-                SELECT checkpoint_count
-                FROM years
-                WHERE year = ?
-            ', $this->selectedYear)->fetch()->checkpoint_count;
-
-        $maxCheckpoint = (count($results) ? max(array_keys($results)) : $checkpointCount);
+        $results = $this->resultsModel->getTeamResults($teamId);
+        $yearData = $teamId->yearsModel->getYearData();
 
         $form = new UI\Form;
 
-        for ($i = 0; $i < $checkpointCount; $i++) {
+        for ($i = 0; $i < $yearData->checkpointCount; $i++) {
             $checkpoint = $form->addContainer('checkpoint' . $i);
-            $checkpoint->addText('entryTime', ($i == 0 ? 'Začátek hry:' : ($i == $checkpointCount-1 ? 'Příchod do cíle:' : 'Příchod na ' . $i . '. stanoviště:')))->setType('time')->setDefaultValue((isset($results[$i]) && isset($results[$i]['entry_time']) ? $results[$i]['entry_time'] : ($i == 0 && isset($gameStart) ? $gameStart : self::EMPTY_TIME_VALUE)));
-            $checkpoint->addText('exitTime', ($i == 0 ? 'Odchod ze startu:' : ($i == $checkpointCount-1 ? 'Vyřešení cílového hesla:' : 'Odchod z ' . $i . '. stanoviště:')))->setType('time')->setDefaultValue((isset($results[$i]) && isset($results[$i]['exit_time']) ? $results[$i]['exit_time'] : self::EMPTY_TIME_VALUE));;
-            if($i != $checkpointCount-1) {
+            $checkpoint->addText('entryTime', ($i == 0 ? 'Začátek hry:' : ($i == $yearData->checkpointCount-1 ? 'Příchod do cíle:' : 'Příchod na ' . $i . '. stanoviště:')))->setType('time')->setDefaultValue((isset($results[$i]) && isset($results[$i]['entry_time']) ? $results[$i]['entry_time'] : ($i == 0 && isset($yearData->game_start) ? $yearData->game_start : self::EMPTY_TIME_VALUE)));
+            $checkpoint->addText('exitTime', ($i == 0 ? 'Odchod ze startu:' : ($i == $yearData->checkpointCount-1 ? 'Vyřešení cílového hesla:' : 'Odchod z ' . $i . '. stanoviště:')))->setType('time')->setDefaultValue((isset($results[$i]) && isset($results[$i]['exit_time']) ? $results[$i]['exit_time'] : self::EMPTY_TIME_VALUE));;
+            if($i != $yearData->checkpointCount-1) {
                 $checkpoint->addCheckbox('usedHint')->setDefaultValue((isset($results[$i]) && isset($results[$i]['used_hint']) ? $results[$i]['used_hint'] : 0))->setRequired(false);
             }
-
         }
+
         $form->addSubmit('send', 'ODESLAT KARTU TÝMU');
         $form->onSuccess[] = [$this, 'teamCardFormSucceeded'];
         return $form;
     }
 
-
     public function teamCardFormSucceeded(UI\Form $form, array $values)
     {
+        if(!isset($this->selectedYear)) {
+            $this->getYearData();
+        }
+
+        $this->resultsModel->setYear($this->selectedYear);
+
         $teamId = $_GET['team'];
         foreach($values as $number => $checkpoint) {
             $number = substr($number,10);
@@ -317,18 +296,13 @@ class AdministrationPresenter extends BasePresenter
                     $checkpoint['entryTime'] = NULL;
                 }
 
-                $this->database->query('
-                INSERT INTO results (team_id, year, checkpoint_number, entry_time, exit_time, used_hint) VALUES
-                (?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE entry_time = ?, exit_time = ?, used_hint = ?
-            ', $teamId, $this->selectedYear, $number, (strlen($checkpoint['entryTime']) == 0 ? NULL : $checkpoint['entryTime']), (strlen($checkpoint['exitTime']) == 0 ? NULL : $checkpoint['exitTime']), (isset($checkpoint['usedHint']) && $checkpoint['usedHint'] ? 1 : 0), (strlen($checkpoint['entryTime']) == 0 ? NULL : $checkpoint['entryTime']), (strlen($checkpoint['exitTime']) == 0 ? NULL : $checkpoint['exitTime']), (isset($checkpoint['usedHint']) && $checkpoint['usedHint'] ? 1 : 0));
+                $this->resultsModel->insertResultsRow($teamId, $number, $checkpoint['entryTime'], $checkpoint['exitTime'], $checkpoint['usedHint']);
             }
 
             //Handle finish
             if ($number == count($values) - 1 && $checkpoint['exitTime'] != '' && $checkpoint['exitTime'] != self::EMPTY_TIME_VALUE) {
-                $this->database->query('
-                INSERT INTO results (team_id, year, checkpoint_number, entry_time) VALUES
-                (?, ?, ?, ?) ON DUPLICATE KEY UPDATE entry_time = ?
-            ', $teamId, $this->selectedYear, ((int)$number + 1), $checkpoint['exitTime'],$checkpoint['exitTime']);
+
+                $this->resultsModel->insertResultsRow($teamId, ((int)$number + 1), $checkpoint['exitTime'],$checkpoint['exitTime']);
             }
         }
 
@@ -340,14 +314,13 @@ class AdministrationPresenter extends BasePresenter
     public function createComponentSelectCheckpointForm()
     {
         $checkpoint = (isset($_GET['checkpoint']) ? $_GET['checkpoint'] : null);
-        $checked = (isset($_GET['previous']) ? $_GET['previous'] : false);
-        $this->getYearData();
+        if(!isset($this->selectedYear)) {
+            $this->getYearData();
+        }
 
-        $checkpointCount = $this->database->query('
-                SELECT checkpoint_count
-                FROM years
-                WHERE year = ?
-            ', $this->selectedYear)->fetch()->checkpoint_count;
+        $this->yearsModel->setYear($this->selectedYear);
+
+        $checkpointCount = $this->yearsModel->getCheckpointCount();
 
         $options = [];
         for ($i = 0; $i <= $checkpointCount; $i++){
@@ -381,13 +354,13 @@ class AdministrationPresenter extends BasePresenter
     public function createComponentSelectOnlyCheckpointForm()
     {
         $checkpoint = (isset($_GET['checkpoint']) ? $_GET['checkpoint'] : null);
-        $this->getYearData();
+        if(!isset($this->selectedYear)) {
+            $this->getYearData();
+        }
 
-        $checkpointCount = $this->database->query('
-                SELECT checkpoint_count
-                FROM years
-                WHERE year = ?
-            ', $this->selectedYear)->fetch()->checkpoint_count;
+        $this->yearsModel->setYear($this->selectedYear);
+
+        $checkpointCount = $this->yearsModel->getCheckpointCount();
 
         $options = [];
         for ($i = 0; $i < $checkpointCount; $i++){
@@ -410,29 +383,13 @@ class AdministrationPresenter extends BasePresenter
     public function createComponentCheckpointCardForm()
     {
         $checkpoint = $_GET['checkpoint'];
-        $previous = $_GET['previous'];
-        $this->getYearData();
-        if($previous) {
-            $data = $this->database->query('
-            SELECT TIME_FORMAT(results.entry_time, \'%H:%i\') AS entry_time, teams.id, teams.name, previous_results.entry_time IS NOT NULL AS visited_previous
-            FROM teamsyear
-            LEFT JOIN results ON teamsyear.year = results.year AND teamsyear.team_id = results.team_id AND results.checkpoint_number = ?
-            LEFT JOIN teams ON teamsyear.team_id = teams.id
-            LEFT JOIN results AS previous_results ON previous_results.year = ? AND previous_results.checkpoint_number = ? AND previous_results.team_id = teamsyear.team_id
-            WHERE teamsyear.year = ?
-            ORDER BY results.entry_time ASC, previous_results.entry_time IS NOT NULL DESC, previous_results.entry_time ASC, LTRIM(name) COLLATE utf8_czech_ci ASC
-        ', $checkpoint, $this->selectedYear, ($checkpoint == 0 ? 0 : $checkpoint - 1), $this->selectedYear)->fetchAll();
-        } else {
-            $data = $this->database->query('
-            SELECT TIME_FORMAT(results.entry_time, \'%H:%i\') AS entry_time, teams.id, teams.name, previous_results.entry_time IS NOT NULL AS visited_previous
-            FROM teamsyear
-            LEFT JOIN results ON teamsyear.year = results.year AND teamsyear.team_id = results.team_id AND results.checkpoint_number = ?
-            LEFT JOIN teams ON teamsyear.team_id = teams.id
-            LEFT JOIN results AS previous_results ON previous_results.year = ? AND previous_results.checkpoint_number = ? AND previous_results.team_id = teamsyear.team_id
-            WHERE teamsyear.year = ?
-            ORDER BY results.entry_time ASC, LTRIM(name) COLLATE utf8_czech_ci ASC
-        ', $checkpoint, $this->selectedYear, ($checkpoint == 0 ? 0 : $checkpoint - 1), $this->selectedYear)->fetchAll();
+        $previous = array_key_exists('previous', $_GET) && $_GET['previous'];
+        if(!isset($this->selectedYear)) {
+            $this->getYearData();
         }
+        $this->resultsModel->setYear($this->selectedYear);
+
+        $data = $this->resultsModel->getCheckpointEntryTimes($checkpoint, (bool)$previous);
 
         $form = new UI\Form;
 
@@ -453,35 +410,25 @@ class AdministrationPresenter extends BasePresenter
 
     public function checkpointCardFormSucceeded(UI\Form $form, array $values)
     {
-        $checkpointCount = $this->database->query('
-                SELECT checkpoint_count
-                FROM years
-                WHERE year = ?
-            ', $this->selectedYear)->fetch()->checkpoint_count;
-
-
         $checkpoint = $_GET['checkpoint'];
+
+        if(!isset($this->selectedYear)) {
+            $this->getYearData();
+        }
+        $this->yearsModel->setYear($this->selectedYear);
+        $this->resultsModel->setYear($this->selectedYear);
+
+        $checkpointCount = $this->yearsModel->getCheckpointCount();
+
         foreach($values as $team) {
-            if($team['entryTime'] != '' && $team['entryTime'] != self::EMPTY_TIME_VALUE) {
+            if(!isset($team['entryTime']) || $team['entryTime'] == '' || $team['entryTime'] == self::EMPTY_TIME_VALUE) {
+                $team['entryTime'] = NULL;
+            }
 
-                $this->database->query('
-                    INSERT INTO results (team_id, year, checkpoint_number, entry_time) VALUES
-                    (?, ?, ?, ?) ON DUPLICATE KEY UPDATE entry_time = ?
-                ', $team['teamId'], $this->selectedYear, $checkpoint, $team['entryTime'], $team['entryTime']
-                );
+            $this->resultsModel->insertResultsRow($team['teamId'], $checkpoint, $team['entryTime']);
 
-                if($checkpoint == $checkpointCount) {
-                    $this->database->query('
-                        INSERT INTO results (team_id, year, checkpoint_number, exit_time) VALUES
-                        (?, ?, ?, ?) ON DUPLICATE KEY UPDATE exit_time = ?
-                    ', $team['teamId'], $this->selectedYear, $checkpoint - 1, $team['entryTime'], $team['entryTime']
-                    );
-                }
-
-            } else {
-                $this->database->query('
-                    UPDATE results SET entry_time = NULL WHERE team_id = ? AND year = ? AND results.checkpoint_number = ?
-                ', $team['teamId'], $this->selectedYear, $checkpoint);
+            if($checkpoint == $checkpointCount) {
+                $this->resultsModel->insertResultsRow($team['teamId'], $checkpoint, NULL, $team['entryTime']);
             }
         }
 
@@ -494,13 +441,9 @@ class AdministrationPresenter extends BasePresenter
     {
         $checkpoint = $_GET['checkpoint'];
         $this->getYearData();
-        $data = $this->database->query('
-            SELECT ciphers.name, cipher_description, solution_description, CONCAT_WS(\'/\',cipher_image.path, cipher_image.name) AS cipher_image, CONCAT(solution_image.path, solution_image.name) AS solution_image, ciphers.solution
-            FROM ciphers
-            LEFT JOIN files AS cipher_image ON cipher_image.id = ciphers.cipher_image_id
-            LEFT JOIN files AS solution_image ON solution_image.id = ciphers.cipher_image_id
-            WHERE year = ? AND checkpoint_number = ?
-        ', $this->selectedYear, $checkpoint)->fetch();
+
+        $this->ciphersModel->setYear($this->selectedYear);
+        $data = $this->ciphersModel->getCipher($checkpoint);
 
         $form = new UI\Form;
         $form->elementPrototype->addAttributes(['enctype' => 'multipart/form-data']);
@@ -524,27 +467,7 @@ class AdministrationPresenter extends BasePresenter
             $tmpFile = $file->getTemporaryFile();
 
             move_uploaded_file($tmpFile, $target_file);
-
-            $this->database->beginTransaction();
-
-            $id = $this->database->query('
-                SELECT id
-                FROM files
-                WHERE path = ? AND name = ?
-            ', $path, $target_name)->fetchField();
-
-            if(!$id) {
-                $this->database->query('
-                INSERT INTO files (path, name) VALUES (?, ?)
-                ', $path, $target_name
-                );
-
-                $id = $this->database->getInsertId();
-            }
-
-            $this->database->commit();
-
-            return $id;
+            return $this->filesModel->insertFile($path, $target_name);
         }
 
         return null;
@@ -572,6 +495,9 @@ class AdministrationPresenter extends BasePresenter
             $checkpointString = '0' . $checkpoint;
         }
 
+        $this->ciphersModel->setYear($this->selectedYear);
+        $this->ciphersModel->setCheckpoint($checkpoint);
+
         $pattern = '~.*(\.[^\.]*)~';
         $replacement = 's' . $checkpointString . '$1';
 
@@ -579,37 +505,18 @@ class AdministrationPresenter extends BasePresenter
         $solution_image_id = $this->uploadFile($values['solution_image'], $target_dir, preg_replace($pattern, 'sol_' . $replacement, $values['solution_image']->getName()));
         $pdf_file_id = $this->uploadFile($values['pdf_file'], $target_dir, preg_replace($pattern, 'pdf_' . $replacement, $values['pdf_file']->getName()));
 
-        $this->database->query('
-            INSERT INTO ciphers (year, checkpoint_number, name, cipher_description,  solution_description, solution) VALUES
-            (?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE name = ?, cipher_description = ?, solution_description = ?, solution = ?
-        ', $this->selectedYear, $checkpoint, $values['name'], $values['cipher_description'], $values['solution_description'],
-              $values ['solution'],
-                $values['name'], $values['cipher_description'], $values['solution_description'],
-            $values ['solution']
-        );
+        $this->ciphersModel->upsertCipher($checkpoint, $values['name'], $values['cipher_description'], $values['solution_description'], $values['solution']);
 
         if($values['solution_image']->getError() == UPLOAD_ERR_OK) {
-            $this->database->query('
-                UPDATE ciphers
-                SET solution_image_id = ?
-                WHERE year = ? AND checkpoint_number = ?
-            ', $solution_image_id, $this->selectedYear, $checkpoint);
+            $this->ciphersModel->updateSolutionImage($solution_image_id);
         }
 
         if($values['cipher_image']->getError() == UPLOAD_ERR_OK) {
-            $this->database->query('
-                UPDATE ciphers
-                SET cipher_image_id = ?
-                WHERE year = ? AND checkpoint_number = ?
-            ', $cipher_image_id, $this->selectedYear, $checkpoint);
+            $this->ciphersModel->updateCipherImage($cipher_image_id);
         }
 
         if($values['pdf_file']->getError() == UPLOAD_ERR_OK) {
-            $this->database->query('
-                UPDATE ciphers
-                SET pdf_file_id = ?
-                WHERE year = ? AND checkpoint_number = ?
-            ', $pdf_file_id, $this->selectedYear, $checkpoint);
+            $this->ciphersModel->updatePDF($pdf_file_id);
         }
 
         $this->flashMessage('Šifra byla úspěšně vložena.', 'success');
@@ -619,13 +526,8 @@ class AdministrationPresenter extends BasePresenter
     public function createComponentPayments()
     {
         $this->getYearData();
-        $teams = $this->database->query('
-            SELECT id, name, paid
-            FROM teams
-            LEFT JOIN teamsyear ON teams.id = teamsyear.team_id
-            WHERE teamsyear.year = ?
-            ORDER BY LTRIM(name) COLLATE utf8_czech_ci
-        ', $this->selectedYear)->fetchAll();
+        $this->teamsModel->setYear($this->selectedYear);
+        $teams = $this->teamsModel->getTeamsPaymentStatus();
 
         $form = new UI\Form;
         foreach ($teams as $team) {
@@ -640,11 +542,9 @@ class AdministrationPresenter extends BasePresenter
 
     public function editPayments(UI\Form $form, array $values)
     {
-        foreach($values as $team_id => $paid) {
-            $this->database->query('
-                UPDATE teamsyear SET paid = ?
-                WHERE team_id = ? AND year = ?
-            ', $paid, $team_id, $this->selectedYear);
+        $this->teamsModel->setYear($this->selectedYear);
+        foreach($values as $teamId => $paymentStatus) {
+            $this->teamsModel->editTeamPayment($teamId, $paymentStatus);
         }
 
         $this->flashMessage('Platby byly úspěšně uloženy', 'success');
@@ -656,21 +556,11 @@ class AdministrationPresenter extends BasePresenter
         parent::render();
         $this->prepareHeading('Výsledky');
 
-        $data = $this->database->query('
-            SELECT teams.name, MAX(results.checkpoint_number) AS max_checkpoint, SUM(results.used_hint) AS total_hints, TIME_FORMAT(MAX(results.entry_time), \'%H:%i\') AS finish_time
-            FROM results
-            LEFT JOIN teams ON teams.id = results.team_id
-            WHERE year = ?
-            GROUP BY teams.name
-            ORDER BY (MAX(results.checkpoint_number) - SUM(results.used_hint)) DESC, MAX(results.checkpoint_number) DESC, MAX(results.entry_time) ASC',
-            $this->selectedYear
-        )->fetchAll();
+        $this->resultsModel->setYear($this->selectedYear);
 
-        $this->template->resultsPublic = $this->database->query('
-            SELECT results_public
-            FROM years
-            WHERE year = ?
-        ', $this->selectedYear)->fetchField();
+        $data = $this->resultsModel->getTeamStandings();
+
+        $this->template->resultsPublic = $this->resultsModel->getResultsPublic();
 
         $this->template->data = $data;
 
@@ -689,20 +579,16 @@ class AdministrationPresenter extends BasePresenter
         return $form;
     }
 
-    public function publishResults(UI\Form $form, array $values)
+    public function publishResults()
     {
         $this->getYearData();
 
-        $this->database->query('
-            UPDATE years SET results_public = 1
-            WHERE year = ?
-        ', $this->selectedYear);
+        $this->resultsModel->setYear($this->selectedYear);
+        $this->resultsModel->publishResults();
 
         $this->flashMessage('Výsledky byly úspěšně zveřejněny', 'success');
         $this->redirect('this');
     }
-
-
 
     public function renderReports()
     {
@@ -712,12 +598,9 @@ class AdministrationPresenter extends BasePresenter
 
     public function createComponentAddReport()
     {
-
         $this->getYearData();
 
-
         $form = new UI\Form;
-
 
         $form->addText('year', 'Ročník*')->setType('number')->setDefaultValue($this->selectedYear)->setRequired();
         $form->addText('team', 'Autor (tým)*')->setRequired();
@@ -734,20 +617,14 @@ class AdministrationPresenter extends BasePresenter
     {
         $this->getYearData();
 
-        $teamId = $this->database->query('
-            SELECT id
-            FROM teams
-            LEFT JOIN teamsyear ON teams.id = teamsyear.team_id
-            WHERE year = ? AND name = ?
-        ', $values['year'], $values['team'])->fetchField();
+        $this->teamsModel->setYear($this->selectedYear);
+        $teamId = $this->teamsModel->getTeamId($values['team']);
 
         if(!$teamId) {
             $form->addError('Tým se zadaným názvem neexistuje');
         }
 
-        $this->database->query('
-            INSERT INTO reports (year, link, team_id, name, description) VALUES (?, ?, ?, ?, ?)
-        ', $values['year'], $values['link'], $teamId, $values['name'], $values['description']);
+        $this->reportsModel->insertReport($values['year'], $values['link'], $teamId, $values['name'], $values['description']);
 
         $this->flashMessage('Reportáž byla úspěšně přidána', 'success');
         $this->redirect('this');
