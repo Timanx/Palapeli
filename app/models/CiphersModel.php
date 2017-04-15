@@ -11,7 +11,7 @@ class CiphersModel {
     private $database;
 
     private $checkpoint = 1;
-    private $year = BasePresenter::CURRENT_YEAR;
+    private $year;
 
     public function __construct(Nette\Database\Context $database)
     {

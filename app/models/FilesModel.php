@@ -11,7 +11,7 @@ class FilesModel
     /** @var Nette\Database\Context */
     private $database;
 
-    private $year = BasePresenter::CURRENT_YEAR;
+    private $year;
 
     public function __construct(Nette\Database\Context $database)
     {

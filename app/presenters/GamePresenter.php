@@ -44,6 +44,8 @@ class GamePresenter extends BasePresenter
         $this->prepareHeading('Seznam týmů');
 
         $this->teamsModel->setYear($this->selectedYear);
+        $this->yearsModel->setYear($this->selectedYear);
+        $this->template->hasGameEnded = $this->yearsModel->hasGameEnded();
         $data = $this->teamsModel->getPlayingTeams();
         $standby = $this->teamsModel->getStandbyTeams();
         $this->template->paid = $this->teamsModel->getPaidTeamsCount();
@@ -52,6 +54,7 @@ class GamePresenter extends BasePresenter
         $this->template->standby = $standby;
         $this->template->teamsCount = count($data) + count($standby);
         $this->template->standbyCount = count($standby);
+
     }
 
     public function renderCiphers($checkpoint = 0, $year = null)
@@ -67,6 +70,7 @@ class GamePresenter extends BasePresenter
         $this->teamsModel->setYear($this->selectedYear);
         $this->ciphersModel->setYear($this->selectedYear);
 
+        $this->template->hasGameEnded = $this->yearsModel->hasGameEnded();
         $this->template->checkpointCount = $this->yearsModel->getCheckpointCount();
         $this->template->cipherData = $this->ciphersModel->getCipher($checkpoint);
         $this->template->fastestSolution = $this->resultsModel->getFastestSolution($checkpoint);
@@ -107,7 +111,9 @@ class GamePresenter extends BasePresenter
 
         $this->template->data = $this->resultsModel->getTeamStandings();
         $this->template->resultsPublic = $this->resultsModel->getResultsPublic();
-        $this->template->resultsPublic = $this->resultsModel->getResultsFinal();
+        $this->template->resultsFinal = $this->resultsModel->getResultsFinal();
+        $this->template->hasGameStarted = $this->yearsModel->hasGameStarted();
+        $this->template->hasGameEnded = $this->yearsModel->hasGameEnded();
     }
 
     public function renderReports()
@@ -116,6 +122,8 @@ class GamePresenter extends BasePresenter
         $this->prepareHeading('Reportáže');
 
         $this->template->years = $this->yearsModel->getYearNames();
+        $this->yearsModel->setYear($this->selectedYear);
+        $this->template->hasGameEnded = $this->yearsModel->hasGameEnded();
         $this->template->reports = $reports = $this->reportsModel->getReports();
     }
 
@@ -129,6 +137,8 @@ class GamePresenter extends BasePresenter
         $this->resultsModel->setYear($this->selectedYear);
         $this->teamsModel->setYear($this->selectedYear);
         $data = $this->resultsModel->getStatsData();
+
+        $this->template->hasGameEnded = $this->yearsModel->hasGameEnded();
 
         $cipherData = [];
 
@@ -174,6 +184,8 @@ class GamePresenter extends BasePresenter
         $this->template->results = $this->resultsModel->getCompleteResults();
         $this->template->resultsPublic = $this->resultsModel->getResultsPublic();
         $this->template->resultsFinal = $this->resultsModel->getResultsFinal();
+        $this->template->hasGameStarted = $this->yearsModel->hasGameStarted();
+        $this->template->hasGameEnded = $this->yearsModel->hasGameEnded();
     }
 
     protected function createComponentCipherDiscussion() {

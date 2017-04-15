@@ -187,7 +187,7 @@ class AdministrationPresenter extends BasePresenter
             ->setRequired();
         $form->addText('year', 'Ročník:')
             ->setType('number')
-            ->setDefaultValue(self::CURRENT_YEAR)
+            ->setDefaultValue($this->selectedYear)
             ->addRule(UI\Form::MIN, 'Hodnota ročníku musí být alespoň 1.', 1)
             ->setRequired();
         $form->addSubmit('send', 'PŘIDAT AKTUALITU');

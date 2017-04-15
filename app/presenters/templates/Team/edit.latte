@@ -161,7 +161,7 @@
 								<div class="responsiveTeamForm">
 									{control editForm}
 								</div>
-						{elseif !$hasRegistrationEnded}
+						{elseif $isRegistrationOpen}
 							<div class="flash info">Do {$selectedYear}. ročníku ještě nejste zaregistrovaní. Můžete tak učinit kliknutím <a href="{plink Team:registerLogged}">SEM</a>.</div>
 						{else}
 							<div class="flash info">Registrace do {$selectedYear}. ročníku už je uzavřena.</div>

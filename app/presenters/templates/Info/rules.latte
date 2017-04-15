@@ -5,16 +5,16 @@
 	<div class="ruleContainer">
 		<h3 id="about">O HŘE</h3>
 		<p>
-		Palapeli je lineární denní šifrovací hra. Od podobných her se poněkud liší, koná se totiž jako jedna z mála v zimě, a to konkrétně {date('j.&\nb\sp;n.&\nb\sp;Y', App\Presenters\BasePresenter::GAME_DATE)|noescape}. Letos proběhne již {App\Presenters\BasePresenter::CURRENT_YEAR}. ročník. Hru pro vás za pomoci mnoha dalších lidí připravují stálí i občasní členové týmu <a href="http://kvik.wz.cz" target="_blank">KVÍK!</a> Wal, Tíman, Soňa, Tinka, Kačka, Míša a Dark.
+		Palapeli je lineární denní šifrovací hra. Od podobných her se poněkud liší, koná se totiž jako jedna z mála v zimě, a to konkrétně {$yearData->date|date: 'j. n. Y'|noescape}. Letos proběhne již {$yearData->year}. ročník. Hru pro vás za pomoci mnoha dalších lidí připravují stálí i občasní členové týmu <a href="http://kvik.wz.cz" target="_blank">KVÍK!</a> Wal, Tíman, Soňa, Tinka, Kačka, Míša a Dark.
 		</p>
 	</div>
 
 	<div class="ruleContainer">
 	<h3 id="conditions">PODMÍNKY ÚČASTI</h3>
 	<p>
-		Počet členů týmu je 1–4. Týmy se musí <a href="{plink Team:registration}">zaregistrovat</a> nejpozději {date('j.&\nb\sp;n.&\nb\sp;Y', App\Presenters\BasePresenter::REGISTRATION_END)|noescape}. Startovné činí {App\Presenters\BasePresenter::ENTRY_FEE} Kč na tým, zasílá se na účet, jehož číslo vám bude sděleno po registraci. Týmy, které do {date('j.&\nb\sp;n.&\nb\sp;Y', App\Presenters\BasePresenter::ENTRY_FEE_DEADLINE)|noescape} nezaplatí startovné a nezažádají o výjimku placení na startu, se hry nebudou moci zúčastnit. Startovné vracíme v případě zrušení účasti do {date('j.&\nb\sp;n.&\nb\sp;Y', App\Presenters\BasePresenter::ENTRY_FEE_RETURN_DEADLINE)|noescape}. Účastníci mladší než osmnáct let musí mít v týmu alespoň jednoho dospělého. Organizátoři nenesou za bezpečnost ani jednání hráčů zodpovědnost.
-		{if App\Presenters\BasePresenter::TEAM_LIMIT > 0}
-		Limit počtu hrajících týmů je {App\Presenters\BasePresenter::TEAM_LIMIT}.
+		Počet členů týmu je 1–4. Týmy se musí <a href="{plink Team:registration}">zaregistrovat</a> nejpozději {$yearData->registration_end|date: 'j. n. Y'|noescape}. Startovné činí {$yearData->entry_fee} Kč na tým, zasílá se na účet, jehož číslo vám bude sděleno po registraci. Týmy, které do {$yearData->entry_fee_deadline|date: 'j. n. Y'|noescape} nezaplatí startovné a nezažádají o výjimku placení na startu, se hry nebudou moci zúčastnit. Startovné vracíme v případě zrušení účasti do {$yearData->entry_fee_return_deadline|date: 'j. n. Y'|noescape}. Účastníci mladší než osmnáct let musí mít v týmu alespoň jednoho dospělého. Organizátoři nenesou za bezpečnost ani jednání hráčů zodpovědnost.
+		{if $yearData->team_limit > 0}
+			Limit počtu hrajících týmů je {$yearData->team_limit}.
 		{/if}
 	</p>
 	</div>

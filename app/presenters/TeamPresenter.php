@@ -1,6 +1,7 @@
 <?php
 namespace App\Presenters;
 
+use App\Models\YearsModel;
 use Nette;
 use Nette\Application\UI;
 use Nette\Mail\Message;
@@ -12,11 +13,14 @@ class TeamPresenter extends BasePresenter
 {
     /** @var  TeamsModel */
     private $teamsModel;
+    /** @var YearsModel */
+    private $yearsModel;
 
-    public function __construct( TeamsModel $teamsModel)
+    public function __construct(TeamsModel $teamsModel, YearsModel $yearsModel)
     {
         parent::__construct();
         $this->teamsModel = $teamsModel;
+        $this->yearsModel = $yearsModel;
     }
 
     public function renderRegistration()
@@ -24,20 +28,32 @@ class TeamPresenter extends BasePresenter
         parent::render();
         $this->prepareHeading('Registrace');
         $this->teamsModel->setYear($this->selectedYear);
+        $this->yearsModel->setYear($this->selectedYear);
+        $this->template->hasRegistrationStarted = $this->yearsModel->hasRegistrationStarted();
+        $this->template->isRegistrationOpen = $this->yearsModel->isRegistrationOpen();
+        $this->template->registrationStart = $this->yearsModel->getRegistrationStart();
 
-        $this->template->displayStandbyWarning = $this->teamsModel->getTeamsCount() >= self::TEAM_LIMIT && self::TEAM_LIMIT > 0;
+        $teamLimit = $this->yearsModel->getTeamLimit();
+        $this->template->displayStandbyWarning = $teamLimit && $this->teamsModel->getTeamsCount() >= $teamLimit;
     }
 
     public function renderDefault()
     {
         parent::render();
         $this->prepareHeading('Přihlášení');
+        $this->yearsModel->setYear($this->selectedYear);
+        $this->template->isRegistrationOpen = $this->yearsModel->isRegistrationOpen();
     }
 
     public function renderCancel()
     {
         parent::render();
         $this->prepareHeading('Zrušení účasti');
+
+        $this->yearsModel->setYear($this->selectedYear);
+        $this->template->hasRegistrationStarted = $this->yearsModel->hasRegistrationStarted();
+        $this->template->isRegistrationOpen = $this->yearsModel->isRegistrationOpen();
+        $this->template->hasGameStarted = $this->yearsModel->hasGameStarted();
 
         if(isset($this->teamId)) {
             $this->teamsModel->setYear($this->selectedYear);
@@ -58,6 +74,10 @@ class TeamPresenter extends BasePresenter
         parent::render();
         $this->prepareHeading('Úprava údajů');
 
+        $this->yearsModel->setYear($this->selectedYear);
+        $this->template->hasRegistrationStarted = $this->yearsModel->hasRegistrationStarted();
+        $this->template->isRegistrationOpen = $this->yearsModel->isRegistrationOpen();
+
         if(isset($this->teamId)) {
             $this->teamsModel->setYear($this->selectedYear);
             $this->template->registered = $this->teamsModel->isTeamRegistered($this->teamId);
@@ -70,13 +90,16 @@ class TeamPresenter extends BasePresenter
     {
         parent::render();
         $this->prepareHeading('Platba startovného');
-
         if(isset($this->teamId)) {
             $this->teamsModel->setYear($this->selectedYear);
+            $this->yearsModel->setYear($this->selectedYear);
+
+            $this->template->yearData = $this->yearsModel->getYearData();
             $this->template->registered = $registered = $this->teamsModel->isTeamRegistered($this->teamId);
 
             if($registered) {
-                $this->template->isSubstitute = $this->teamsModel->getTeamRegistrationOrder($this->teamId) >= self::TEAM_LIMIT;
+                $teamLimit = $this->yearsModel->getTeamLimit();
+                $this->template->isSubstitute = $teamLimit && $this->teamsModel->getTeamRegistrationOrder($this->teamId) >= $teamLimit;
                 $this->template->paid = $this->teamsModel->getTeamPaymentStatus($this->teamId);
             } else {
                 $this->template->paid = self::SHOULD_NOT_PAY;
@@ -99,8 +122,10 @@ class TeamPresenter extends BasePresenter
     public function actionRegisterLogged()
     {
         $this->teamsModel->setYear($this->selectedYear);
-        
-        if(!$this->isRegistrationOpen()) {
+        $this->yearsModel->setYear($this->selectedYear);
+
+
+        if(!$this->yearsModel->isRegistrationOpen()) {
             $this->flashMessage('Registrace do ' . $this->selectedYear . '. ročníku je uzavřena.');
             $this->redirect('Info:');
         }
@@ -117,8 +142,8 @@ class TeamPresenter extends BasePresenter
                     $this->teamsModel->registerTeam($teamId);
                 }
                 $teamsCount = $this->teamsModel->getTeamsCount();
-
-                if($teamsCount > self::TEAM_LIMIT && self::TEAM_LIMIT >= 0) {
+                $teamLimit = $this->yearsModel->getTeamLimit();
+                if($teamLimit && $teamsCount > $teamLimit) {
                     $this->flashMessage('Tým ' . $this->session->getSection('team')->teamName . ' byl úspěšně zaregistrován do aktuálního ročníku jako náhradní. Již je totiž naplněn limit počtu týmů, které se mohou hry zúčastnit. Jakmile se pro vás uvolní místo, ozveme se vám.', 'info');
                 } else {
                     $this->flashMessage('Tým ' . $this->session->getSection('team')->teamName . ' byl úspěšně zaregistrován do aktuálního ročníku.', 'success');
@@ -126,7 +151,7 @@ class TeamPresenter extends BasePresenter
 
                 $this->redirect('Team:edit');
             } else {
-                $this->flashMessage('Do ' . self::CURRENT_YEAR . '. ročníku už jste zaregistrováni.', 'info');
+                $this->flashMessage('Do ' . $this->yearsModel->getCurrentYearNumber() . '. ročníku už jste zaregistrováni.', 'info');
                 $this->redirect('Team:edit');
             }
         } else {
@@ -166,6 +191,13 @@ class TeamPresenter extends BasePresenter
 
     public function registrationFormSucceeded(UI\Form $form, array $values)
     {
+        if(!$this->selectedYear) {
+            parent::getYearData();
+        }
+
+        $this->teamsModel->setYear($this->selectedYear);
+        $this->yearsModel->setYear($this->selectedYear);
+
         $takenNames = $this->teamsModel->getTakenNames();
 
         if (in_array($values['name'], $takenNames)) {
@@ -182,8 +214,8 @@ class TeamPresenter extends BasePresenter
             $this->teamsModel->registerTeam($teamId, $values['member1'], $values['member2'], $values['member3'], $values['member4']);
 
             $teamsCount = $this->teamsModel->getTeamsCount();
-
-            if($teamsCount > self::TEAM_LIMIT && self::TEAM_LIMIT >= 0) {
+            $teamLimit = $this->yearsModel->getTeamLimit();
+            if($teamLimit && $teamsCount > $teamLimit) {
                 $this->flashMessage('Tým ' . $this->session->getSection('team')->teamName . ' byl úspěšně zaregistrován do aktuálního ročníku jako náhradní. Již je totiž naplněn limit počtu týmů, které se mohou hry zúčastnit. Jakmile se pro vás uvolní místo, ozveme se vám.', 'info');
             } else {
                 $this->flashMessage('Tým ' . $values ['name'] . ' byl úspěšně zaregistrován a přihlášen.', 'success');
@@ -201,6 +233,9 @@ class TeamPresenter extends BasePresenter
         }
         $teamId = $this->teamsModel->getTeamId($values['name']);
 
+        $this->yearsModel->setYear($this->selectedYear);
+        $this->teamsModel->setYear($this->selectedYear);
+
         if (!isset($teamId)) {
             $form->addError(Nette\Utils\Html::el('div', ['class' => 'flash info'])->setHtml('Tým se zadaným názvem neexistuje.'));
         } else {
@@ -216,8 +251,10 @@ class TeamPresenter extends BasePresenter
                 } else {
                     $registered = $this->teamsModel->isTeamRegistered($teamId);
 
-                    if (!$registered && $this->selectedYear == self::CURRENT_YEAR) {
-                        if (!$this->isRegistrationOpen()) {
+                    $currentYearNumber = $this->yearsModel->getCurrentYearNumber();
+
+                    if (!$registered && $this->selectedYear == $currentYearNumber) {
+                        if (!$this->yearsModel->isRegistrationOpen()) {
                             $this->flashMessage('Tým ' . $values ['name'] . ' byl úspěšně přihlášen. Registrace do aktuálního ročníku je však již uzavřena. Pro úpravu údajů z jiných ročníků prosíme vyberte jiný ročník.', 'success');
                             $this->session->getSection('team')->teamId = $teamId;
                             $this->session->getSection('team')->teamName = $values['name'];
@@ -235,15 +272,15 @@ class TeamPresenter extends BasePresenter
                             $this->session->getSection('team')->teamName = $values['name'];
 
                             $teamsCount = $this->teamsModel->getTeamsCount();
-
-                            if($teamsCount > self::TEAM_LIMIT && self::TEAM_LIMIT >= 0) {
+                            $teamLimit = $this->yearsModel->getTeamLimit();
+                            if($teamLimit && $teamsCount > $teamLimit) {
                                 $this->flashMessage('Tým ' . $this->session->getSection('team')->teamName . ' byl úspěšně zaregistrován do aktuálního ročníku jako náhradní. Již je totiž naplněn limit počtu týmů, které se mohou hry zúčastnit. Jakmile se pro vás uvolní místo, ozveme se vám.', 'info');
                             } else {
                                 $this->flashMessage('Tým ' . $this->session->getSection('team')->teamName . ' byl úspěšně zaregistrován do aktuálního ročníku.', 'success');
                             }
                             $this->redirect('Team:edit');
                         }
-                    } elseif (!$registered && $this->selectedYear != self::CURRENT_YEAR) {
+                    } elseif (!$registered && $this->selectedYear != $currentYearNumber) {
                         $this->flashMessage('Tým ' . $values ['name'] . ' byl úspěšně přihlášen. ' . $this->selectedYear . '. ročníku se však neúčastnil, pro úpravu údajů z jiných ročníků prosíme vyberte jiný ročník.', 'success');
                         $this->session->getSection('team')->teamId = $teamId;
                         $this->session->getSection('team')->teamName = $values['name'];
@@ -330,9 +367,14 @@ class TeamPresenter extends BasePresenter
 
     public  function cancelFormSucceeded(UI\Form $form, array $values) {
 
+        if(!$this->selectedYear) {
+            parent::getYearData();
+        }
+
         $teamId = $this->session->getSection('team')->teamId;
 
         $this->teamsModel->setYear($this->selectedYear);
+        $this->yearsModel->setYear($this->selectedYear);
 
         $paid = $this->teamsModel->getTeamPaymentStatus($teamId);
 
@@ -348,8 +390,8 @@ class TeamPresenter extends BasePresenter
         $this->teamsModel->deleteTeamRegistration($teamId);
         
         $playingTeams = $this->teamsModel->getPlayingTeamsIds();
-
-        if($teamsCount > self::TEAM_LIMIT && in_array($this->session->getSection("team")->teamId, $playingTeams)) {
+        $teamLimit = $this->yearsModel->getTeamLimit();
+        if($teamLimit && $teamsCount > $teamLimit && in_array($this->session->getSection("team")->teamId, $playingTeams)) {
             $newTeam = $this->teamsModel->getFirstStandby();
 
             if(isset($newTeam)) {

@@ -14,6 +14,7 @@ class TeamsModel
     private $database;
 
     private $year;
+    private $teamLimit;
 
     public function __construct(Nette\Database\Context $database)
     {
@@ -23,6 +24,12 @@ class TeamsModel
     public function setYear($year)
     {
         $this->year = $year;
+
+        $this->teamLimit = $this->database->query('
+            SELECT team_limit
+            FROM years
+            WHERE year = ?
+        ', $year);
     }
 
     public function getTeamsCount()
@@ -43,7 +50,7 @@ class TeamsModel
             WHERE year = ?
             ORDER BY registered
             LIMIT ?
-        ', $this->year, BasePresenter::TEAM_LIMIT
+        ', $this->year, $this->teamLimit ?? PHP_INT_MAX
         )->fetchAssoc('team_id'));
     }
 
@@ -56,7 +63,7 @@ class TeamsModel
             WHERE year = ?
             ORDER BY registered
             LIMIT 1 OFFSET ?
-        ', BasePresenter::CURRENT_YEAR, BasePresenter::TEAM_LIMIT - 1
+        ', $this->year, $this->teamLimit - 1 ?? PHP_INT_MAX
         )->fetch();
     }
 
@@ -72,7 +79,7 @@ class TeamsModel
                 LIMIT ?
             ) t
             ORDER BY LTRIM(name) COLLATE utf8_czech_ci',
-            $this->year, (BasePresenter::TEAM_LIMIT > 0 ? BasePresenter::TEAM_LIMIT : PHP_INT_MAX)
+            $this->year, $this->teamLimit ?? PHP_INT_MAX
         )->fetchAll();
     }
 
@@ -86,7 +93,7 @@ class TeamsModel
             ORDER BY registered
             LIMIT ? OFFSET ?
             ',
-            $this->year, PHP_INT_MAX, (BasePresenter::TEAM_LIMIT > 0 ? BasePresenter::TEAM_LIMIT : PHP_INT_MAX)
+            $this->year, PHP_INT_MAX, $this->teamLimit ?? PHP_INT_MAX
         )->fetchAll();
     }
 
@@ -293,7 +300,8 @@ class TeamsModel
             LIMIT ?
           ) t
           WHERE paid = ?
-            ', $this->year, (BasePresenter::TEAM_LIMIT > 0 ? BasePresenter::TEAM_LIMIT : PHP_INT_MAX), BasePresenter::PAY_NOK)->fetchAll();
+            ', $this->year, $this->teamLimit ?? PHP_INT_MAX, BasePresenter::PAY_NOK
+        )->fetchAll();
     }
 
     public function getUnfilledTeamsData()
@@ -308,7 +316,8 @@ class TeamsModel
                 GROUP BY email
             ) t
             WHERE team_filled = 0
-        ', $this->year, $this->year)->fetchAll();
+        ', $this->year, $this->year
+        )->fetchAll();
     }
 
     public function getPlayingTeamsEmails()
@@ -320,7 +329,8 @@ class TeamsModel
                 WHERE year = ?
                 ORDER BY registered
                 LIMIT ?
-            ', $this->year, (BasePresenter::TEAM_LIMIT > 0 ? BasePresenter::TEAM_LIMIT : PHP_INT_MAX))->fetchAll();
+            ', $this->year, $this->teamLimit ?? PHP_INT_MAX
+        )->fetchAll();
     }
 
     public function getTeamsPaymentStatus()

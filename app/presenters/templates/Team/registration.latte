@@ -1,7 +1,7 @@
 {block content}
 
 	{if $isSelectedYearCurrent}
-		{if $hasRegistrationStarted && !$hasRegistrationEnded}
+		{if $isRegistrationOpen}
 			<div class="flash info" n:if="$displayStandbyWarning">
 				Již je naplněna kapacita maximálního možného počtu týmů na hře. Stále se však můžete zaregistrovat jako náhradníci. Nebo nám můžete pomoci s testováním - máte-li zájem, ozvěte se prosím na mail organizatori@palapeli.cz.
 			</div>
@@ -93,7 +93,7 @@
 				{control registrationForm}
 			</div>
 		{elseif !$hasRegistrationStarted}
-			<div class="flash info">Registrace do {$selectedYear}. ročníku bude spuštěna až {date('j.&\nb\sp;n.&\nb\sp;Y&\nb\sp;\v&\nb\sp;H:i', App\Presenters\BasePresenter::REGISTRATION_START)|noescape}.</div>
+			<div class="flash info">Registrace do {$selectedYear}. ročníku bude spuštěna až {$registrationStart|date: '%j. %n. %Y v %H:%i'|noescape}.</div>
 		{else}
 			<div class="flash info">Registrace do {$selectedYear}. ročníku již není možná.</div>
 		{/if}

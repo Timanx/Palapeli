@@ -6,7 +6,7 @@
 				{control cancelForm}
 			{elseif !$registered}
 				<div class="flash info">
-					Do {$selectedYear}. ročníku nejste zaregistrovaní.{if $hasRegistrationStarted && !$hasRegistrationEnded} Můžete tak učinit kliknutím <a href="{plink Team:registerLogged}">SEM</a>.{/if}
+					Do {$selectedYear}. ročníku nejste zaregistrovaní.{if $isRegistrationOpen} Můžete tak učinit kliknutím <a href="{plink Team:registerLogged}">SEM</a>.{/if}
 				</div>
 			{elseif !$hasRegistrationStarted}
 				<div class="flash info">

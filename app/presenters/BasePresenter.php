@@ -13,28 +13,6 @@ use Nette\Mail\SendmailMailer;
 
 class BasePresenter extends Nette\Application\UI\Presenter
 {
-
-
-    const ALMOST_DAY = 86399; //End dates should be inclusive
-
-
-    const REGISTRATION_START = 1477580400; //27. 10. 2016 17:00
-    const REGISTRATION_END = 1585039600 + self::ALMOST_DAY; //22. 1. 2017
-    const TEAM_LIMIT = 70; //-1 = no limit
-    const CURRENT_YEAR = 6;
-    const CURRENT_CALENDAR_YEAR = 2017;
-
-
-    const ENTRY_FEE = 240; //CZK
-    const ENTRY_FEE_DEADLINE = 1485212400 + self::ALMOST_DAY; //24. 1. 2017
-    const ENTRY_FEE_RETURN_DEADLINE = 1485385200 + self::ALMOST_DAY; ///26. 1. 2015
-    const GAME_DATE = 1485558000; //28. 1. 2017
-    const GAME_START = 1485590400 ; //28. 1. 2017 9:00
-    const GAME_END = self::GAME_START + 10 * 60 * 60 ; //28. 1. 2017 19:00
-    const ENTRY_FEE_ACCOUNT = '237977821/0300';
-
-    const SHOW_TESTER_NOTIFICATION = false;
-
     const BLUE = '#005BD0';
     const RED = '#FF0000';
     const YELLOW = '#FFCA05';
@@ -63,11 +41,25 @@ class BasePresenter extends Nette\Application\UI\Presenter
     public $selectedYear;
     public $selectedCalendarYear;
 
+    /** @var YearsModel */
+    private $yearsModel;
+
     protected $teamId;
+
+    public function __construct()
+    {
+        parent::__construct();
+    }
+
+    public function injectYearsModel(YearsModel $yearsModel)
+    {
+        $this->yearsModel = $yearsModel;
+    }
 
     public function render()
     {
         $this->getYearData();
+        $this->yearsModel->setYear($this->selectedYear);
 
         $this->template->teamName = null;
         if($this->session->hasSection('team') && !empty($this->session->getSection('team')->teamName)) {
@@ -86,69 +78,32 @@ class BasePresenter extends Nette\Application\UI\Presenter
             $this->template->orgLogged = false;
         }
 
-        $this->template->lastYear = self::CURRENT_YEAR - 1;
+        $currentYearData = $this->yearsModel->getCurrentYearData();
+
+        $this->template->lastYear = $currentYearData->year - 1;
         $this->template->selectedYear = $this->selectedYear;
         $this->template->selectedCalendarYear = $this->selectedCalendarYear;
-        $this->template->currentYear = self::CURRENT_YEAR;
-        $this->template->currentCalendarYear = self::CURRENT_CALENDAR_YEAR;
-        $this->template->isSelectedYearCurrent = $this->selectedYear == self::CURRENT_YEAR;
-        $now = time();
-        $this->template->hasRegistrationStarted = $this->hasRegistrationStarted($now);
-        $this->template->hasRegistrationEnded = $this->hasRegistrationEnded($now);
-        $this->template->isRegistrationOpen = $this->isRegistrationOpen($now);
-        $this->template->hasGameStarted = $this->hasGameStarted($now);
-        $this->template->hasGameEnded = $this->hasGameEnded($now);
-        $this->template->showTesterNotification = self::SHOW_TESTER_NOTIFICATION;
+        $this->template->currentYear = $currentYearData->year;
+        $this->template->currentCalendarYear = $currentYearData->calendar_year;
+        $this->template->isSelectedYearCurrent = ($this->selectedYear == $currentYearData->year);
+        $this->template->showTesterNotification = $currentYearData->show_tester_notification;
     }
 
     public function getYearData() {
+        $currentYearData = $this->yearsModel->getCurrentYearData();
+
         if($this->session->hasSection('selected') && !empty($this->session->getSection('selected')->year)) {
             $this->selectedYear = $this->session->getSection('selected')->year;
         } else {
-            $this->session->getSection('selected')->year = self::CURRENT_YEAR;
-            $this->selectedYear = self::CURRENT_YEAR;
+            $this->session->getSection('selected')->year = $currentYearData->year;
+            $this->selectedYear = $currentYearData->year;
         }
         if($this->session->hasSection('selected') && !empty($this->session->getSection('selected')->calendarYear)) {
             $this->selectedCalendarYear = $this->session->getSection('selected')->calendarYear;
         } else {
-            $this->session->getSection('selected')->calendarYear = self::CURRENT_CALENDAR_YEAR;
-            $this->selectedCalendarYear = self::CURRENT_CALENDAR_YEAR;
+            $this->session->getSection('selected')->calendarYear = $currentYearData->calendar_year;
+            $this->selectedCalendarYear = $currentYearData->calendar_year;
         }
-    }
-
-    public function hasGameStarted($time = null) {
-        if(!isset($time)) {
-            $time = time();
-        }
-        return $time >= self::GAME_START;
-    }
-
-    public function hasGameEnded($time = null) {
-        if(!isset($time)) {
-            $time = time();
-        }
-        return $time >= self::GAME_END;
-    }
-
-    public function hasRegistrationStarted($time = null) {
-        if(!isset($time)) {
-            $time = time();
-        }
-        return $time >= self::REGISTRATION_START;
-    }
-
-    public function hasRegistrationEnded($time = null) {
-        if(!isset($time)) {
-            $time = time();
-        }
-        return $time >= self::REGISTRATION_END;
-    }
-
-    public function isRegistrationOpen($time = null) {
-        if(!isset($time)) {
-            $time = time();
-        }
-        return $this->hasRegistrationStarted($time) && !$this->hasRegistrationEnded($time);
     }
 
     public function prepareHeading($heading) {

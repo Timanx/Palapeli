@@ -21,9 +21,9 @@
 						{if $paid == App\Presenters\BasePresenter::PAY_OK}
 							Startovné je zaplacené.
 						{elseif $paid == App\Presenters\BasePresenter::PAY_NOK}
-							Startovné ve výši {App\Presenters\BasePresenter::ENTRY_FEE} Kč zaplaťte prosím do {date('j.&\nb\sp;n.&\nb\sp;Y', App\Presenters\BasePresenter::ENTRY_FEE_DEADLINE)|noescape} na účet {App\Presenters\BasePresenter::ENTRY_FEE_ACCOUNT|noescape}. Ve zprávě prosím uveďte název vašeho týmu. V případě zrušení účasti na hře do {date('j.&\nb\sp;n.&\nb\sp;Y', App\Presenters\BasePresenter::ENTRY_FEE_RETURN_DEADLINE)|noescape} vám startovné vrátíme.
+							Startovné ve výši {$yearData->entry_fee} Kč zaplaťte prosím do {$yearData->entry_fee_deadline|date: 'j. n. Y'|noescape} na účet {$yearData->entry_fee_account}. Ve zprávě prosím uveďte název vašeho týmu. V případě zrušení účasti na hře do {$yearData->entry_fee_return_deadline|date: 'j. n. Y'|noescape} vám startovné vrátíme.
 						{elseif $paid == App\Presenters\BasePresenter::PAY_NOK}
-							Startovné ve výši {App\Presenters\BasePresenter::ENTRY_FEE} Kč budete platit na startu.
+							Startovné ve výši {$yearData->entry_fee} Kč budete platit na startu.
 						{else}
 							<div class="flash success">Neočekává se od vás platba startovného.</div>
 						{/if}
