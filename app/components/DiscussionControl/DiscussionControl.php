@@ -26,6 +26,7 @@ class DiscussionControl extends Control
 
     public function __construct(TeamsModel $teamsModel, DiscussionModel $discussionModel)
     {
+        parent::__construct();
         $this->teamsModel = $teamsModel;
         $this->discussionModel = $discussionModel;
     }

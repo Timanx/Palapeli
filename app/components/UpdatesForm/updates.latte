@@ -1,0 +1,28 @@
+<div n:foreach="$flashes as $flash" n:class="flash, $flash->type">{$flash->message}</div>
+{form newUpdateForm}
+	<table>
+		<tr>
+			<td>
+				{label date /}<br>
+				{input date}
+			</td>
+		</tr>
+		<tr>
+			<td>
+				{label year /}<br>
+				{input year}
+			</td>
+		</tr>
+		<tr>
+			<td colspan="2">
+				{label message /}<br>
+				{input message}
+			</td>
+		</tr>
+		<tr>
+			<td class="updatesTd" colspan="2">
+				{input send}
+			</td>
+		</tr>
+	</table>
+{/form}

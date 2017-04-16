@@ -12,6 +12,7 @@ use DiscussionControl;
 use Nette;
 use Nette\Application\UI;
 use Nette\Http\FileUpload;
+use UpdatesForm;
 
 
 class AdministrationPresenter extends BasePresenter
@@ -21,8 +22,6 @@ class AdministrationPresenter extends BasePresenter
     private $yearsModel;
     /** @var  TeamsModel */
     private $teamsModel;
-    /** @var  UpdatesModel */
-    private $updatesModel;
     /** @var  ReportsModel */
     private $reportsModel;
     /** @var  ResultsModel */
@@ -33,20 +32,22 @@ class AdministrationPresenter extends BasePresenter
     private $filesModel;
     /** @var  \IDiscussionControlFactory */
     private $discussionControlFactory;
+    /** @var  \IUpdatesFormFactory */
+    private $updatesFormFactory;
 
     public function __construct(\IDiscussionControlFactory $discussionControlFactory,
+                                \IUpdatesFormFactory $updatesFormFactory,
                                 YearsModel $yearsModel,
                                 TeamsModel $teamsModel,
                                 ReportsModel $reportsModel,
                                 ResultsModel $resultsModel,
-                                UpdatesModel $updatesModel,
                                 CiphersModel $ciphersModel,
                                 FilesModel $filesModel)
     {
         $this->discussionControlFactory = $discussionControlFactory;
+        $this->updatesFormFactory = $updatesFormFactory;
         $this->yearsModel = $yearsModel;
         $this->teamsModel = $teamsModel;
-        $this->updatesModel = $updatesModel;
         $this->resultsModel = $resultsModel;
         $this->reportsModel = $reportsModel;
         $this->ciphersModel = $ciphersModel;
@@ -153,8 +154,8 @@ class AdministrationPresenter extends BasePresenter
         $this->teamsModel->getPlayingTeams();
     }
 
-    protected function createComponentDiscussion() {
-
+    protected function createComponentDiscussion()
+    {
         /** @var DiscussionControl $control */
         $control = $this->discussionControlFactory->create();
 
@@ -165,8 +166,8 @@ class AdministrationPresenter extends BasePresenter
         return $control;
     }
 
-    protected function createComponentChat() {
-
+    protected function createComponentChat()
+    {
         /** @var DiscussionControl $control */
         $control = $this->discussionControlFactory->create();
 
@@ -177,36 +178,14 @@ class AdministrationPresenter extends BasePresenter
         return $control;
     }
 
-    public function createComponentNewUpdateForm()
+    protected function createComponentUpdateForm()
     {
-        $form = new UI\Form;
-        $form->addTextArea('message', 'Text aktuality:', null, 5);
-        $form->addText('date', 'Datum:')
-            ->setType('date')
-            ->setDefaultValue(date('Y-m-d', time()))
-            ->setRequired();
-        $form->addText('year', 'Ročník:')
-            ->setType('number')
-            ->setDefaultValue($this->selectedYear)
-            ->addRule(UI\Form::MIN, 'Hodnota ročníku musí být alespoň 1.', 1)
-            ->setRequired();
-        $form->addSubmit('send', 'PŘIDAT AKTUALITU');
-        $form->onSuccess[] = [$this, 'newUpdateFormSucceeded'];
-        return $form;
-    }
+        parent::getYearData();
 
-    public function newUpdateFormSucceeded(UI\Form $form, array $values)
-    {
-        if(!isset($this->selectedYear)) {
-            $this->getYearData();
-        }
-
-        $this->updatesModel->setYear($this->selectedYear);
-
-        $this->updatesModel->addUpdate($values['date'], $values['message']);
-
-        $this->flashMessage('Aktualita byla úspěšně vložena.', 'success');
-        $this->redirect('this');
+        /** @var UpdatesForm $control */
+        $control = $this->updatesFormFactory->create();
+        $control->setYear($this->selectedYear);
+        return $control;
     }
 
     public function createComponentSelectTeamForm()
