@@ -12,6 +12,7 @@ use DiscussionControl;
 use Nette;
 use Nette\Application\UI;
 use Nette\Http\FileUpload;
+use TeamCard;
 use UpdatesForm;
 
 
@@ -34,9 +35,12 @@ class AdministrationPresenter extends BasePresenter
     private $discussionControlFactory;
     /** @var  \IUpdatesFormFactory */
     private $updatesFormFactory;
+    /** @var  \ITeamCardFactory */
+    private $teamCardFactory;
 
     public function __construct(\IDiscussionControlFactory $discussionControlFactory,
                                 \IUpdatesFormFactory $updatesFormFactory,
+                                \ITeamCardFactory $teamCardFactory,
                                 YearsModel $yearsModel,
                                 TeamsModel $teamsModel,
                                 ReportsModel $reportsModel,
@@ -46,6 +50,7 @@ class AdministrationPresenter extends BasePresenter
     {
         $this->discussionControlFactory = $discussionControlFactory;
         $this->updatesFormFactory = $updatesFormFactory;
+        $this->teamCardFactory = $teamCardFactory;
         $this->yearsModel = $yearsModel;
         $this->teamsModel = $teamsModel;
         $this->resultsModel = $resultsModel;
@@ -60,16 +65,10 @@ class AdministrationPresenter extends BasePresenter
         $this->prepareHeading('Přidání aktuality');
     }
 
-    public function renderTeamCard($teamId = null)
+    public function renderTeamCard()
     {
         parent::render();
         $this->prepareHeading('Karta týmu');
-
-        $this->yearsModel->setYear($this->selectedYear);
-
-        $this->template->checkpointCount = $this->yearsModel->getCheckpointCount();
-        $this->template->teamName = $this->teamsModel->getTeamName($teamId);
-        $this->template->teamId = $teamId;
     }
 
     public function renderCheckpointCard($checkpoint = null)
@@ -188,107 +187,15 @@ class AdministrationPresenter extends BasePresenter
         return $control;
     }
 
-    public function createComponentSelectTeamForm()
+    protected function createComponentTeamCard()
     {
-        if(!isset($this->selectedYear)) {
-            $this->getYearData();
-        }
+        parent::getYearData();
 
-        $teamId = (isset($_GET['team']) ? $_GET['team'] : null);
-
-        $this->resultsModel->setYear($this->selectedYear);
-
-        $teams = $this->resultsModel->getTeamsWithFilledStatus();
-
-        $options = ['Nevyplněné týmy' => [], 'Vyplněné týmy' => []];
-        foreach ($teams as $team) {
-            $options[(!$team->team_filled ? 'Nevyplněné týmy' : 'Vyplněné týmy')][$team->id] = $team->name;
-        }
-
-        $form = new UI\Form;
-        $form->addSelect('teams', null, $options, 1)->setPrompt('Vyberte tým')->setAttribute('onchange', 'this.form.submit()');
-        $form->onSuccess[] = [$this, 'teamSelected'];
-        return $form;
+        /** @var TeamCard $control */
+        $control = $this->teamCardFactory->create();
+        $control->setYear($this->selectedYear);
+        return $control;
     }
-
-    public function teamSelected(UI\Form $form, array $values)
-    {
-        $this->redirect('this', ['team' => $values['teams']]);
-    }
-
-    public function createComponentTeamCardForm()
-    {
-        $teamId = $_GET['team'];
-        if(!isset($this->selectedYear)) {
-            $this->getYearData();
-        }
-
-        $this->resultsModel->setYear($this->selectedYear);
-        $teamId->yearsModel->setYear($this->selectedYear);
-
-        $results = $this->resultsModel->getTeamResults($teamId);
-        $yearData = $teamId->yearsModel->getYearData();
-
-        $form = new UI\Form;
-
-        for ($i = 0; $i < $yearData->checkpointCount; $i++) {
-            $checkpoint = $form->addContainer('checkpoint' . $i);
-            $checkpoint->addText('entryTime', ($i == 0 ? 'Začátek hry:' : ($i == $yearData->checkpointCount-1 ? 'Příchod do cíle:' : 'Příchod na ' . $i . '. stanoviště:')))->setType('time')->setDefaultValue((isset($results[$i]) && isset($results[$i]['entry_time']) ? $results[$i]['entry_time'] : ($i == 0 && isset($yearData->game_start) ? $yearData->game_start : self::EMPTY_TIME_VALUE)));
-            $checkpoint->addText('exitTime', ($i == 0 ? 'Odchod ze startu:' : ($i == $yearData->checkpointCount-1 ? 'Vyřešení cílového hesla:' : 'Odchod z ' . $i . '. stanoviště:')))->setType('time')->setDefaultValue((isset($results[$i]) && isset($results[$i]['exit_time']) ? $results[$i]['exit_time'] : self::EMPTY_TIME_VALUE));;
-            if($i != $yearData->checkpointCount-1) {
-                $checkpoint->addCheckbox('usedHint')->setDefaultValue((isset($results[$i]) && isset($results[$i]['used_hint']) ? $results[$i]['used_hint'] : 0))->setRequired(false);
-            }
-        }
-
-        $form->addSubmit('send', 'ODESLAT KARTU TÝMU');
-        $form->onSuccess[] = [$this, 'teamCardFormSucceeded'];
-        return $form;
-    }
-
-    public function teamCardFormSucceeded(UI\Form $form, array $values)
-    {
-        if(!isset($this->selectedYear)) {
-            $this->getYearData();
-        }
-
-        $this->resultsModel->setYear($this->selectedYear);
-
-        $teamId = $_GET['team'];
-        foreach($values as $number => $checkpoint) {
-            $number = substr($number,10);
-
-            if  (   isset($checkpoint['usedHint']) &&
-                    $checkpoint['usedHint']
-                 ||
-                    $checkpoint['exitTime'] != '' &&
-                    $checkpoint['exitTime'] != self::EMPTY_TIME_VALUE
-                 ||
-                    $checkpoint['entryTime'] != '' &&
-                    $checkpoint['entryTime'] != self::EMPTY_TIME_VALUE
-
-
-            ) {
-                if($checkpoint['exitTime'] == self::EMPTY_TIME_VALUE || strlen($checkpoint['exitTime']) == 0) {
-                    $checkpoint['exitTime'] = NULL;
-                }                
-                if($checkpoint['entryTime'] == self::EMPTY_TIME_VALUE || strlen($checkpoint['entryTime']) == 0) {
-                    $checkpoint['entryTime'] = NULL;
-                }
-
-                $this->resultsModel->insertResultsRow($teamId, $number, $checkpoint['entryTime'], $checkpoint['exitTime'], $checkpoint['usedHint']);
-            }
-
-            //Handle finish
-            if ($number == count($values) - 1 && $checkpoint['exitTime'] != '' && $checkpoint['exitTime'] != self::EMPTY_TIME_VALUE) {
-
-                $this->resultsModel->insertResultsRow($teamId, ((int)$number + 1), $checkpoint['exitTime'],$checkpoint['exitTime']);
-            }
-        }
-
-        $this->flashMessage('Údaje z karty týmu byly úspěšně uloženy', 'success');
-        $this->redirect('this');
-    }
-
 
     public function createComponentSelectCheckpointForm()
     {

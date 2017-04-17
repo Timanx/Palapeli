@@ -1,12 +1,10 @@
 <?php
-use Nette\Application\UI\Control;
 use Nette\Application\UI;
 use App\Models\TeamsModel;
 use App\Models\DiscussionModel;
 
-class DiscussionControl extends Control
+class DiscussionControl extends BaseControl
 {
-
     const MAIN_THREAD = 'main';
     const CIPHER_THREAD_PREFIX = 'sifry';
     const CHAT_THREAD = 'chat';

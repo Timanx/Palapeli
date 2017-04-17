@@ -1,23 +1,16 @@
 <?php
 use App\Models\UpdatesModel;
-use Nette\Application\UI\Control;
 use Nette\Application\UI;
 
-class UpdatesForm extends Control
+class UpdatesForm extends BaseControl
 {
     /** @var UpdatesModel */
     private $updatesModel;
-    private $year;
 
     public function __construct(UpdatesModel $updatesModel)
     {
         parent::__construct();
         $this->updatesModel = $updatesModel;
-    }
-
-    public function setYear($year)
-    {
-        $this->year = $year;
     }
 
     public function render()
