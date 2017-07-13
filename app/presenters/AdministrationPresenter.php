@@ -37,10 +37,13 @@ class AdministrationPresenter extends BasePresenter
     private $updatesFormFactory;
     /** @var  \ITeamCardFactory */
     private $teamCardFactory;
+    /** @var  \ICheckpointCardFactory */
+    private $checkpointCardFactory;
 
     public function __construct(\IDiscussionControlFactory $discussionControlFactory,
                                 \IUpdatesFormFactory $updatesFormFactory,
                                 \ITeamCardFactory $teamCardFactory,
+                                \ICheckpointCardFactory $checkpointCardFactory,
                                 YearsModel $yearsModel,
                                 TeamsModel $teamsModel,
                                 ReportsModel $reportsModel,
@@ -51,6 +54,7 @@ class AdministrationPresenter extends BasePresenter
         $this->discussionControlFactory = $discussionControlFactory;
         $this->updatesFormFactory = $updatesFormFactory;
         $this->teamCardFactory = $teamCardFactory;
+        $this->checkpointCardFactory = $checkpointCardFactory;
         $this->yearsModel = $yearsModel;
         $this->teamsModel = $teamsModel;
         $this->resultsModel = $resultsModel;
@@ -197,131 +201,15 @@ class AdministrationPresenter extends BasePresenter
         return $control;
     }
 
-    public function createComponentSelectCheckpointForm()
+    protected function createComponentCheckpointCard()
     {
-        $checkpoint = (isset($_GET['checkpoint']) ? $_GET['checkpoint'] : null);
-        if(!isset($this->selectedYear)) {
-            $this->getYearData();
-        }
+        parent::getYearData();
 
-        $this->yearsModel->setYear($this->selectedYear);
-
-        $checkpointCount = $this->yearsModel->getCheckpointCount();
-
-        $options = [];
-        for ($i = 0; $i <= $checkpointCount; $i++){
-            $options[$i] = ($i == $checkpointCount - 1 ? 'Příchod do cíle' : ($i == $checkpointCount ? 'Vyřešení cílového hesla' : ($i == 0 ? 'Start' : $i . '. stanoviště')));
-        }
-
-        array_unshift($options, 'Vyberte stanoviště');
-
-        $form = new UI\Form;
-
-        $form->addCheckbox('previous', 'Řadit týmy podle příchodu na předchozí stanoviště')->setAttribute('onchange', 'this.form.submit()');
-        $form->addSelect('checkpoint', '', $options, 1)->setAttribute('onchange', 'this.form.submit()');
-        $form->addHidden('currentCheckpoint', $checkpoint);
-        $form->onSuccess[] = [$this, 'checkpointSelected'];
-        return $form;
+        /** @var \CheckpointCard $control */
+        $control = $this->teamCardFactory->create();
+        $control->setYear($this->selectedYear);
+        return $control;
     }
-
-    public function checkpointSelected(UI\Form $form, array $values)
-    {
-        if($values['previous']) {
-            $checkpoint = $values['currentCheckpoint'];
-        } elseif($values['checkpoint'] == 0) {
-            $checkpoint = 0;
-        } else {
-            $checkpoint = $values['checkpoint'] - 1;
-        }
-
-        $this->redirect('this', ['checkpoint' => $checkpoint, 'previous' => $values['previous']]);
-    }
-
-    public function createComponentSelectOnlyCheckpointForm()
-    {
-        $checkpoint = (isset($_GET['checkpoint']) ? $_GET['checkpoint'] : null);
-        if(!isset($this->selectedYear)) {
-            $this->getYearData();
-        }
-
-        $this->yearsModel->setYear($this->selectedYear);
-
-        $checkpointCount = $this->yearsModel->getCheckpointCount();
-
-        $options = [];
-        for ($i = 0; $i < $checkpointCount; $i++){
-            $options[$i] = ($i == $checkpointCount - 1 ? 'Cíl' : ($i == 0 ? 'Start' : $i . '. stanoviště'));
-        }
-        array_unshift($options, 'Vyberte stanoviště');
-
-
-        $form = new UI\Form;
-        $form->addSelect('checkpoint', '', $options, 1)->setAttribute('onchange', 'this.form.submit()');
-        $form->onSuccess[] = [$this, 'onlyCheckpointSelected'];
-        return $form;
-    }
-
-    public function onlyCheckpointSelected(UI\Form $form, array $values)
-    {
-        $this->redirect('this', ['checkpoint' => ($values['checkpoint'] == 0 ? 0 : $values['checkpoint'] - 1)]);
-    }
-
-    public function createComponentCheckpointCardForm()
-    {
-        $checkpoint = $_GET['checkpoint'];
-        $previous = array_key_exists('previous', $_GET) && $_GET['previous'];
-        if(!isset($this->selectedYear)) {
-            $this->getYearData();
-        }
-        $this->resultsModel->setYear($this->selectedYear);
-
-        $data = $this->resultsModel->getCheckpointEntryTimes($checkpoint, (bool)$previous);
-
-        $form = new UI\Form;
-
-        for ($i = 0; $i < count($data); $i++) {
-            $teamContainer = $form->addContainer('team' . $i);
-            $teamName = $teamContainer->addText('entryTime', $data[$i]['name'])->setType('time')->setDefaultValue((isset($data[$i]['entry_time']) ? $data[$i]['entry_time'] : self::EMPTY_TIME_VALUE));
-            if($checkpoint > 1 && !$data[$i]['visited_previous']) {
-                $teamName->getLabelPrototype()->addAttributes(['class' => 'dead', 'title' => 'Tým nemá vyplněný příchod na předchozím stanovišti']);
-            }
-            $teamContainer->addHidden('teamId', $data[$i]['id']);
-            $teamContainer->addButton('currentTime', 'Teď')->setAttribute('onclick', 'submitCurrentTime(' . $i . ', this.form)');
-            $teamContainer->addButton('inputtedTime', 'Zadáno')->setAttribute('onclick', 'this.form.submit()');
-        }
-        $form->addSubmit('send', 'ODESLAT KARTU STANOVIŠTĚ');
-        $form->onSuccess[] = [$this, 'checkpointCardFormSucceeded'];
-        return $form;
-    }
-
-    public function checkpointCardFormSucceeded(UI\Form $form, array $values)
-    {
-        $checkpoint = $_GET['checkpoint'];
-
-        if(!isset($this->selectedYear)) {
-            $this->getYearData();
-        }
-        $this->yearsModel->setYear($this->selectedYear);
-        $this->resultsModel->setYear($this->selectedYear);
-
-        $checkpointCount = $this->yearsModel->getCheckpointCount();
-
-        foreach($values as $team) {
-            if(!isset($team['entryTime']) || $team['entryTime'] == '' || $team['entryTime'] == self::EMPTY_TIME_VALUE) {
-                $team['entryTime'] = NULL;
-            }
-
-            $this->resultsModel->insertResultsRow($team['teamId'], $checkpoint, $team['entryTime']);
-
-            if($checkpoint == $checkpointCount) {
-                $this->resultsModel->insertResultsRow($team['teamId'], $checkpoint, NULL, $team['entryTime']);
-            }
-        }
-
-        $this->flashMessage('Údaje z karty stanoviště byly úspěšně uloženy', 'success');
-        $this->redirect('this');
-    }
-
 
     public function createComponentCipherForm()
     {
