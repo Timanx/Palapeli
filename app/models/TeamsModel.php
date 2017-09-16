@@ -29,7 +29,7 @@ class TeamsModel
             SELECT team_limit
             FROM years
             WHERE year = ?
-        ', $year);
+        ', $year)->fetchField('team_limit');
     }
 
     public function getTeamsCount()
