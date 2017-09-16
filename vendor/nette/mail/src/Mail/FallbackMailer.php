@@ -75,12 +75,11 @@ class FallbackMailer implements IMailer
 
 
 	/**
-	 * @return self
+	 * @return static
 	 */
 	public function addMailer(IMailer $mailer)
 	{
 		$this->mailers[] = $mailer;
 		return $this;
 	}
-
 }

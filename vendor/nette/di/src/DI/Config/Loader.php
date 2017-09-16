@@ -36,7 +36,7 @@ class Loader
 	 * @param  string  optional section to load
 	 * @return array
 	 */
-	public function load($file, $section = NULL)
+	public function load($file, $section = null)
 	{
 		if (!is_file($file) || !is_readable($file)) {
 			throw new Nette\FileNotFoundException("File '$file' is missing or is not readable.");
@@ -56,7 +56,10 @@ class Loader
 		if (isset($data[self::INCLUDES_KEY])) {
 			Validators::assert($data[self::INCLUDES_KEY], 'list', "section 'includes' in file '$file'");
 			foreach ($data[self::INCLUDES_KEY] as $include) {
-				$merged = Helpers::merge($this->load(dirname($file) . '/' . $include), $merged);
+				if (!preg_match('#([a-z]+:)?[/\\\\]#Ai', $include)) {
+					$include = dirname($file) . '/' . $include;
+				}
+				$merged = Helpers::merge($this->load($include), $merged);
 			}
 		}
 		unset($data[self::INCLUDES_KEY]);
@@ -73,7 +76,7 @@ class Loader
 	 */
 	public function save($data, $file)
 	{
-		if (file_put_contents($file, $this->getAdapter($file)->dump($data)) === FALSE) {
+		if (file_put_contents($file, $this->getAdapter($file)->dump($data)) === false) {
 			throw new Nette\IOException("Cannot write file '$file'.");
 		}
 	}
@@ -93,7 +96,7 @@ class Loader
 	 * Registers adapter for given file extension.
 	 * @param  string  file extension
 	 * @param  string|IAdapter
-	 * @return self
+	 * @return static
 	 */
 	public function addAdapter($extension, $adapter)
 	{
@@ -122,5 +125,4 @@ class Loader
 		}
 		return $item;
 	}
-
 }

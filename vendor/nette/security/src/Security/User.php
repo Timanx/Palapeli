@@ -26,9 +26,12 @@ class User
 	use Nette\SmartObject;
 
 	/** @deprecated */
-	const MANUAL = IUserStorage::MANUAL,
-		INACTIVITY = IUserStorage::INACTIVITY,
-		BROWSER_CLOSED = IUserStorage::BROWSER_CLOSED;
+	const
+		MANUAL = IUserStorage::MANUAL,
+		INACTIVITY = IUserStorage::INACTIVITY;
+
+	/** @deprecated */
+	const BROWSER_CLOSED = IUserStorage::BROWSER_CLOSED;
 
 	/** @var string  default role for unauthenticated user */
 	public $guestRole = 'guest';
@@ -52,7 +55,7 @@ class User
 	private $authorizator;
 
 
-	public function __construct(IUserStorage $storage, IAuthenticator $authenticator = NULL, IAuthorizator $authorizator = NULL)
+	public function __construct(IUserStorage $storage, IAuthenticator $authenticator = null, IAuthorizator $authorizator = null)
 	{
 		$this->storage = $storage;
 		$this->authenticator = $authenticator;
@@ -79,14 +82,14 @@ class User
 	 * @return void
 	 * @throws AuthenticationException if authentication was not successful
 	 */
-	public function login($id = NULL, $password = NULL)
+	public function login($id = null, $password = null)
 	{
-		$this->logout(TRUE);
+		$this->logout(true);
 		if (!$id instanceof IIdentity) {
 			$id = $this->getAuthenticator()->authenticate(func_get_args());
 		}
 		$this->storage->setIdentity($id);
-		$this->storage->setAuthenticated(TRUE);
+		$this->storage->setAuthenticated(true);
 		$this->onLoggedIn($this);
 	}
 
@@ -96,14 +99,14 @@ class User
 	 * @param  bool  clear the identity from persistent storage?
 	 * @return void
 	 */
-	public function logout($clearIdentity = FALSE)
+	public function logout($clearIdentity = false)
 	{
 		if ($this->isLoggedIn()) {
 			$this->onLoggedOut($this);
-			$this->storage->setAuthenticated(FALSE);
+			$this->storage->setAuthenticated(false);
 		}
 		if ($clearIdentity) {
-			$this->storage->setIdentity(NULL);
+			$this->storage->setIdentity(null);
 		}
 	}
 
@@ -120,7 +123,7 @@ class User
 
 	/**
 	 * Returns current user identity, if any.
-	 * @return IIdentity|NULL
+	 * @return IIdentity|null
 	 */
 	public function getIdentity()
 	{
@@ -135,13 +138,13 @@ class User
 	public function getId()
 	{
 		$identity = $this->getIdentity();
-		return $identity ? $identity->getId() : NULL;
+		return $identity ? $identity->getId() : null;
 	}
 
 
 	/**
 	 * Sets authentication handler.
-	 * @return self
+	 * @return static
 	 */
 	public function setAuthenticator(IAuthenticator $handler)
 	{
@@ -152,11 +155,11 @@ class User
 
 	/**
 	 * Returns authentication handler.
-	 * @return IAuthenticator
+	 * @return IAuthenticator|null
 	 */
-	public function getAuthenticator($need = TRUE)
+	public function getAuthenticator($throw = true)
 	{
-		if ($need && !$this->authenticator) {
+		if ($throw && !$this->authenticator) {
 			throw new Nette\InvalidStateException('Authenticator has not been set.');
 		}
 		return $this->authenticator;
@@ -166,21 +169,21 @@ class User
 	/**
 	 * Enables log out after inactivity.
 	 * @param  string|int|\DateTimeInterface number of seconds or timestamp
-	 * @param  bool  log out when the browser is closed?
-	 * @param  bool  clear the identity from persistent storage?
-	 * @return self
+	 * @param  int|bool  flag IUserStorage::CLEAR_IDENTITY
+	 * @param  bool  clear the identity from persistent storage? (deprecated)
+	 * @return static
 	 */
-	public function setExpiration($time, $whenBrowserIsClosed = TRUE, $clearIdentity = FALSE)
+	public function setExpiration($time, $flags = null, $clearIdentity = false)
 	{
-		$flags = ($whenBrowserIsClosed ? IUserStorage::BROWSER_CLOSED : 0) | ($clearIdentity ? IUserStorage::CLEAR_IDENTITY : 0);
-		$this->storage->setExpiration($time, $flags);
+		$clearIdentity = $clearIdentity || $flags === IUserStorage::CLEAR_IDENTITY;
+		$this->storage->setExpiration($time, $clearIdentity ? IUserStorage::CLEAR_IDENTITY : 0);
 		return $this;
 	}
 
 
 	/**
 	 * Why was user logged out?
-	 * @return int
+	 * @return int|null
 	 */
 	public function getLogoutReason()
 	{
@@ -213,13 +216,13 @@ class User
 	 */
 	public function isInRole($role)
 	{
-		return in_array($role, $this->getRoles(), TRUE);
+		return in_array($role, $this->getRoles(), true);
 	}
 
 
 	/**
 	 * Has a user effective access to the Resource?
-	 * If $resource is NULL, then the query applies to all resources.
+	 * If $resource is null, then the query applies to all resources.
 	 * @param  string  resource
 	 * @param  string  privilege
 	 * @return bool
@@ -228,17 +231,17 @@ class User
 	{
 		foreach ($this->getRoles() as $role) {
 			if ($this->getAuthorizator()->isAllowed($role, $resource, $privilege)) {
-				return TRUE;
+				return true;
 			}
 		}
 
-		return FALSE;
+		return false;
 	}
 
 
 	/**
 	 * Sets authorization handler.
-	 * @return self
+	 * @return static
 	 */
 	public function setAuthorizator(IAuthorizator $handler)
 	{
@@ -249,14 +252,13 @@ class User
 
 	/**
 	 * Returns current authorization handler.
-	 * @return IAuthorizator
+	 * @return IAuthorizator|null
 	 */
-	public function getAuthorizator($need = TRUE)
+	public function getAuthorizator($throw = true)
 	{
-		if ($need && !$this->authorizator) {
+		if ($throw && !$this->authorizator) {
 			throw new Nette\InvalidStateException('Authorizator has not been set.');
 		}
 		return $this->authorizator;
 	}
-
 }

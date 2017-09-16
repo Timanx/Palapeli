@@ -7,9 +7,9 @@
 
 namespace Nette\Bridges\ApplicationLatte;
 
+use Latte;
 use Nette;
 use Nette\Application\UI;
-use Latte;
 
 
 /**
@@ -31,25 +31,32 @@ class TemplateFactory implements UI\ITemplateFactory
 	/** @var Nette\Caching\IStorage */
 	private $cacheStorage;
 
+	/** @var string */
+	private $templateClass;
 
-	public function __construct(ILatteFactory $latteFactory, Nette\Http\IRequest $httpRequest = NULL,
-		Nette\Security\User $user = NULL, Nette\Caching\IStorage $cacheStorage = NULL)
+
+	public function __construct(ILatteFactory $latteFactory, Nette\Http\IRequest $httpRequest = null,
+		Nette\Security\User $user = null, Nette\Caching\IStorage $cacheStorage = null, $templateClass = null)
 	{
 		$this->latteFactory = $latteFactory;
 		$this->httpRequest = $httpRequest;
 		$this->user = $user;
 		$this->cacheStorage = $cacheStorage;
+		if ($templateClass && (!class_exists($templateClass) || !is_a($templateClass, Template::class, true))) {
+			throw new Nette\InvalidArgumentException("Class $templateClass does not extend " . Template::class . ' or it does not exist.');
+		}
+		$this->templateClass = $templateClass ?: Template::class;
 	}
 
 
 	/**
 	 * @return Template
 	 */
-	public function createTemplate(UI\Control $control = NULL)
+	public function createTemplate(UI\Control $control = null)
 	{
 		$latte = $this->latteFactory->create();
-		$template = new Template($latte);
-		$presenter = $control ? $control->getPresenter(FALSE) : NULL;
+		$template = new $this->templateClass($latte);
+		$presenter = $control ? $control->getPresenter(false) : null;
 
 		if ($control instanceof UI\Presenter) {
 			$latte->setLoader(new Loader($control));
@@ -60,7 +67,9 @@ class TemplateFactory implements UI\ITemplateFactory
 		}
 
 		array_unshift($latte->onCompile, function ($latte) use ($control, $template) {
-			$latte->getCompiler()->addMacro('cache', new Nette\Bridges\CacheLatte\CacheMacro($latte->getCompiler()));
+			if ($this->cacheStorage) {
+				$latte->getCompiler()->addMacro('cache', new Nette\Bridges\CacheLatte\CacheMacro($latte->getCompiler()));
+			}
 			UIMacros::install($latte->getCompiler());
 			if (class_exists(Nette\Bridges\FormsLatte\FormMacros::class)) {
 				Nette\Bridges\FormsLatte\FormMacros::install($latte->getCompiler());
@@ -71,12 +80,12 @@ class TemplateFactory implements UI\ITemplateFactory
 		});
 
 		$latte->addFilter('url', 'rawurlencode'); // back compatiblity
-		foreach (['normalize', 'toAscii', 'webalize', 'padLeft', 'padRight', 'reverse'] as $name) {
+		foreach (['normalize', 'toAscii', 'webalize', 'reverse'] as $name) {
 			$latte->addFilter($name, 'Nette\Utils\Strings::' . $name);
 		}
 		$latte->addFilter('null', function () {});
-		$latte->addFilter('modifyDate', function ($time, $delta, $unit = NULL) {
-			return $time == NULL ? NULL : Nette\Utils\DateTime::from($time)->modify($delta . $unit); // intentionally ==
+		$latte->addFilter('modifyDate', function ($time, $delta, $unit = null) {
+			return $time == null ? null : Nette\Utils\DateTime::from($time)->modify($delta . $unit); // intentionally ==
 		});
 
 		if (!isset($latte->getFilters()['translate'])) {
@@ -87,7 +96,7 @@ class TemplateFactory implements UI\ITemplateFactory
 
 		// default parameters
 		$template->user = $this->user;
-		$template->baseUri = $template->baseUrl = $this->httpRequest ? rtrim($this->httpRequest->getUrl()->getBaseUrl(), '/') : NULL;
+		$template->baseUri = $template->baseUrl = $this->httpRequest ? rtrim($this->httpRequest->getUrl()->getBaseUrl(), '/') : null;
 		$template->basePath = preg_replace('#https?://[^/]+#A', '', $template->baseUrl);
 		$template->flashes = [];
 		if ($control) {
@@ -96,6 +105,8 @@ class TemplateFactory implements UI\ITemplateFactory
 			$latte->addProvider('uiControl', $control);
 			$latte->addProvider('uiPresenter', $presenter);
 			$latte->addProvider('snippetBridge', new Nette\Bridges\ApplicationLatte\SnippetBridge($control));
+			$nonce = $presenter && preg_match('#\s\'nonce-([\w+/]+=*)\'#', $presenter->getHttpResponse()->getHeader('Content-Security-Policy'), $m) ? $m[1] : null;
+			$latte->addProvider('uiNonce', $nonce);
 		}
 		$latte->addProvider('cacheStorage', $this->cacheStorage);
 
@@ -111,5 +122,4 @@ class TemplateFactory implements UI\ITemplateFactory
 
 		return $template;
 	}
-
 }

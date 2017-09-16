@@ -33,7 +33,7 @@ class PresenterFactory implements IPresenterFactory
 	/**
 	 * @param  callable  function (string $class): IPresenter
 	 */
-	public function __construct(callable $factory = NULL)
+	public function __construct(callable $factory = null)
 	{
 		$this->factory = $factory ?: function ($class) { return new $class; };
 	}
@@ -56,7 +56,7 @@ class PresenterFactory implements IPresenterFactory
 	 * @return string  class name
 	 * @throws InvalidPresenterException
 	 */
-	public function getPresenterClass(& $name)
+	public function getPresenterClass(&$name)
 	{
 		if (isset($this->cache[$name])) {
 			return $this->cache[$name];
@@ -93,7 +93,7 @@ class PresenterFactory implements IPresenterFactory
 
 	/**
 	 * Sets mapping as pairs [module => mask]
-	 * @return self
+	 * @return static
 	 */
 	public function setMapping(array $mapping)
 	{
@@ -136,7 +136,7 @@ class PresenterFactory implements IPresenterFactory
 	/**
 	 * Formats presenter name from class name.
 	 * @param  string
-	 * @return string
+	 * @return string|null
 	 * @internal
 	 */
 	public function unformatPresenterClass($class)
@@ -148,6 +148,6 @@ class PresenterFactory implements IPresenterFactory
 					. preg_replace("#$mapping[1]#iA", '$1:', $matches[1]) . $matches[3];
 			}
 		}
+		return null;
 	}
-
 }

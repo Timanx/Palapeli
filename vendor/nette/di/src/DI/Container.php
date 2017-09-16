@@ -23,13 +23,13 @@ class Container
 	const ALIASES = 'aliases';
 
 	/** @var array  user parameters */
-	/*private*/public $parameters = [];
-
-	/** @var object[]  storage for shared objects */
-	private $registry = [];
+	public $parameters = [];
 
 	/** @var array[] */
 	protected $meta = [];
+
+	/** @var object[]  storage for shared objects */
+	private $registry = [];
 
 	/** @var array circular reference detector */
 	private $creating;
@@ -54,13 +54,12 @@ class Container
 	 * Adds the service to the container.
 	 * @param  string
 	 * @param  object
-	 * @return self
+	 * @return static
 	 */
 	public function addService($name, $service)
 	{
 		if (!is_string($name) || !$name) {
 			throw new Nette\InvalidArgumentException(sprintf('Service name must be a non-empty string, %s given.', gettype($name)));
-
 		}
 		$name = isset($this->meta[self::ALIASES][$name]) ? $this->meta[self::ALIASES][$name] : $name;
 		if (isset($this->registry[$name])) {
@@ -175,7 +174,7 @@ class Container
 		}
 
 		try {
-			$this->creating[$name] = TRUE;
+			$this->creating[$name] = true;
 			$service = $this->$method(...$args);
 
 		} finally {
@@ -194,20 +193,20 @@ class Container
 	 * Resolves service by type.
 	 * @param  string  class or interface
 	 * @param  bool    throw exception if service doesn't exist?
-	 * @return object  service or NULL
+	 * @return object  service or null
 	 * @throws MissingServiceException
 	 */
-	public function getByType($class, $need = TRUE)
+	public function getByType($type, $throw = true)
 	{
-		$class = ltrim($class, '\\');
-		if (!empty($this->meta[self::TYPES][$class][TRUE])) {
-			if (count($names = $this->meta[self::TYPES][$class][TRUE]) === 1) {
+		$type = Helpers::normalizeClass($type);
+		if (!empty($this->meta[self::TYPES][$type][true])) {
+			if (count($names = $this->meta[self::TYPES][$type][true]) === 1) {
 				return $this->getService($names[0]);
 			}
-			throw new MissingServiceException("Multiple services of type $class found: " . implode(', ', $names) . '.');
+			throw new MissingServiceException("Multiple services of type $type found: " . implode(', ', $names) . '.');
 
-		} elseif ($need) {
-			throw new MissingServiceException("Service of type $class not found.");
+		} elseif ($throw) {
+			throw new MissingServiceException("Service of type $type not found.");
 		}
 	}
 
@@ -217,12 +216,12 @@ class Container
 	 * @param  string
 	 * @return string[]
 	 */
-	public function findByType($class)
+	public function findByType($type)
 	{
-		$class = ltrim($class, '\\');
-		return empty($this->meta[self::TYPES][$class])
+		$type = Helpers::normalizeClass($type);
+		return empty($this->meta[self::TYPES][$type])
 			? []
-			: array_merge(...array_values($this->meta[self::TYPES][$class]));
+			: array_merge(...array_values($this->meta[self::TYPES][$type]));
 	}
 
 
@@ -337,5 +336,4 @@ class Container
 		$uname = ucfirst($name);
 		return 'createService' . ((string) $name === $uname ? '__' : '') . str_replace('.', '__', $uname);
 	}
-
 }

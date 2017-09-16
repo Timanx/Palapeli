@@ -23,7 +23,7 @@ class Validators
 		'int' => 'is_int',
 		'integer' => 'is_int',
 		'float' => 'is_float',
-		'number' => NULL, // is_int || is_float,
+		'number' => [__CLASS__, 'isNumber'],
 		'numeric' => [__CLASS__, 'isNumeric'],
 		'numericint' => [__CLASS__, 'isNumericInt'],
 		'string' => 'is_string',
@@ -41,7 +41,7 @@ class Validators
 		'none' => [__CLASS__, 'isNone'],
 		'type' => [__CLASS__, 'isType'],
 		'identifier' => [__CLASS__, 'isPhpIdentifier'],
-		'pattern' => NULL,
+		'pattern' => null,
 		'alnum' => 'ctype_alnum',
 		'alpha' => 'ctype_alpha',
 		'digit' => 'ctype_digit',
@@ -49,6 +49,7 @@ class Validators
 		'upper' => 'ctype_upper',
 		'space' => 'ctype_space',
 		'xdigit' => 'ctype_xdigit',
+		'iterable' => [__CLASS__, 'isIterable'],
 	];
 
 	protected static $counters = [
@@ -99,7 +100,7 @@ class Validators
 	 * @param  string
 	 * @return void
 	 */
-	public static function assertField($arr, $field, $expected = NULL, $label = "item '%' in array")
+	public static function assertField($arr, $field, $expected = null, $label = "item '%' in array")
 	{
 		self::assert($arr, 'array', 'first argument');
 		if (!array_key_exists($field, $arr)) {
@@ -120,18 +121,21 @@ class Validators
 	public static function is($value, $expected)
 	{
 		foreach (explode('|', $expected) as $item) {
+			if (substr($item, -2) === '[]') {
+				if (self::everyIs($value, substr($item, 0, -2))) {
+					return true;
+				}
+				continue;
+			}
+
 			list($type) = $item = explode(':', $item, 2);
 			if (isset(static::$validators[$type])) {
 				if (!call_user_func(static::$validators[$type], $value)) {
 					continue;
 				}
-			} elseif ($type === 'number') {
-				if (!is_int($value) && !is_float($value)) {
-					continue;
-				}
 			} elseif ($type === 'pattern') {
 				if (preg_match('|^' . (isset($item[1]) ? $item[1] : '') . '\z|', $value)) {
-					return TRUE;
+					return true;
 				}
 				continue;
 			} elseif (!$value instanceof $type) {
@@ -151,9 +155,39 @@ class Validators
 					continue;
 				}
 			}
-			return TRUE;
+			return true;
 		}
-		return FALSE;
+		return false;
+	}
+
+
+	/**
+	 * Finds whether all values are of expected type.
+	 * @param  array|\Traversable
+	 * @param  string  expected types separated by pipe with optional ranges
+	 * @return bool
+	 */
+	public static function everyIs($values, $expected)
+	{
+		if (!self::isIterable($values)) {
+			return false;
+		}
+		foreach ($values as $value) {
+			if (!static::is($value, $expected)) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+
+	/**
+	 * Finds whether a value is an integer or a float.
+	 * @return bool
+	 */
+	public static function isNumber($value)
+	{
+		return is_int($value) || is_float($value);
 	}
 
 
@@ -183,7 +217,7 @@ class Validators
 	 */
 	public static function isCallable($value)
 	{
-		return $value && is_callable($value, TRUE);
+		return $value && is_callable($value, true);
 	}
 
 
@@ -204,7 +238,7 @@ class Validators
 	 */
 	public static function isNone($value)
 	{
-		return $value == NULL; // intentionally ==
+		return $value == null; // intentionally ==
 	}
 
 
@@ -227,8 +261,22 @@ class Validators
 	 */
 	public static function isInRange($value, $range)
 	{
-		return (!isset($range[0]) || $range[0] === '' || $value >= $range[0])
-			&& (!isset($range[1]) || $range[1] === '' || $value <= $range[1]);
+		if ($value === null || !(isset($range[0]) || isset($range[1]))) {
+			return false;
+		}
+		$limit = isset($range[0]) ? $range[0] : $range[1];
+		if (is_string($limit)) {
+			$value = (string) $value;
+		} elseif ($limit instanceof \DateTimeInterface) {
+			if (!$value instanceof \DateTimeInterface) {
+				return false;
+			}
+		} elseif (is_numeric($value)) {
+			$value *= 1;
+		} else {
+			return false;
+		}
+		return (!isset($range[0]) || ($value >= $range[0])) && (!isset($range[1]) || ($value <= $range[1]));
 	}
 
 
@@ -302,4 +350,13 @@ class Validators
 		return is_string($value) && preg_match('#^[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*\z#', $value);
 	}
 
+
+	/**
+	 * Returns true if value is iterable (array or instance of Traversable).
+	 * @return bool
+	 */
+	private static function isIterable($value)
+	{
+		return is_array($value) || $value instanceof \Traversable;
+	}
 }

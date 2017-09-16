@@ -17,7 +17,7 @@ class JsonResponse implements Nette\Application\IResponse
 {
 	use Nette\SmartObject;
 
-	/** @var array|\stdClass */
+	/** @var mixed */
 	private $payload;
 
 	/** @var string */
@@ -25,21 +25,18 @@ class JsonResponse implements Nette\Application\IResponse
 
 
 	/**
-	 * @param  array|\stdClass  payload
-	 * @param  string    MIME content type
+	 * @param  mixed   payload
+	 * @param  string  MIME content type
 	 */
-	public function __construct($payload, $contentType = NULL)
+	public function __construct($payload, $contentType = null)
 	{
-		if (!is_array($payload) && !is_object($payload)) {
-			throw new Nette\InvalidArgumentException(sprintf('Payload must be array or object class, %s given.', gettype($payload)));
-		}
 		$this->payload = $payload;
 		$this->contentType = $contentType ? $contentType : 'application/json';
 	}
 
 
 	/**
-	 * @return array|\stdClass
+	 * @return mixed
 	 */
 	public function getPayload()
 	{
@@ -66,5 +63,4 @@ class JsonResponse implements Nette\Application\IResponse
 		$httpResponse->setContentType($this->contentType, 'utf-8');
 		echo Nette\Utils\Json::encode($this->payload);
 	}
-
 }

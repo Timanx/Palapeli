@@ -9,7 +9,7 @@
 
 	// enables <a class="tracy-toggle" href="#"> or <span data-tracy-ref="#"> toggling
 	Tracy.Toggle.init = function() {
-		document.body.addEventListener('click', function(e) {
+		document.documentElement.addEventListener('click', function(e) {
 			var el = Tracy.closest(e.target, '.tracy-toggle');
 			if (el && !e.shiftKey && !e.altKey && !e.ctrlKey && !e.metaKey) {
 				Tracy.Toggle.toggle(el);
@@ -47,7 +47,7 @@
 		if (typeof window.Event === 'function') {
 			var toggleEvent = new Event('tracy-toggle', {bubbles: true});
 		} else {
-			var toggleEvent = document.createEvent('Event');
+			toggleEvent = document.createEvent('Event');
 			toggleEvent.initEvent('tracy-toggle', true, false);
 		}
 		el.dispatchEvent(toggleEvent);
@@ -89,7 +89,7 @@
 			});
 			sessionStorage.setItem('tracy-toggles-' + baseEl.id, JSON.stringify(toggles));
 		});
-	}
+	};
 
 
 	// finds closing maching element

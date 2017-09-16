@@ -50,7 +50,7 @@ class Route implements Application\IRouter
 			self::PATTERN => '[^/]+',
 			self::FILTER_OUT => [__CLASS__, 'param2path'],
 		],
-		'?#' => [ // default style for query parameters
+		'?#' => [// default style for query parameters
 		],
 		'module' => [
 			self::PATTERN => '[a-z][a-z0-9.-]*',
@@ -148,7 +148,7 @@ class Route implements Application\IRouter
 
 	/**
 	 * Maps HTTP request to a Request object.
-	 * @return Nette\Application\Request|NULL
+	 * @return Nette\Application\Request|null
 	 */
 	public function match(Nette\Http\IRequest $httpRequest)
 	{
@@ -173,7 +173,7 @@ class Route implements Application\IRouter
 		} elseif ($this->type === self::RELATIVE) {
 			$basePath = $url->getBasePath();
 			if (strncmp($url->getPath(), $basePath, strlen($basePath)) !== 0) {
-				return NULL;
+				return null;
 			}
 			$path = (string) substr($url->getPath(), strlen($basePath));
 
@@ -187,7 +187,7 @@ class Route implements Application\IRouter
 
 		if (!$matches = Strings::match($path, $re)) {
 			// stop, not matched
-			return NULL;
+			return null;
 		}
 
 		// assigns matched values to parameters
@@ -202,7 +202,7 @@ class Route implements Application\IRouter
 		// 2) CONSTANT FIXITY
 		foreach ($this->metadata as $name => $meta) {
 			if (!isset($params[$name]) && isset($meta['fixity']) && $meta['fixity'] !== self::OPTIONAL) {
-				$params[$name] = NULL; // cannot be overwriten in 3) and detected by isset() in 4)
+				$params[$name] = null; // cannot be overwriten in 3) and detected by isset() in 4)
 			}
 		}
 
@@ -219,17 +219,17 @@ class Route implements Application\IRouter
 		foreach ($this->metadata as $name => $meta) {
 			if (isset($params[$name])) {
 				if (!is_scalar($params[$name])) {
-
+					// do nothing
 				} elseif (isset($meta[self::FILTER_TABLE][$params[$name]])) { // applies filterTable only to scalar parameters
 					$params[$name] = $meta[self::FILTER_TABLE][$params[$name]];
 
 				} elseif (isset($meta[self::FILTER_TABLE]) && !empty($meta[self::FILTER_STRICT])) {
-					return NULL; // rejected by filterTable
+					return null; // rejected by filterTable
 
 				} elseif (isset($meta[self::FILTER_IN])) { // applies filterIn only to scalar parameters
 					$params[$name] = call_user_func($meta[self::FILTER_IN], (string) $params[$name]);
-					if ($params[$name] === NULL && !isset($meta['fixity'])) {
-						return NULL; // rejected by filter
+					if ($params[$name] === null && !isset($meta['fixity'])) {
+						return null; // rejected by filter
 					}
 				}
 
@@ -238,10 +238,10 @@ class Route implements Application\IRouter
 			}
 		}
 
-		if (isset($this->metadata[NULL][self::FILTER_IN])) {
-			$params = call_user_func($this->metadata[NULL][self::FILTER_IN], $params);
-			if ($params === NULL) {
-				return NULL;
+		if (isset($this->metadata[null][self::FILTER_IN])) {
+			$params = call_user_func($this->metadata[null][self::FILTER_IN], $params);
+			if ($params === null) {
+				return null;
 			}
 		}
 
@@ -249,7 +249,7 @@ class Route implements Application\IRouter
 		if (!isset($params[self::PRESENTER_KEY])) {
 			throw new Nette\InvalidStateException('Missing presenter in route definition.');
 		} elseif (!is_string($params[self::PRESENTER_KEY])) {
-			return NULL;
+			return null;
 		}
 		$presenter = $params[self::PRESENTER_KEY];
 		unset($params[self::PRESENTER_KEY]);
@@ -272,12 +272,12 @@ class Route implements Application\IRouter
 
 	/**
 	 * Constructs absolute URL from Request object.
-	 * @return string|NULL
+	 * @return string|null
 	 */
 	public function constructUrl(Application\Request $appRequest, Nette\Http\Url $refUrl)
 	{
 		if ($this->flags & self::ONE_WAY) {
-			return NULL;
+			return null;
 		}
 
 		$params = $appRequest->getParameters();
@@ -286,13 +286,6 @@ class Route implements Application\IRouter
 		$presenter = $appRequest->getPresenterName();
 		$params[self::PRESENTER_KEY] = $presenter;
 
-		if (isset($metadata[NULL][self::FILTER_OUT])) {
-			$params = call_user_func($metadata[NULL][self::FILTER_OUT], $params);
-			if ($params === NULL) {
-				return NULL;
-			}
-		}
-
 		if (isset($metadata[self::MODULE_KEY])) { // try split into module and [submodule:]presenter parts
 			$module = $metadata[self::MODULE_KEY];
 			if (isset($module['fixity']) && strncmp($presenter, $module[self::VALUE] . ':', strlen($module[self::VALUE]) + 1) === 0) {
@@ -300,32 +293,37 @@ class Route implements Application\IRouter
 			} else {
 				$a = strrpos($presenter, ':');
 			}
-			if ($a === FALSE) {
-				$params[self::MODULE_KEY] = isset($module[self::VALUE]) ? '' : NULL;
+			if ($a === false) {
+				$params[self::MODULE_KEY] = isset($module[self::VALUE]) ? '' : null;
 			} else {
 				$params[self::MODULE_KEY] = substr($presenter, 0, $a);
 				$params[self::PRESENTER_KEY] = substr($presenter, $a + 1);
 			}
 		}
 
+		if (isset($metadata[null][self::FILTER_OUT])) {
+			$params = call_user_func($metadata[null][self::FILTER_OUT], $params);
+			if ($params === null) {
+				return null;
+			}
+		}
+
 		foreach ($metadata as $name => $meta) {
 			if (!isset($params[$name])) {
-				continue; // retains NULL values
+				continue; // retains null values
+			}
+
+			if (is_scalar($params[$name])) {
+				$params[$name] = $params[$name] === false ? '0' : (string) $params[$name];
 			}
 
 			if (isset($meta['fixity'])) {
-				if ($params[$name] === FALSE) {
-					$params[$name] = '0';
-				} elseif (is_scalar($params[$name])) {
-					$params[$name] = (string) $params[$name];
-				}
-
-				if ($params[$name] === $meta[self::VALUE]) { // remove default values; NULL values are retain
+				if ($params[$name] === $meta[self::VALUE]) { // remove default values; null values are retain
 					unset($params[$name]);
 					continue;
 
 				} elseif ($meta['fixity'] === self::CONSTANT) {
-					return NULL; // missing or wrong parameter '$name'
+					return null; // missing or wrong parameter '$name'
 				}
 			}
 
@@ -333,21 +331,21 @@ class Route implements Application\IRouter
 				$params[$name] = $meta['filterTable2'][$params[$name]];
 
 			} elseif (isset($meta['filterTable2']) && !empty($meta[self::FILTER_STRICT])) {
-				return NULL;
+				return null;
 
 			} elseif (isset($meta[self::FILTER_OUT])) {
 				$params[$name] = call_user_func($meta[self::FILTER_OUT], $params[$name]);
 			}
 
 			if (isset($meta[self::PATTERN]) && !preg_match($meta[self::PATTERN], rawurldecode($params[$name]))) {
-				return NULL; // pattern not match
+				return null; // pattern not match
 			}
 		}
 
 		// compositing path
 		$sequence = $this->sequence;
 		$brackets = [];
-		$required = NULL; // NULL for auto-optional
+		$required = null; // null for auto-optional
 		$url = '';
 		$i = count($sequence) - 1;
 		do {
@@ -357,7 +355,7 @@ class Route implements Application\IRouter
 			}
 			$i--;
 
-			$name = $sequence[$i]; $i--; // parameter name
+			$name = $sequence[$i--]; // parameter name
 
 			if ($name === ']') { // opening optional part
 				$brackets[] = $url;
@@ -381,17 +379,18 @@ class Route implements Application\IRouter
 				unset($params[$name]);
 
 			} elseif (isset($metadata[$name]['fixity'])) { // has default value?
-				if ($required === NULL && !$brackets) { // auto-optional
+				if ($required === null && !$brackets) { // auto-optional
 					$url = '';
 				} else {
 					$url = $metadata[$name]['defOut'] . $url;
 				}
 
 			} else {
-				return NULL; // missing parameter '$name'
+				return null; // missing parameter '$name'
 			}
-		} while (TRUE);
+		} while (true);
 
+		$scheme = $this->scheme ?: $refUrl->getScheme();
 
 		if ($this->type === self::HOST) {
 			$host = $refUrl->getHost();
@@ -403,10 +402,9 @@ class Route implements Application\IRouter
 				'%sld%' => isset($parts[1]) ? $parts[1] : '',
 				'%host%' => $host,
 			]);
-			$url = ($this->scheme ?: $refUrl->getScheme()) . ':' . $url;
+			$url = $scheme . ':' . $url;
 		} else {
 			if ($this->lastRefUrl !== $refUrl) {
-				$scheme = ($this->scheme ?: $refUrl->getScheme());
 				$basePath = ($this->type === self::RELATIVE ? $refUrl->getBasePath() : '');
 				$this->lastBaseUrl = $scheme . '://' . $refUrl->getAuthority() . $basePath;
 				$this->lastRefUrl = $refUrl;
@@ -414,8 +412,8 @@ class Route implements Application\IRouter
 			$url = $this->lastBaseUrl . $url;
 		}
 
-		if (strpos($url, '//', 7) !== FALSE) {
-			return NULL;
+		if (strpos($url, '//', strlen($scheme) + 3) !== false) {
+			return null;
 		}
 
 		// build query string
@@ -462,13 +460,13 @@ class Route implements Application\IRouter
 
 			if (array_key_exists(self::VALUE, $meta)) {
 				if (is_scalar($meta[self::VALUE])) {
-					$metadata[$name][self::VALUE] = (string) $meta[self::VALUE];
+					$metadata[$name][self::VALUE] = $meta[self::VALUE] === false ? '0' : (string) $meta[self::VALUE];
 				}
 				$metadata[$name]['fixity'] = self::CONSTANT;
 			}
 		}
 
-		if (strpbrk($mask, '?<>[]') === FALSE) {
+		if (strpbrk($mask, '?<>[]') === false) {
 			$this->re = '#' . preg_quote($mask, '#') . '/?\z#A';
 			$this->sequence = [$mask];
 			$this->metadata = $metadata;
@@ -503,7 +501,7 @@ class Route implements Application\IRouter
 				}
 
 				unset($meta['pattern']);
-				$meta['filterTable2'] = empty($meta[self::FILTER_TABLE]) ? NULL : array_flip($meta[self::FILTER_TABLE]);
+				$meta['filterTable2'] = empty($meta[self::FILTER_TABLE]) ? null : array_flip($meta[self::FILTER_TABLE]);
 
 				$metadata[$name] = $meta;
 				if ($param !== '') {
@@ -517,11 +515,11 @@ class Route implements Application\IRouter
 		$brackets = 0; // optional level
 		$re = '';
 		$sequence = [];
-		$autoOptional = TRUE;
+		$autoOptional = true;
 		$aliases = [];
 		do {
 			$part = $parts[$i]; // part of path
-			if (strpbrk($part, '<>') !== FALSE) {
+			if (strpbrk($part, '<>') !== false) {
 				throw new Nette\InvalidArgumentException("Unexpected '$part' in mask '$mask'.");
 			}
 			array_unshift($sequence, $part);
@@ -543,9 +541,9 @@ class Route implements Application\IRouter
 				continue;
 			}
 
-			$pattern = trim($parts[$i]); $i--; // validation condition (as regexp)
-			$default = $parts[$i]; $i--; // default value
-			$name = $parts[$i]; $i--; // parameter name
+			$pattern = trim($parts[$i--]); // validation condition (as regexp)
+			$default = $parts[$i--]; // default value
+			$name = $parts[$i--]; // parameter name
 			array_unshift($sequence, $name);
 
 			if ($name[0] === '?') { // "foo" parameter
@@ -575,7 +573,7 @@ class Route implements Application\IRouter
 				$meta['fixity'] = self::PATH_OPTIONAL;
 			}
 
-			$meta['filterTable2'] = empty($meta[self::FILTER_TABLE]) ? NULL : array_flip($meta[self::FILTER_TABLE]);
+			$meta['filterTable2'] = empty($meta[self::FILTER_TABLE]) ? null : array_flip($meta[self::FILTER_TABLE]);
 			if (array_key_exists(self::VALUE, $meta)) {
 				if (isset($meta['filterTable2'][$meta[self::VALUE]])) {
 					$meta['defOut'] = $meta['filterTable2'][$meta[self::VALUE]];
@@ -594,23 +592,22 @@ class Route implements Application\IRouter
 			$re = '(?P<p' . $i . '>(?U)' . $pattern . ')' . $re;
 			if ($brackets) { // is in brackets?
 				if (!isset($meta[self::VALUE])) {
-					$meta[self::VALUE] = $meta['defOut'] = NULL;
+					$meta[self::VALUE] = $meta['defOut'] = null;
 				}
 				$meta['fixity'] = self::PATH_OPTIONAL;
 
-			} elseif (!$autoOptional) {
-				unset($meta['fixity']);
-
-			} elseif (isset($meta['fixity'])) { // auto-optional
-				$re = '(?:' . $re . ')?';
+			} elseif (isset($meta['fixity'])) {
+				if ($autoOptional) {
+					$re = '(?:' . $re . ')?';
+				}
 				$meta['fixity'] = self::PATH_OPTIONAL;
 
 			} else {
-				$autoOptional = FALSE;
+				$autoOptional = false;
 			}
 
 			$metadata[$name] = $meta;
-		} while (TRUE);
+		} while (true);
 
 		if ($brackets) {
 			throw new Nette\InvalidArgumentException("Missing '[' in mask '$mask'.");
@@ -665,7 +662,7 @@ class Route implements Application\IRouter
 	/**
 	 * Proprietary cache aim.
 	 * @internal
-	 * @return string[]|NULL
+	 * @return string[]|null
 	 */
 	public function getTargetPresenters()
 	{
@@ -680,14 +677,14 @@ class Route implements Application\IRouter
 			if (isset($m[self::MODULE_KEY]['fixity']) && $m[self::MODULE_KEY]['fixity'] === self::CONSTANT) {
 				$module = $m[self::MODULE_KEY][self::VALUE] . ':';
 			} else {
-				return NULL;
+				return null;
 			}
 		}
 
 		if (isset($m[self::PRESENTER_KEY]['fixity']) && $m[self::PRESENTER_KEY]['fixity'] === self::CONSTANT) {
 			return [$module . $m[self::PRESENTER_KEY][self::VALUE]];
 		}
-		return NULL;
+		return null;
 	}
 
 
@@ -787,5 +784,4 @@ class Route implements Application\IRouter
 	{
 		return str_replace('%2F', '/', rawurlencode($s));
 	}
-
 }

@@ -24,6 +24,10 @@ class SQLiteStorage implements Nette\Caching\IStorage, Nette\Caching\IBulkReader
 
 	public function __construct($path)
 	{
+		if ($path !== ':memory:' && !is_file($path)) {
+			touch($path); // ensures ordinary file permissions
+		}
+
 		$this->pdo = new \PDO('sqlite:' . $path);
 		$this->pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
 		$this->pdo->exec('
@@ -48,15 +52,15 @@ class SQLiteStorage implements Nette\Caching\IStorage, Nette\Caching\IBulkReader
 
 	/**
 	 * Read from cache.
-	 * @param  string key
-	 * @return mixed|NULL
+	 * @param  string
+	 * @return mixed
 	 */
 	public function read($key)
 	{
 		$stmt = $this->pdo->prepare('SELECT data, slide FROM cache WHERE key=? AND (expire IS NULL OR expire >= ?)');
 		$stmt->execute([$key, time()]);
 		if ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
-			if ($row['slide'] !== NULL) {
+			if ($row['slide'] !== null) {
 				$this->pdo->prepare('UPDATE cache SET expire = ? + slide WHERE key=?')->execute([time(), $key]);
 			}
 			return unserialize($row['data']);
@@ -66,7 +70,7 @@ class SQLiteStorage implements Nette\Caching\IStorage, Nette\Caching\IBulkReader
 
 	/**
 	 * Reads from cache in bulk.
-	 * @param  string key
+	 * @param  string
 	 * @return array key => value pairs, missing items are omitted
 	 */
 	public function bulkRead(array $keys)
@@ -76,7 +80,7 @@ class SQLiteStorage implements Nette\Caching\IStorage, Nette\Caching\IBulkReader
 		$result = [];
 		$updateSlide = [];
 		foreach ($stmt->fetchAll(\PDO::FETCH_ASSOC) as $row) {
-			if ($row['slide'] !== NULL) {
+			if ($row['slide'] !== null) {
 				$updateSlide[] = $row['key'];
 			}
 			$result[$row['key']] = unserialize($row['data']);
@@ -91,7 +95,7 @@ class SQLiteStorage implements Nette\Caching\IStorage, Nette\Caching\IBulkReader
 
 	/**
 	 * Prevents item reading and writing. Lock is released by write() or remove().
-	 * @param  string key
+	 * @param  string
 	 * @return void
 	 */
 	public function lock($key)
@@ -101,15 +105,14 @@ class SQLiteStorage implements Nette\Caching\IStorage, Nette\Caching\IBulkReader
 
 	/**
 	 * Writes item into the cache.
-	 * @param  string key
-	 * @param  mixed  data
-	 * @param  array  dependencies
+	 * @param  string
+	 * @param  mixed
 	 * @return void
 	 */
 	public function write($key, $data, array $dependencies)
 	{
-		$expire = isset($dependencies[Cache::EXPIRATION]) ? $dependencies[Cache::EXPIRATION] + time() : NULL;
-		$slide = isset($dependencies[Cache::SLIDING]) ? $dependencies[Cache::EXPIRATION] : NULL;
+		$expire = isset($dependencies[Cache::EXPIRATION]) ? $dependencies[Cache::EXPIRATION] + time() : null;
+		$slide = isset($dependencies[Cache::SLIDING]) ? $dependencies[Cache::EXPIRATION] : null;
 
 		$this->pdo->exec('BEGIN TRANSACTION');
 		$this->pdo->prepare('REPLACE INTO cache (key, data, expire, slide) VALUES (?, ?, ?, ?)')
@@ -129,7 +132,7 @@ class SQLiteStorage implements Nette\Caching\IStorage, Nette\Caching\IBulkReader
 
 	/**
 	 * Removes item from the cache.
-	 * @param  string key
+	 * @param  string
 	 * @return void
 	 */
 	public function remove($key)
@@ -162,5 +165,4 @@ class SQLiteStorage implements Nette\Caching\IStorage, Nette\Caching\IBulkReader
 			$this->pdo->prepare($sql)->execute($args);
 		}
 	}
-
 }

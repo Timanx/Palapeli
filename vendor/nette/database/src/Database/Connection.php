@@ -41,7 +41,7 @@ class Connection
 	private $pdo;
 
 
-	public function __construct($dsn, $user = NULL, $password = NULL, array $options = NULL)
+	public function __construct($dsn, $user = null, $password = null, array $options = null)
 	{
 		if (func_num_args() > 4) { // compatibility
 			trigger_error(__METHOD__ . " fifth argument is deprecated, use \$options['driverClass'].", E_USER_DEPRECATED);
@@ -90,7 +90,7 @@ class Connection
 	/** @return void */
 	public function disconnect()
 	{
-		$this->pdo = NULL;
+		$this->pdo = null;
 	}
 
 
@@ -121,10 +121,11 @@ class Connection
 	 * @param  string  sequence object
 	 * @return string
 	 */
-	public function getInsertId($name = NULL)
+	public function getInsertId($name = null)
 	{
 		try {
-			return $this->getPdo()->lastInsertId($name);
+			$res = $this->getPdo()->lastInsertId($name);
+			return $res === false ? '0' : $res;
 		} catch (PDOException $e) {
 			throw $this->driver->convertException($e);
 		}
@@ -147,14 +148,14 @@ class Connection
 
 
 	/** @return void */
-	function beginTransaction()
+	public function beginTransaction()
 	{
 		$this->query('::beginTransaction');
 	}
 
 
 	/** @return void */
-	function commit()
+	public function commit()
 	{
 		$this->query('::commit');
 	}

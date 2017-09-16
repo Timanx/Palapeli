@@ -17,7 +17,7 @@ class SendmailMailer implements IMailer
 {
 	use Nette\SmartObject;
 
-	/** @var string */
+	/** @var string|null */
 	public $commandArgs;
 
 
@@ -29,8 +29,8 @@ class SendmailMailer implements IMailer
 	public function send(Message $mail)
 	{
 		$tmp = clone $mail;
-		$tmp->setHeader('Subject', NULL);
-		$tmp->setHeader('To', NULL);
+		$tmp->setHeader('Subject', null);
+		$tmp->setHeader('To', null);
 
 		$parts = explode(Message::EOL . Message::EOL, $tmp->generateMessage(), 2);
 
@@ -43,12 +43,11 @@ class SendmailMailer implements IMailer
 		if ($this->commandArgs) {
 			$args[] = (string) $this->commandArgs;
 		}
-		$res = Nette\Utils\Callback::invokeSafe('mail', $args, function ($message) use (& $info) {
+		$res = Nette\Utils\Callback::invokeSafe('mail', $args, function ($message) use (&$info) {
 			$info = ": $message";
 		});
-		if ($res === FALSE) {
+		if ($res === false) {
 			throw new SendException("Unable to send email$info.");
 		}
 	}
-
 }

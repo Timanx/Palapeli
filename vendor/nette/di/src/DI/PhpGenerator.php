@@ -8,11 +8,10 @@
 namespace Nette\DI;
 
 use Nette;
-use Nette\Utils\Validators;
-use Nette\Utils\Strings;
 use Nette\PhpGenerator\Helpers as PhpHelpers;
 use Nette\PhpGenerator\PhpLiteral;
-use ReflectionClass;
+use Nette\Utils\Reflection;
+use Nette\Utils\Strings;
 
 
 /**
@@ -52,7 +51,10 @@ class PhpGenerator
 		$containerClass = $this->generatedClasses[] = new Nette\PhpGenerator\ClassType($this->className);
 		$containerClass->setExtends(Container::class);
 		$containerClass->addMethod('__construct')
-			->addBody('parent::__construct(?);', [$this->builder->parameters]);
+			->addBody('$this->parameters = $params;')
+			->addBody('$this->parameters += ?;', [$this->builder->parameters])
+			->addParameter('params', [])
+				->setTypeHint('array');
 
 		$definitions = $this->builder->getDefinitions();
 		ksort($definitions);
@@ -62,7 +64,7 @@ class PhpGenerator
 			->setValue([Container::TYPES => $this->builder->getClassList()]);
 
 		foreach ($definitions as $name => $def) {
-			$meta->value[Container::SERVICES][$name] = $def->getClass() ?: NULL;
+			$meta->value[Container::SERVICES][$name] = $def->getType() ?: null;
 			foreach ($def->getTags() as $tag => $value) {
 				$meta->value[Container::TAGS][$tag][$name] = $value;
 			}
@@ -76,7 +78,8 @@ class PhpGenerator
 					throw new ServiceCreationException('Name contains invalid characters.');
 				}
 				$containerClass->addMethod($methodName)
-					->addComment('@return ' . ($def->getImplement() ?: $def->getClass()))
+					->addComment(PHP_VERSION_ID < 70000 ? '@return ' . ($def->getImplement() ?: $def->getType()) : '')
+					->setReturnType(PHP_VERSION_ID >= 70000 ? ($def->getImplement() ?: $def->getType()) : null)
 					->setBody($name === ContainerBuilder::THIS_CONTAINER ? 'return $this;' : $this->generateService($name))
 					->setParameters($def->getImplement() ? [] : $this->convertParameters($def->parameters));
 			} catch (\Exception $e) {
@@ -112,15 +115,15 @@ class PhpGenerator
 			? new Statement(['@' . ContainerBuilder::THIS_CONTAINER, 'getService'], [$serviceRef])
 			: $def->getFactory();
 
-		$this->currentService = NULL;
+		$this->currentService = null;
 		$code = '$service = ' . $this->formatStatement($factory) . ";\n";
 
-		if (($class = $def->getClass()) && !$serviceRef && $class !== $entity
-			&& !(is_string($entity) && preg_match('#^[\w\\\\]+\z#', $entity) && is_subclass_of($entity, $class))
+		if ((PHP_VERSION_ID < 70000 || $def->getSetup()) && ($type = $def->getType()) && !$serviceRef && $type !== $entity
+			&& !(is_string($entity) && preg_match('#^[\w\\\\]+\z#', $entity) && is_subclass_of($entity, $type))
 		) {
-			$code .= PhpHelpers::formatArgs("if (!\$service instanceof $class) {\n"
+			$code .= PhpHelpers::formatArgs("if (!\$service instanceof $type) {\n"
 				. "\tthrow new Nette\\UnexpectedValueException(?);\n}\n",
-				["Unable to create service '$name', value returned by factory is not $class type."]
+				["Unable to create service '$name', value returned by factory is not $type type."]
 			);
 		}
 
@@ -135,10 +138,8 @@ class PhpGenerator
 			return $code;
 		}
 
-		$factoryClass = $this->generatedClasses[] = new Nette\PhpGenerator\ClassType;
-		$factoryClass->setName(str_replace(['\\', '.'], '_', "{$this->className}_{$def->getImplement()}Impl_{$name}"))
-			->addImplement($def->getImplement())
-			->setFinal(TRUE);
+		$factoryClass = (new Nette\PhpGenerator\ClassType)
+			->addImplement($def->getImplement());
 
 		$factoryClass->addProperty('container')
 			->setVisibility('private');
@@ -148,12 +149,20 @@ class PhpGenerator
 			->addParameter('container')
 				->setTypeHint($this->className);
 
+		$rm = new \ReflectionMethod($def->getImplement(), $def->getImplementMode());
+
 		$factoryClass->addMethod($def->getImplementMode())
 			->setParameters($this->convertParameters($def->parameters))
 			->setBody(str_replace('$this', '$this->container', $code))
-			->setReturnType(PHP_VERSION_ID >= 70000 ? $def->getClass() : NULL);
+			->setReturnType(PHP_VERSION_ID >= 70000 ? (Reflection::getReturnType($rm) ?: $def->getType()) : null);
 
-		return "return new {$factoryClass->getName()}(\$this);";
+		if (PHP_VERSION_ID < 70000) {
+			$this->generatedClasses[] = $factoryClass;
+			$factoryClass->setName(str_replace(['\\', '.'], '_', "{$this->className}_{$def->getImplement()}Impl_{$name}"));
+			return "return new {$factoryClass->getName()}(\$this);";
+		}
+
+		return 'return new class ($this) ' . $factoryClass . ';';
 	}
 
 
@@ -170,23 +179,23 @@ class PhpGenerator
 			return $this->formatPhp($entity, $arguments);
 
 		} elseif ($service = $this->builder->getServiceName($entity)) { // factory calling
-			return $this->formatPhp('$this->?(?*)', [Container::getMethodName($service), $arguments]);
+			return $this->formatPhp('$this->?(...?)', [Container::getMethodName($service), $arguments]);
 
 		} elseif ($entity === 'not') { // operator
 			return $this->formatPhp('!?', [$arguments[0]]);
 
 		} elseif (is_string($entity)) { // class name
-			return $this->formatPhp("new $entity" . ($arguments ? '(?*)' : ''), [$arguments]);
+			return $this->formatPhp("new $entity" . ($arguments ? '(...?)' : ''), $arguments ? [$arguments] : []);
 
 		} elseif ($entity[0] === '') { // globalFunc
-			return $this->formatPhp("$entity[1](?*)", [$arguments]);
+			return $this->formatPhp("$entity[1](...?)", [$arguments]);
 
 		} elseif ($entity[0] instanceof Statement) {
 			$inner = $this->formatPhp('?', [$entity[0]]);
 			if (substr($inner, 0, 4) === 'new ') {
 				$inner = "($inner)";
 			}
-			return $this->formatPhp("$inner->?(?*)", [$entity[1], $arguments]);
+			return $this->formatPhp("$inner->?(...?)", [$entity[1], $arguments]);
 
 		} elseif ($entity[1][0] === '$') { // property getter, setter or appender
 			$name = substr($entity[1], 1);
@@ -203,10 +212,10 @@ class PhpGenerator
 				: $prop;
 
 		} elseif ($service = $this->builder->getServiceName($entity[0])) { // service method
-			return $this->formatPhp('?->?(?*)', [$entity[0], $entity[1], $arguments]);
+			return $this->formatPhp('?->?(...?)', [$entity[0], $entity[1], $arguments]);
 
 		} else { // static method
-			return $this->formatPhp("$entity[0]::$entity[1](?*)", [$arguments]);
+			return $this->formatPhp("$entity[0]::$entity[1](...?)", [$arguments]);
 		}
 	}
 
@@ -218,7 +227,7 @@ class PhpGenerator
 	 */
 	public function formatPhp($statement, $args)
 	{
-		array_walk_recursive($args, function (& $val) {
+		array_walk_recursive($args, function (&$val) {
 			if ($val instanceof Statement) {
 				$val = new PhpLiteral($this->formatStatement($val));
 
@@ -249,10 +258,9 @@ class PhpGenerator
 		$res = [];
 		foreach ($parameters as $k => $v) {
 			$tmp = explode(' ', is_int($k) ? $v : $k);
-			$param = $res[] = new Nette\PhpGenerator\Parameter;
-			$param->setName(end($tmp));
+			$param = $res[] = new Nette\PhpGenerator\Parameter(end($tmp));
 			if (!is_int($k)) {
-				$param = $param->setOptional(TRUE)->setDefaultValue($v);
+				$param->setOptional(true)->setDefaultValue($v);
 			}
 			if (isset($tmp[1])) {
 				$param->setTypeHint($tmp[0]);
@@ -260,5 +268,4 @@ class PhpGenerator
 		}
 		return $res;
 	}
-
 }

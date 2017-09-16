@@ -31,7 +31,7 @@
 		this.inited = true;
 
 		// enables <span data-tracy-href=""> & ctrl key
-		document.body.addEventListener('click', function(e) {
+		document.documentElement.addEventListener('click', function(e) {
 			var el;
 			if (e.ctrlKey && (el = Tracy.closest(e.target, '[data-tracy-href]'))) {
 				location.href = el.getAttribute('data-tracy-href');
@@ -48,7 +48,7 @@
 			collapseCount = typeof collapsed === 'undefined' ? COLLAPSE_COUNT_TOP : COLLAPSE_COUNT;
 
 		if (type === 'null' || type === 'string' || type === 'number' || type === 'boolean') {
-			data = type === 'string' ? '"' + data + '"' : (data + '').toUpperCase();
+			data = type === 'string' ? '"' + data + '"' : (data + '');
 			return createEl(null, null, [
 				createEl(
 					'span',
@@ -58,7 +58,8 @@
 			]);
 
 		} else if (Array.isArray(data)) {
-			return buildStruct([
+			return buildStruct(
+				[
 					createEl('span', {'class': 'tracy-dump-array'}, ['array']),
 					' (' + (data[0] && data.length || '') + ')'
 				],
@@ -87,10 +88,11 @@
 				throw new UnknownEntityException;
 			}
 			parentIds = parentIds || [];
-			recursive = parentIds.indexOf(id) > -1;
+			var recursive = parentIds.indexOf(id) > -1;
 			parentIds.push(id);
 
-			return buildStruct([
+			return buildStruct(
+				[
 					createEl('span', {
 						'class': data.object ? 'tracy-dump-object' : 'tracy-dump-resource',
 						title: object.editor ? 'Declared in file ' + object.editor.file + ' on line ' + object.editor.line : null,

@@ -39,15 +39,15 @@ trait SmartObject
 				foreach ($this->$name as $handler) {
 					Callback::invokeArgs($handler, $args);
 				}
-			} elseif ($this->$name !== NULL) {
-				throw new UnexpectedValueException("Property $class::$$name must be array or NULL, " . gettype($this->$name) . ' given.');
+			} elseif ($this->$name !== null) {
+				throw new UnexpectedValueException("Property $class::$$name must be array or null, " . gettype($this->$name) . ' given.');
 			}
 
 		} elseif ($isProp && $this->$name instanceof \Closure) { // closure in property
 			trigger_error("Invoking closure in property via \$obj->$name() is deprecated" . ObjectMixin::getSource(), E_USER_DEPRECATED);
 			return call_user_func_array($this->$name, $args);
 
-		} elseif (($methods = & ObjectMixin::getMethods($class)) && isset($methods[$name]) && is_array($methods[$name])) { // magic @methods
+		} elseif (($methods = &ObjectMixin::getMethods($class)) && isset($methods[$name]) && is_array($methods[$name])) { // magic @methods
 			trigger_error("Magic methods such as $class::$name() are deprecated" . ObjectMixin::getSource(), E_USER_DEPRECATED);
 			list($op, $rp, $type) = $methods[$name];
 			if (count($args) !== ($op === 'get' ? 0 : 1)) {
@@ -92,7 +92,7 @@ trait SmartObject
 	 * @return mixed   property value
 	 * @throws MemberAccessException if the property is not defined.
 	 */
-	public function & __get($name)
+	public function &__get($name)
 	{
 		$class = get_class($this);
 		$uname = ucfirst($name);
@@ -112,12 +112,12 @@ trait SmartObject
 		} elseif ($name === '') {
 			throw new MemberAccessException("Cannot read a class '$class' property without name.");
 
-		} elseif (($methods = & ObjectMixin::getMethods($class)) && isset($methods[$m = 'get' . $uname]) || isset($methods[$m = 'is' . $uname])) { // old property getter
-			trigger_error("Missing annotation @property for $class::\$$name used" . ObjectMixin::getSource(), E_USER_DEPRECATED);
+		} elseif (($methods = &ObjectMixin::getMethods($class)) && isset($methods[$m = 'get' . $uname]) || isset($methods[$m = 'is' . $uname])) { // old property getter
+			trigger_error("Use $m() or add annotation @property for $class::\$$name" . ObjectMixin::getSource(), E_USER_DEPRECATED);
 			if ($methods[$m] === 0) {
 				$methods[$m] = (new \ReflectionMethod($class, $m))->returnsReference();
 			}
-			if ($methods[$m] === TRUE) {
+			if ($methods[$m] === true) {
 				return $this->$m();
 			} else {
 				$val = $this->$m();
@@ -159,8 +159,8 @@ trait SmartObject
 		} elseif ($name === '') {
 			throw new MemberAccessException("Cannot write to a class '$class' property without name.");
 
-		} elseif (($methods = & ObjectMixin::getMethods($class)) && isset($methods[$m = 'set' . $uname])) { // old property setter
-			trigger_error("Missing annotation @property for $class::\$$name used" . ObjectMixin::getSource(), E_USER_DEPRECATED);
+		} elseif (($methods = &ObjectMixin::getMethods($class)) && isset($methods[$m = 'set' . $uname])) { // old property setter
+			trigger_error("Use $m() or add annotation @property for $class::\$$name" . ObjectMixin::getSource(), E_USER_DEPRECATED);
 			$this->$m($value);
 
 		} elseif (isset($methods['get' . $uname]) || isset($methods['is' . $uname])) { // property setter
@@ -212,20 +212,19 @@ trait SmartObject
 	 * @return mixed
 	 * @deprecated use Nette\Utils\ObjectMixin::setExtensionMethod()
 	 */
-	public static function extensionMethod($name, $callback = NULL)
+	public static function extensionMethod($name, $callback = null)
 	{
-		if (strpos($name, '::') === FALSE) {
+		if (strpos($name, '::') === false) {
 			$class = get_called_class();
 		} else {
 			list($class, $name) = explode('::', $name);
 			$class = (new \ReflectionClass($class))->getName();
 		}
 		trigger_error("Extension methods such as $class::$name() are deprecated" . ObjectMixin::getSource(), E_USER_DEPRECATED);
-		if ($callback === NULL) {
+		if ($callback === null) {
 			return ObjectMixin::getExtensionMethod($class, $name);
 		} else {
 			ObjectMixin::setExtensionMethod($class, $name, $callback);
 		}
 	}
-
 }

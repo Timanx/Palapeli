@@ -35,7 +35,7 @@ interface ISupplementalDriver
 	/**
 	 * Formats boolean for use in a SQL statement.
 	 * @param  bool
-	 * @return mixed
+	 * @return string
 	 */
 	function formatBool($value);
 
@@ -62,11 +62,11 @@ interface ISupplementalDriver
 	/**
 	 * Injects LIMIT/OFFSET to the SQL query.
 	 * @param  string  SQL query that will be modified.
-	 * @param  int|NULL
-	 * @param  int|NULL
+	 * @param  int|null
+	 * @param  int|null
 	 * @return void
 	 */
-	function applyLimit(& $sql, $limit, $offset);
+	function applyLimit(&$sql, $limit, $offset);
 
 	/**
 	 * Normalizes result row.
@@ -75,9 +75,7 @@ interface ISupplementalDriver
 	 */
 	function normalizeRow($row);
 
-
 	/********************* reflection ****************d*g**/
-
 
 	/**
 	 * Returns list of tables.
@@ -119,5 +117,4 @@ interface ISupplementalDriver
 	 * @return bool
 	 */
 	function isSupported($item);
-
 }

@@ -5,10 +5,13 @@
 (function(){
 	Tracy = window.Tracy || {};
 
-	var layer = document.getElementById('tracy-debug');
+	if (document.currentScript) {
+		var nonce = document.currentScript.getAttribute('nonce');
+		var contentId = document.currentScript.dataset.id;
+	}
 
 	Tracy.getAjaxHeader = function() {
-		return layer.dataset.id;
+		return contentId;
 	};
 
 	var Panel = Tracy.DebugPanel = function(id) {
@@ -33,8 +36,8 @@
 		evalScripts(elem);
 
 		draggable(elem, {
-			handle: elem.querySelector('h1'),
-			stop: function() {
+			handles: elem.querySelectorAll('h1'),
+			start: function() {
 				_this.toFloat();
 			}
 		});
@@ -68,6 +71,7 @@
 
 		forEach(elem.querySelectorAll('.tracy-icons a'), function(a) {
 			a.addEventListener('click', function(e) {
+				clearTimeout(elem.Tracy.displayTimeout);
 				if (this.rel === 'close') {
 					_this.toPeek();
 				} else {
@@ -94,7 +98,6 @@
 			clearTimeout(elem.Tracy.displayTimeout);
 			elem.Tracy.displayTimeout = setTimeout(function() {
 				elem.classList.add(Panel.FOCUSED);
-				elem.style.display = 'block';
 				elem.style.zIndex = Panel.zIndex++;
 				if (callback) {
 					callback();
@@ -105,11 +108,10 @@
 
 	Panel.prototype.blur = function() {
 		var elem = this.elem;
-		elem.classList.remove(Panel.FOCUSED);
 		if (this.is(Panel.PEEK)) {
 			clearTimeout(elem.Tracy.displayTimeout);
 			elem.Tracy.displayTimeout = setTimeout(function() {
-				elem.style.display = 'none';
+				elem.classList.remove(Panel.FOCUSED);
 			}, 50);
 		}
 	};
@@ -118,15 +120,14 @@
 		this.elem.classList.remove(Panel.WINDOW);
 		this.elem.classList.remove(Panel.PEEK);
 		this.elem.classList.add(Panel.FLOAT);
-		this.elem.style.display = 'block';
 		this.reposition();
 	};
 
 	Panel.prototype.toPeek = function() {
 		this.elem.classList.remove(Panel.WINDOW);
 		this.elem.classList.remove(Panel.FLOAT);
+		this.elem.classList.remove(Panel.FOCUSED);
 		this.elem.classList.add(Panel.PEEK);
-		this.elem.style.display = 'none';
 	};
 
 	Panel.prototype.toWindow = function() {
@@ -140,18 +141,13 @@
 			return false;
 		}
 
-		function escape(s) {
-			return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
-		}
-
 		var doc = win.document;
 		doc.write('<!DOCTYPE html><meta charset="utf-8">'
-			+ '<link rel="stylesheet" href="' + escape(document.getElementById('tracy-debug-style').href) + '">'
-			+ '<script src="' + escape(document.getElementById('tracy-debug-script').src) + '" onload="Tracy.Dumper.init()" async><\/script>'
+			+ '<script src="?_tracy_bar=js&amp;XDEBUG_SESSION_STOP=1" onload="Tracy.Dumper.init()" async></script>'
 			+ '<body id="tracy-debug">'
 		);
-		doc.body.innerHTML = '<div class="tracy-panel tracy-mode-window" id="' + this.elem.id + '">' + this.elem.innerHTML + '<\/div>';
-		evalScripts(doc.body, win);
+		doc.body.innerHTML = '<div class="tracy-panel tracy-mode-window" id="' + this.elem.id + '">' + this.elem.innerHTML + '</div>';
+		evalScripts(doc.body);
 		if (this.elem.querySelector('h1')) {
 			doc.title = this.elem.querySelector('h1').textContent;
 		}
@@ -168,9 +164,9 @@
 			}
 		});
 
-		this.elem.style.display = 'none';
 		this.elem.classList.remove(Panel.FLOAT);
 		this.elem.classList.remove(Panel.PEEK);
+		this.elem.classList.remove(Panel.FOCUSED);
 		this.elem.classList.add(Panel.WINDOW);
 		this.elem.Tracy.window = win;
 		return true;
@@ -218,15 +214,20 @@
 		this.elem = document.getElementById(this.id);
 
 		draggable(this.elem, {
+			handles: this.elem.querySelectorAll('li:first-child'),
 			draggedClass: 'tracy-dragged'
 		});
 
-		this.initTabs();
+		this.elem.addEventListener('mousedown', function(e) {
+			e.preventDefault();
+		});
+
+		this.initTabs(this.elem);
 		this.restorePosition();
 	};
 
-	Bar.prototype.initTabs = function() {
-		var _this = this, elem = this.elem;
+	Bar.prototype.initTabs = function(elem) {
+		var _this = this;
 
 		forEach(elem.getElementsByTagName('a'), function(a) {
 			a.addEventListener('click', function(e) {
@@ -235,6 +236,10 @@
 
 				} else if (this.rel) {
 					var panel = Debug.panels[this.rel];
+					if (panel.elem.dataset.tracyContent) {
+						panel.init();
+					}
+
 					if (e.shiftKey) {
 						panel.toFloat();
 						panel.toWindow();
@@ -318,10 +323,13 @@
 			throw new Error('Tracy requires IE 11+');
 		}
 
-		layer.innerHTML = content;
-		evalScripts(layer);
+		Debug.layer = document.createElement('div');
+		Debug.layer.setAttribute('id', 'tracy-debug');
+		Debug.layer.innerHTML = content;
+		document.documentElement.appendChild(Debug.layer);
+		evalScripts(Debug.layer);
 		Tracy.Dumper.init();
-		layer.style.display = 'block';
+		Debug.layer.style.display = 'block';
 		Debug.bar.init();
 
 		forEach(document.querySelectorAll('.tracy-panel'), function(panel) {
@@ -335,7 +343,7 @@
 	};
 
 	Debug.loadAjax = function(content, dumps) {
-		forEach(layer.querySelectorAll('.tracy-panel.tracy-ajax'), function(panel) {
+		forEach(Debug.layer.querySelectorAll('.tracy-panel.tracy-ajax'), function(panel) {
 			Debug.panels[panel.id].savePosition();
 			delete Debug.panels[panel.id];
 			panel.parentNode.removeChild(panel);
@@ -346,8 +354,8 @@
 			ajaxBar.parentNode.removeChild(ajaxBar);
 		}
 
-		layer.insertAdjacentHTML('beforeend', content);
-		evalScripts(layer);
+		Debug.layer.insertAdjacentHTML('beforeend', content);
+		evalScripts(Debug.layer);
 		ajaxBar = document.getElementById('tracy-ajax-bar');
 		document.getElementById(Bar.prototype.id).appendChild(ajaxBar);
 
@@ -384,56 +392,66 @@
 		if (!header) {
 			return;
 		}
-		var oldOpen = XMLHttpRequest.prototype.open,
-			oldGet = XMLHttpRequest.prototype.getResponseHeader,
-			oldGetAll = XMLHttpRequest.prototype.getAllResponseHeaders;
+		var oldOpen = XMLHttpRequest.prototype.open;
 
 		XMLHttpRequest.prototype.open = function() {
 			oldOpen.apply(this, arguments);
 			if (window.TracyAutoRefresh !== false && arguments[1].indexOf('//') <= 0 || arguments[1].indexOf(location.origin + '/') === 0) {
 				this.setRequestHeader('X-Tracy-Ajax', header);
+				this.addEventListener('load', function() {
+					if (this.getAllResponseHeaders().match(/^X-Tracy-Ajax: 1/mi)) {
+						Debug.loadScript('?_tracy_bar=content-ajax.' + header + '&XDEBUG_SESSION_STOP=1&v=' + Math.random());
+					}
+				});
 			}
 		};
-		XMLHttpRequest.prototype.getResponseHeader = function() {
-			process(this);
-			return oldGet.apply(this, arguments);
-		};
-		XMLHttpRequest.prototype.getAllResponseHeaders = function() {
-			process(this);
-			return oldGetAll.call(this);
-		};
-		function process(xhr) {
-			xhr.getResponseHeader = oldGet;
-			xhr.getAllResponseHeaders = oldGetAll;
-			if (xhr.getAllResponseHeaders().match(/^X-Tracy-Ajax: 1/mi)) {
-				Debug.loadScript(
-					document.getElementById('tracy-debug-script').src.split('?')[0]
-					+ '?_tracy_bar=content-ajax.' + header + '&XDEBUG_SESSION_STOP=1&XDEBUG_PROFILE=0&XDEBUG_TRACE=0&v=' + Math.random()
-				);
-			}
+
+		if (window.fetch) {
+			var oldFetch = window.fetch;
+			window.fetch = function(request, options) {
+				options = options || {};
+				options.headers = new Headers(options.headers || {});
+				var url = request instanceof Request ? request.url : request;
+
+				if (window.TracyAutoRefresh !== false && url.indexOf('//') <= 0 || url.indexOf(location.origin + '/') === 0) {
+					options.headers.set('X-Tracy-Ajax', header);
+					options.credentials = (request instanceof Request && request.credentials) || options.credentials || 'same-origin';
+
+					return oldFetch(request, options).then(function (response) {
+						if (response.headers.has('X-Tracy-Ajax') && response.headers.get('X-Tracy-Ajax')[0] === '1') {
+							Debug.loadScript('?_tracy_bar=content-ajax.' + header + '&XDEBUG_SESSION_STOP=1&v=' + Math.random());
+						}
+
+						return response;
+					});
+				}
+
+				return oldFetch(request, options);
+			};
 		}
 	};
 
 	Debug.loadScript = function(url) {
 		if (Debug.scriptElem) {
-			Debug.scriptElem.parentNode.removeChild(Debug.scriptElem)
+			Debug.scriptElem.parentNode.removeChild(Debug.scriptElem);
 		}
 		Debug.scriptElem = document.createElement('script');
 		Debug.scriptElem.src = url;
+		Debug.scriptElem.setAttribute('nonce', nonce);
 		document.documentElement.appendChild(Debug.scriptElem);
 	};
 
-	function evalScripts(elem, scope) {
-		scope = scope || window;
+	function evalScripts(elem) {
 		forEach(elem.getElementsByTagName('script'), function(script) {
 			if ((!script.hasAttribute('type') || script.type === 'text/javascript' || script.type === 'application/javascript') && !script.tracyEvaluated) {
-				(scope.execScript || function (data) {
-					scope['eval'].call(scope, data);
-				})(script.innerHTML);
+				var dolly = script.ownerDocument.createElement('script');
+				dolly.textContent = script.textContent;
+				dolly.setAttribute('nonce', nonce);
+				script.ownerDocument.documentElement.appendChild(dolly);
 				script.tracyEvaluated = true;
 			}
 		});
-	};
+	}
 
 	// emulate mouseenter & mouseleave
 	function isTargetChanged(target, dest) {
@@ -460,9 +478,9 @@
 			}
 		};
 
-		var onmousemove = function(e) {
+		var onMove = function(e) {
 			if (e.buttons === 0) {
-				return onmouseup(e);
+				return onEnd(e);
 			}
 			if (!started) {
 				if (options.draggedClass) {
@@ -474,12 +492,12 @@
 				started = true;
 			}
 
-			clientX = e.clientX;
-			clientY = e.clientY;
+			clientX = e.touches ? e.touches[0].clientX : e.clientX;
+			clientY = e.touches ? e.touches[0].clientY : e.clientY;
 			return false;
 		};
 
-		var onmouseup = function(e) {
+		var onEnd = function(e) {
 			if (started) {
 				if (options.draggedClass) {
 					elem.classList.remove(options.draggedClass);
@@ -489,42 +507,54 @@
 				}
 			}
 			dragging = null;
-			dE.removeEventListener('mousemove', onmousemove);
-			dE.removeEventListener('mouseup', onmouseup);
+			dE.removeEventListener('mousemove', onMove);
+			dE.removeEventListener('mouseup', onEnd);
+			dE.removeEventListener('touchmove', onMove);
+			dE.removeEventListener('touchend', onEnd);
 			return false;
 		};
 
-		(options.handle || elem).addEventListener('mousedown', function(e) {
+		var onStart = function(e) {
 			e.preventDefault();
 			e.stopPropagation();
 
 			if (dragging) { // missed mouseup out of window?
-				return onmouseup(e);
+				return onEnd(e);
 			}
 
 			var pos = getPosition(elem);
-			clientX = e.clientX;
-			clientY = e.clientY;
+			clientX = e.touches ? e.touches[0].clientX : e.clientX;
+			clientY = e.touches ? e.touches[0].clientY : e.clientY;
 			deltaX = pos.right + clientX;
 			deltaY = pos.bottom + clientY;
 			dragging = true;
 			started = false;
-			dE.addEventListener('mousemove', onmousemove);
-			dE.addEventListener('mouseup', onmouseup);
+			dE.addEventListener('mousemove', onMove);
+			dE.addEventListener('mouseup', onEnd);
+			dE.addEventListener('touchmove', onMove);
+			dE.addEventListener('touchend', onEnd);
 			requestAnimationFrame(redraw);
-		});
-
-		(options.handle || elem).addEventListener('click', function(e) {
-			if (started) {
-				e.stopImmediatePropagation();
+			if (options.start) {
+				options.start(e, elem);
 			}
+		};
+
+		forEach(options.handles, function (handle) {
+			handle.addEventListener('mousedown', onStart);
+			handle.addEventListener('touchstart', onStart);
+
+			handle.addEventListener('click', function(e) {
+				if (started) {
+					e.stopImmediatePropagation();
+				}
+			});
 		});
 	}
 
 	// returns total offset for element
 	function getOffset(elem) {
 		var res = {left: elem.offsetLeft, top: elem.offsetTop};
-		while (elem = elem.offsetParent) {
+		while (elem = elem.offsetParent) { // eslint-disable-line no-cond-assign
 			res.left += elem.offsetLeft; res.top += elem.offsetTop;
 		}
 		return res;

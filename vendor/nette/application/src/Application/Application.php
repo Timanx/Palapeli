@@ -29,7 +29,7 @@ class Application
 	/** @var callable[]  function (Application $sender); Occurs before the application loads presenter */
 	public $onStartup;
 
-	/** @var callable[]  function (Application $sender, \Exception|\Throwable $e = NULL); Occurs before the application shuts down */
+	/** @var callable[]  function (Application $sender, \Exception|\Throwable $e = null); Occurs before the application shuts down */
 	public $onShutdown;
 
 	/** @var callable[]  function (Application $sender, Request $request); Occurs when a new request is received */
@@ -47,7 +47,7 @@ class Application
 	/** @var Request[] */
 	private $requests = [];
 
-	/** @var IPresenter */
+	/** @var IPresenter|null */
 	private $presenter;
 
 	/** @var Nette\Http\IRequest */
@@ -83,8 +83,8 @@ class Application
 			$this->processRequest($this->createInitialRequest());
 			$this->onShutdown($this);
 
-		} catch (\Throwable $e) {
 		} catch (\Exception $e) {
+		} catch (\Throwable $e) {
 		}
 		if (isset($e)) {
 			$this->onError($this, $e);
@@ -94,9 +94,9 @@ class Application
 					$this->onShutdown($this, $e);
 					return;
 
-				} catch (\Throwable $e) {
-					$this->onError($this, $e);
 				} catch (\Exception $e) {
+					$this->onError($this, $e);
+				} catch (\Throwable $e) {
 					$this->onError($this, $e);
 				}
 			}
@@ -112,21 +112,9 @@ class Application
 	public function createInitialRequest()
 	{
 		$request = $this->router->match($this->httpRequest);
-
 		if (!$request instanceof Request) {
 			throw new BadRequestException('No route for HTTP request.');
-
-		} elseif (strcasecmp($request->getPresenterName(), $this->errorPresenter) === 0) {
-			throw new BadRequestException('Invalid request. Presenter is not achievable.');
 		}
-
-		try {
-			$name = $request->getPresenterName();
-			$this->presenterFactory->getPresenterClass($name);
-		} catch (InvalidPresenterException $e) {
-			throw new BadRequestException($e->getMessage(), 0, $e);
-		}
-
 		return $request;
 	}
 
@@ -144,7 +132,15 @@ class Application
 		$this->requests[] = $request;
 		$this->onRequest($this, $request);
 
-		$this->presenter = $this->presenterFactory->createPresenter($request->getPresenterName());
+		if (!$request->isMethod($request::FORWARD) && !strcasecmp($request->getPresenterName(), $this->errorPresenter)) {
+			throw new BadRequestException('Invalid request. Presenter is not achievable.');
+		}
+
+		try {
+			$this->presenter = $this->presenterFactory->createPresenter($request->getPresenterName());
+		} catch (InvalidPresenterException $e) {
+			throw count($this->requests) > 1 ? $e : new BadRequestException($e->getMessage(), 0, $e);
+		}
 		$this->onPresenter($this, $this->presenter);
 		$response = $this->presenter->run(clone $request);
 
@@ -166,13 +162,13 @@ class Application
 	public function processException($e)
 	{
 		if (!$e instanceof BadRequestException && $this->httpResponse instanceof Nette\Http\Response) {
-			$this->httpResponse->warnOnBuffer = FALSE;
+			$this->httpResponse->warnOnBuffer = false;
 		}
 		if (!$this->httpResponse->isSent()) {
-			$this->httpResponse->setCode($e instanceof BadRequestException ? ($e->getCode() ?: 404) : 500);
+			$this->httpResponse->setCode($e instanceof BadRequestException ? ($e->getHttpCode() ?: 404) : 500);
 		}
 
-		$args = ['exception' => $e, 'request' => end($this->requests) ?: NULL];
+		$args = ['exception' => $e, 'request' => end($this->requests) ?: null];
 		if ($this->presenter instanceof UI\Presenter) {
 			try {
 				$this->presenter->forward(":$this->errorPresenter:", $args);
@@ -197,7 +193,7 @@ class Application
 
 	/**
 	 * Returns current presenter.
-	 * @return IPresenter
+	 * @return IPresenter|null
 	 */
 	public function getPresenter()
 	{
@@ -226,5 +222,4 @@ class Application
 	{
 		return $this->presenterFactory;
 	}
-
 }

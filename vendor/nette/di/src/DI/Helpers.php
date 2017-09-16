@@ -8,6 +8,8 @@
 namespace Nette\DI;
 
 use Nette;
+use Nette\PhpGenerator\PhpLiteral;
+use Nette\Utils\Reflection;
 
 
 /**
@@ -26,7 +28,7 @@ class Helpers
 	 * @return mixed
 	 * @throws Nette\InvalidArgumentException
 	 */
-	public static function expand($var, array $params, $recursive = FALSE)
+	public static function expand($var, array $params, $recursive = false)
 	{
 		if (is_array($var)) {
 			$res = [];
@@ -43,13 +45,14 @@ class Helpers
 		}
 
 		$parts = preg_split('#%([\w.-]*)%#i', $var, -1, PREG_SPLIT_DELIM_CAPTURE);
-		$res = '';
+		$res = [];
+		$php = false;
 		foreach ($parts as $n => $part) {
 			if ($n % 2 === 0) {
-				$res .= $part;
+				$res[] = $part;
 
 			} elseif ($part === '') {
-				$res .= '%';
+				$res[] = '%';
 
 			} elseif (isset($recursive[$part])) {
 				throw new Nette\InvalidArgumentException(sprintf('Circular reference detected for variables: %s.', implode(', ', array_keys($recursive))));
@@ -66,13 +69,20 @@ class Helpers
 				if (strlen($part) + 2 === strlen($var)) {
 					return $val;
 				}
-				if (!is_scalar($val)) {
+				if ($val instanceof PhpLiteral) {
+					$php = true;
+				} elseif (!is_scalar($val)) {
 					throw new Nette\InvalidArgumentException("Unable to concatenate non-scalar parameter '$part' into '$var'.");
 				}
-				$res .= $val;
+				$res[] = $val;
 			}
 		}
-		return $res;
+		if ($php) {
+			$res = array_filter($res, function ($val) { return $val !== ''; });
+			$res = array_map(function ($val) { return $val instanceof PhpLiteral ? "($val)" : var_export((string) $val, true); }, $res);
+			return new PhpLiteral(implode(' . ', $res));
+		}
+		return implode('', $res);
 	}
 
 
@@ -85,8 +95,7 @@ class Helpers
 		$optCount = 0;
 		$num = -1;
 		$res = [];
-		$methodName = ($method instanceof \ReflectionMethod ? $method->getDeclaringClass()->getName() . '::' : '')
-			. $method->getName() . '()';
+		$methodName = Reflection::toString($method) . '()';
 
 		foreach ($method->getParameters() as $num => $parameter) {
 			if (!$parameter->isVariadic() && array_key_exists($parameter->getName(), $arguments)) {
@@ -99,18 +108,15 @@ class Helpers
 				unset($arguments[$num]);
 				$optCount = 0;
 
-			} elseif (($class = PhpReflection::getParameterType($parameter)) && !PhpReflection::isBuiltinType($class)) {
-				$res[$num] = $container->getByType($class, FALSE);
-				if ($res[$num] === NULL) {
+			} elseif (($type = Reflection::getParameterType($parameter)) && !Reflection::isBuiltinType($type)) {
+				$res[$num] = $container->getByType($type, false);
+				if ($res[$num] === null) {
 					if ($parameter->allowsNull()) {
 						$optCount++;
-					} elseif (class_exists($class) || interface_exists($class)) {
-						if ($class !== ($hint = (new \ReflectionClass($class))->getName())) {
-							throw new ServiceCreationException("Service of type {$class} needed by $methodName not found, did you mean $hint?");
-						}
-						throw new ServiceCreationException("Service of type {$class} needed by $methodName not found. Did you register it in configuration file?");
+					} elseif (class_exists($type) || interface_exists($type)) {
+						throw new ServiceCreationException("Service of type $type needed by $methodName not found. Did you register it in configuration file?");
 					} else {
-						throw new ServiceCreationException("Class {$class} needed by $methodName not found. Check type hint and 'use' statements.");
+						throw new ServiceCreationException("Class $type needed by $methodName not found. Check type hint and 'use' statements.");
 					}
 				} else {
 					if ($container instanceof ContainerBuilder) {
@@ -119,10 +125,10 @@ class Helpers
 					$optCount = 0;
 				}
 
-			} elseif ($parameter->isOptional() || $parameter->isDefaultValueAvailable()) {
-				// !optional + defaultAvailable = func($a = NULL, $b) since 5.4.7
+			} elseif (($type && $parameter->allowsNull()) || $parameter->isOptional() || $parameter->isDefaultValueAvailable()) {
+				// !optional + defaultAvailable = func($a = null, $b) since 5.4.7
 				// optional + !defaultAvailable = i.e. Exception::__construct, mysqli::mysqli, ...
-				$res[$num] = $parameter->isDefaultValueAvailable() ? $parameter->getDefaultValue() : NULL;
+				$res[$num] = $parameter->isDefaultValueAvailable() ? Reflection::getParameterDefaultValue($parameter) : null;
 				$optCount++;
 
 			} else {
@@ -184,11 +190,55 @@ class Helpers
 				self::prefixServiceName($config->arguments, $namespace)
 			);
 		} elseif (is_array($config)) {
-			foreach ($config as & $val) {
+			foreach ($config as &$val) {
 				$val = self::prefixServiceName($val, $namespace);
 			}
 		}
 		return $config;
 	}
 
+
+	/**
+	 * Returns an annotation value.
+	 * @return string|null
+	 */
+	public static function parseAnnotation(\Reflector $ref, $name)
+	{
+		if (!Reflection::areCommentsAvailable()) {
+			throw new Nette\InvalidStateException('You have to enable phpDoc comments in opcode cache.');
+		}
+		$name = preg_quote($name, '#');
+		if ($ref->getDocComment() && preg_match("#[\\s*]@$name(?:\\s++([^@]\\S*)?|$)#", trim($ref->getDocComment(), '/*'), $m)) {
+			return isset($m[1]) ? $m[1] : '';
+		}
+	}
+
+
+	/**
+	 * @return string|null
+	 */
+	public static function getReturnType(\ReflectionFunctionAbstract $func)
+	{
+		if ($type = Reflection::getReturnType($func)) {
+			return $type;
+		} elseif ($type = preg_replace('#[|\s].*#', '', (string) self::parseAnnotation($func, 'return'))) {
+			if ($type === 'object' || $type === 'mixed') {
+				return null;
+			} elseif ($func instanceof \ReflectionMethod) {
+				return $type === 'static' || $type === '$this'
+					? $func->getDeclaringClass()->getName()
+					: Reflection::expandClassName($type, $func->getDeclaringClass());
+			} else {
+				return $type;
+			}
+		}
+	}
+
+
+	public static function normalizeClass($type)
+	{
+		return class_exists($type) || interface_exists($type)
+			? (new \ReflectionClass($type))->getName()
+			: $type;
+	}
 }

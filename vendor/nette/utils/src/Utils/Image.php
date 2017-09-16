@@ -40,7 +40,7 @@ use Nette;
  * @method void colorSet($index, $red, $green, $blue)
  * @method array colorsForIndex($index)
  * @method int colorsTotal()
- * @method int colorTransparent($color = NULL)
+ * @method int colorTransparent($color = null)
  * @method void convolution(array $matrix, float $div, float $offset)
  * @method void copy(Image $src, $dstX, $dstY, $srcX, $srcY, $srcW, $srcH)
  * @method void copyMerge(Image $src, $dstX, $dstY, $srcX, $srcY, $srcW, $srcH, $opacity)
@@ -58,16 +58,16 @@ use Nette;
  * @method void fillToBorder($x, $y, $border, $color)
  * @method void filter($filtertype)
  * @method void flip(int $mode)
- * @method array ftText($size, $angle, $x, $y, $col, string $fontFile, string $text, array $extrainfo = NULL)
+ * @method array ftText($size, $angle, $x, $y, $col, string $fontFile, string $text, array $extrainfo = null)
  * @method void gammaCorrect(float $inputgamma, float $outputgamma)
- * @method int interlace($interlace = NULL)
+ * @method int interlace($interlace = null)
  * @method bool isTrueColor()
  * @method void layerEffect($effect)
  * @method void line($x1, $y1, $x2, $y2, $color)
  * @method void paletteCopy(Image $source)
  * @method void paletteToTrueColor()
  * @method void polygon(array $points, $numPoints, $color)
- * @method array psText(string $text, $font, $size, $color, $backgroundColor, $x, $y, $space = NULL, $tightness = NULL, float $angle = NULL, $antialiasSteps = NULL)
+ * @method array psText(string $text, $font, $size, $color, $backgroundColor, $x, $y, $space = null, $tightness = null, float $angle = null, $antialiasSteps = null)
  * @method void rectangle($x1, $y1, $x2, $y2, $col)
  * @method Image rotate(float $angle, $backgroundColor)
  * @method void saveAlpha(bool $saveflag)
@@ -105,14 +105,18 @@ class Image
 	const EXACT = 0b1000;
 
 	/** image types */
-	const JPEG = IMAGETYPE_JPEG,
+	const
+		JPEG = IMAGETYPE_JPEG,
 		PNG = IMAGETYPE_PNG,
-		GIF = IMAGETYPE_GIF;
+		GIF = IMAGETYPE_GIF,
+		WEBP = 18; // IMAGETYPE_WEBP is available as of PHP 7.1
 
 	const EMPTY_GIF = "GIF89a\x01\x00\x01\x00\x80\x00\x00\x00\x00\x00\x00\x00\x00!\xf9\x04\x01\x00\x00\x00\x00,\x00\x00\x00\x00\x01\x00\x01\x00\x00\x02\x02D\x01\x00;";
 
 	/** @deprecated */
 	const ENLARGE = 0;
+
+	private static $formats = [self::JPEG => 'jpeg', self::PNG => 'png', self::GIF => 'gif', self::WEBP => 'webp'];
 
 	/** @var resource */
 	private $image;
@@ -143,25 +147,23 @@ class Image
 	 * @param  mixed  detected image format
 	 * @throws Nette\NotSupportedException if gd extension is not loaded
 	 * @throws UnknownImageFileException if file not found or file type is not known
-	 * @return self
+	 * @return static
 	 */
-	public static function fromFile($file, & $format = NULL)
+	public static function fromFile($file, &$format = null)
 	{
 		if (!extension_loaded('gd')) {
 			throw new Nette\NotSupportedException('PHP extension GD is not loaded.');
 		}
 
-		static $funcs = [
-			self::JPEG => 'imagecreatefromjpeg',
-			self::PNG => 'imagecreatefrompng',
-			self::GIF => 'imagecreatefromgif',
-		];
 		$format = @getimagesize($file)[2]; // @ - files smaller than 12 bytes causes read error
-
-		if (!isset($funcs[$format])) {
+		if (!$format && PHP_VERSION_ID < 70100 && @file_get_contents($file, false, null, 8, 4) === 'WEBP') { // @ - may not exists
+			$format = self::WEBP;
+		}
+		if (!isset(self::$formats[$format])) {
+			$format = null;
 			throw new UnknownImageFileException(is_file($file) ? "Unknown type of file '$file'." : "File '$file' not found.");
 		}
-		return new static(Callback::invokeSafe($funcs[$format], [$file], function ($message) {
+		return new static(Callback::invokeSafe('imagecreatefrom' . self::$formats[$format], [$file], function ($message) {
 			throw new ImageException($message);
 		}));
 	}
@@ -171,10 +173,10 @@ class Image
 	 * Create a new image from the image stream in the string.
 	 * @param  string
 	 * @param  mixed  detected image format
-	 * @return self
+	 * @return static
 	 * @throws ImageException
 	 */
-	public static function fromString($s, & $format = NULL)
+	public static function fromString($s, &$format = null)
 	{
 		if (!extension_loaded('gd')) {
 			throw new Nette\NotSupportedException('PHP extension GD is not loaded.');
@@ -182,7 +184,7 @@ class Image
 
 		if (func_num_args() > 1) {
 			$tmp = @getimagesizefromstring($s)[2]; // @ - strings smaller than 12 bytes causes read error
-			$format = in_array($tmp, [self::JPEG, self::PNG, self::GIF], TRUE) ? $tmp : NULL;
+			$format = isset(self::$formats[$tmp]) ? $tmp : null;
 		}
 
 		return new static(Callback::invokeSafe('imagecreatefromstring', [$s], function ($message) {
@@ -196,9 +198,9 @@ class Image
 	 * @param  int
 	 * @param  int
 	 * @param  array
-	 * @return self
+	 * @return static
 	 */
-	public static function fromBlank($width, $height, $color = NULL)
+	public static function fromBlank($width, $height, $color = null)
 	{
 		if (!extension_loaded('gd')) {
 			throw new Nette\NotSupportedException('PHP extension GD is not loaded.');
@@ -214,9 +216,9 @@ class Image
 		if (is_array($color)) {
 			$color += ['alpha' => 0];
 			$color = imagecolorresolvealpha($image, $color['red'], $color['green'], $color['blue'], $color['alpha']);
-			imagealphablending($image, FALSE);
+			imagealphablending($image, false);
 			imagefilledrectangle($image, 0, 0, $width - 1, $height - 1, $color);
-			imagealphablending($image, TRUE);
+			imagealphablending($image, true);
 		}
 		return new static($image);
 	}
@@ -229,7 +231,7 @@ class Image
 	public function __construct($image)
 	{
 		$this->setImageResource($image);
-		imagesavealpha($image, TRUE);
+		imagesavealpha($image, true);
 	}
 
 
@@ -256,7 +258,7 @@ class Image
 	/**
 	 * Sets image resource.
 	 * @param  resource
-	 * @return self
+	 * @return static
 	 */
 	protected function setImageResource($image)
 	{
@@ -283,7 +285,7 @@ class Image
 	 * @param  mixed  width in pixels or percent
 	 * @param  mixed  height in pixels or percent
 	 * @param  int    flags
-	 * @return self
+	 * @return static
 	 */
 	public function resize($width, $height, $flags = self::FIT)
 	{
@@ -322,14 +324,14 @@ class Image
 	public static function calculateSize($srcWidth, $srcHeight, $newWidth, $newHeight, $flags = self::FIT)
 	{
 		if (is_string($newWidth) && substr($newWidth, -1) === '%') {
-			$newWidth = (int) round($srcWidth / 100 * abs($newWidth));
-			$percents = TRUE;
+			$newWidth = (int) round($srcWidth / 100 * abs(substr($newWidth, 0, -1)));
+			$percents = true;
 		} else {
 			$newWidth = (int) abs($newWidth);
 		}
 
 		if (is_string($newHeight) && substr($newHeight, -1) === '%') {
-			$newHeight = (int) round($srcHeight / 100 * abs($newHeight));
+			$newHeight = (int) round($srcHeight / 100 * abs(substr($newHeight, 0, -1)));
 			$flags |= empty($percents) ? 0 : self::STRETCH;
 		} else {
 			$newHeight = (int) abs($newHeight);
@@ -382,7 +384,7 @@ class Image
 	 * @param  mixed  y-offset in pixels or percent
 	 * @param  mixed  width in pixels or percent
 	 * @param  mixed  height in pixels or percent
-	 * @return self
+	 * @return static
 	 */
 	public function crop($left, $top, $width, $height)
 	{
@@ -412,16 +414,16 @@ class Image
 	public static function calculateCutout($srcWidth, $srcHeight, $left, $top, $newWidth, $newHeight)
 	{
 		if (is_string($newWidth) && substr($newWidth, -1) === '%') {
-			$newWidth = (int) round($srcWidth / 100 * $newWidth);
+			$newWidth = (int) round($srcWidth / 100 * substr($newWidth, 0, -1));
 		}
 		if (is_string($newHeight) && substr($newHeight, -1) === '%') {
-			$newHeight = (int) round($srcHeight / 100 * $newHeight);
+			$newHeight = (int) round($srcHeight / 100 * substr($newHeight, 0, -1));
 		}
 		if (is_string($left) && substr($left, -1) === '%') {
-			$left = (int) round(($srcWidth - $newWidth) / 100 * $left);
+			$left = (int) round(($srcWidth - $newWidth) / 100 * substr($left, 0, -1));
 		}
 		if (is_string($top) && substr($top, -1) === '%') {
-			$top = (int) round(($srcHeight - $newHeight) / 100 * $top);
+			$top = (int) round(($srcHeight - $newHeight) / 100 * substr($top, 0, -1));
 		}
 		if ($left < 0) {
 			$newWidth += $left;
@@ -439,7 +441,7 @@ class Image
 
 	/**
 	 * Sharpen image.
-	 * @return self
+	 * @return static
 	 */
 	public function sharpen()
 	{
@@ -458,7 +460,7 @@ class Image
 	 * @param  mixed  x-coordinate in pixels or percent
 	 * @param  mixed  y-coordinate in pixels or percent
 	 * @param  int  opacity 0..100
-	 * @return self
+	 * @return static
 	 */
 	public function place(Image $image, $left = 0, $top = 0, $opacity = 100)
 	{
@@ -471,11 +473,11 @@ class Image
 		$height = $image->getHeight();
 
 		if (is_string($left) && substr($left, -1) === '%') {
-			$left = (int) round(($this->getWidth() - $width) / 100 * $left);
+			$left = (int) round(($this->getWidth() - $width) / 100 * substr($left, 0, -1));
 		}
 
 		if (is_string($top) && substr($top, -1) === '%') {
-			$top = (int) round(($this->getHeight() - $height) / 100 * $top);
+			$top = (int) round(($this->getHeight() - $height) / 100 * substr($top, 0, -1));
 		}
 
 		$output = $input = $image->image;
@@ -485,7 +487,7 @@ class Image
 			}
 
 			$output = imagecreatetruecolor($width, $height);
-			imagealphablending($output, FALSE);
+			imagealphablending($output, false);
 			if (!$image->isTrueColor()) {
 				$input = $output;
 				imagefilledrectangle($output, 0, 0, $width, $height, imagecolorallocatealpha($output, 0, 0, 0, 127));
@@ -498,7 +500,7 @@ class Image
 					\imagesetpixel($output, $x, $y, $c);
 				}
 			}
-			imagealphablending($output, TRUE);
+			imagealphablending($output, true);
 		}
 
 		imagecopy(
@@ -512,40 +514,36 @@ class Image
 	/**
 	 * Saves image to the file.
 	 * @param  string  filename
-	 * @param  int  quality 0..100 (for JPEG and PNG)
+	 * @param  int  quality (0..100 for JPEG and WEBP, 0..9 for PNG)
 	 * @param  int  optional image type
-	 * @return bool TRUE on success or FALSE on failure.
+	 * @return bool true on success or false on failure.
 	 */
-	public function save($file = NULL, $quality = NULL, $type = NULL)
+	public function save($file = null, $quality = null, $type = null)
 	{
-		if ($type === NULL) {
-			switch (strtolower($ext = pathinfo($file, PATHINFO_EXTENSION))) {
-				case 'jpg':
-				case 'jpeg':
-					$type = self::JPEG;
-					break;
-				case 'png':
-					$type = self::PNG;
-					break;
-				case 'gif':
-					$type = self::GIF;
-					break;
-				default:
-					throw new Nette\InvalidArgumentException("Unsupported file extension '$ext'.");
+		if ($type === null) {
+			$extensions = array_flip(self::$formats) + ['jpg' => self::JPEG];
+			$ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
+			if (!isset($extensions[$ext])) {
+				throw new Nette\InvalidArgumentException("Unsupported file extension '$ext'.");
 			}
+			$type = $extensions[$ext];
 		}
 
 		switch ($type) {
 			case self::JPEG:
-				$quality = $quality === NULL ? 85 : max(0, min(100, (int) $quality));
+				$quality = $quality === null ? 85 : max(0, min(100, (int) $quality));
 				return imagejpeg($this->image, $file, $quality);
 
 			case self::PNG:
-				$quality = $quality === NULL ? 9 : max(0, min(9, (int) $quality));
+				$quality = $quality === null ? 9 : max(0, min(9, (int) $quality));
 				return imagepng($this->image, $file, $quality);
 
 			case self::GIF:
 				return imagegif($this->image, $file);
+
+			case self::WEBP:
+				$quality = $quality === null ? 80 : max(0, min(100, (int) $quality));
+				return imagewebp($this->image, $file, $quality);
 
 			default:
 				throw new Nette\InvalidArgumentException("Unsupported image type '$type'.");
@@ -556,13 +554,13 @@ class Image
 	/**
 	 * Outputs image to string.
 	 * @param  int  image type
-	 * @param  int  quality 0..100 (for JPEG and PNG)
+	 * @param  int  quality (0..100 for JPEG and WEBP, 0..9 for PNG)
 	 * @return string
 	 */
-	public function toString($type = self::JPEG, $quality = NULL)
+	public function toString($type = self::JPEG, $quality = null)
 	{
 		ob_start(function () {});
-		$this->save(NULL, $quality, $type);
+		$this->save(null, $quality, $type);
 		return ob_get_clean();
 	}
 
@@ -575,14 +573,14 @@ class Image
 	{
 		try {
 			return $this->toString();
-		} catch (\Throwable $e) {
 		} catch (\Exception $e) {
+		} catch (\Throwable $e) {
 		}
 		if (isset($e)) {
 			if (func_num_args()) {
 				throw $e;
 			}
-			trigger_error("Exception in " . __METHOD__ . "(): {$e->getMessage()} in {$e->getFile()}:{$e->getLine()}", E_USER_ERROR);
+			trigger_error('Exception in ' . __METHOD__ . "(): {$e->getMessage()} in {$e->getFile()}:{$e->getLine()}", E_USER_ERROR);
 		}
 	}
 
@@ -590,16 +588,16 @@ class Image
 	/**
 	 * Outputs image to browser.
 	 * @param  int  image type
-	 * @param  int  quality 0..100 (for JPEG and PNG)
-	 * @return bool TRUE on success or FALSE on failure.
+	 * @param  int  quality (0..100 for JPEG and WEBP, 0..9 for PNG)
+	 * @return bool true on success or false on failure.
 	 */
-	public function send($type = self::JPEG, $quality = NULL)
+	public function send($type = self::JPEG, $quality = null)
 	{
-		if (!in_array($type, [self::JPEG, self::PNG, self::GIF], TRUE)) {
+		if (!isset(self::$formats[$type])) {
 			throw new Nette\InvalidArgumentException("Unsupported image type '$type'.");
 		}
-		header('Content-Type: ' . image_type_to_mime_type($type));
-		return $this->save(NULL, $quality, $type);
+		header('Content-Type: image/' . self::$formats[$type]);
+		return $this->save(null, $quality, $type);
 	}
 
 
@@ -644,4 +642,12 @@ class Image
 		$this->setImageResource(imagecreatefromstring(ob_get_clean()));
 	}
 
+
+	/**
+	 * Prevents serialization.
+	 */
+	public function __sleep()
+	{
+		throw new Nette\NotSupportedException('You cannot serialize or unserialize ' . self::class . ' instances.');
+	}
 }

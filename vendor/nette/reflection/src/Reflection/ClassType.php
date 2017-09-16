@@ -47,7 +47,7 @@ class ClassType extends \ReflectionClass
 
 	/**
 	 * @param  string|object
-	 * @return self
+	 * @return static
 	 */
 	public static function from($class)
 	{
@@ -67,7 +67,7 @@ class ClassType extends \ReflectionClass
 	 */
 	public function is($type)
 	{
-		return is_a($this->getName(), $type, TRUE);
+		return is_a($this->getName(), $type, true);
 	}
 
 
@@ -75,25 +75,25 @@ class ClassType extends \ReflectionClass
 
 
 	/**
-	 * @return Method|NULL
+	 * @return Method|null
 	 */
 	public function getConstructor()
 	{
-		return ($ref = parent::getConstructor()) ? Method::from($this->getName(), $ref->getName()) : NULL;
+		return ($ref = parent::getConstructor()) ? Method::from($this->getName(), $ref->getName()) : null;
 	}
 
 
 	/**
-	 * @return Extension|NULL
+	 * @return Extension|null
 	 */
 	public function getExtension()
 	{
-		return ($name = $this->getExtensionName()) ? new Extension($name) : NULL;
+		return ($name = $this->getExtensionName()) ? new Extension($name) : null;
 	}
 
 
 	/**
-	 * @return self[]
+	 * @return static[]
 	 */
 	public function getInterfaces()
 	{
@@ -127,11 +127,11 @@ class ClassType extends \ReflectionClass
 
 
 	/**
-	 * @return self|NULL
+	 * @return static|null
 	 */
 	public function getParentClass()
 	{
-		return ($ref = parent::getParentClass()) ? new static($ref->getName()) : NULL;
+		return ($ref = parent::getParentClass()) ? new static($ref->getName()) : null;
 	}
 
 
@@ -179,7 +179,7 @@ class ClassType extends \ReflectionClass
 	public function getAnnotation($name)
 	{
 		$res = AnnotationsParser::getAll($this);
-		return isset($res[$name]) ? end($res[$name]) : NULL;
+		return isset($res[$name]) ? end($res[$name]) : null;
 	}
 
 
@@ -201,5 +201,4 @@ class ClassType extends \ReflectionClass
 	{
 		return $this->getAnnotation('description');
 	}
-
 }

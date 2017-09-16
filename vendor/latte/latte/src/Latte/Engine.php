@@ -15,7 +15,7 @@ class Engine
 {
 	use Strict;
 
-	const VERSION = '2.4.1';
+	const VERSION = '2.4.6';
 
 	/** Content types */
 	const CONTENT_HTML = 'html',
@@ -51,8 +51,7 @@ class Engine
 	private $tempDirectory;
 
 	/** @var bool */
-	private $autoRefresh = TRUE;
-
+	private $autoRefresh = true;
 
 
 	public function __construct()
@@ -65,7 +64,7 @@ class Engine
 	 * Renders template to output.
 	 * @return void
 	 */
-	public function render($name, array $params = [], $block = NULL)
+	public function render($name, array $params = [], $block = null)
 	{
 		$this->createTemplate($name, $params + ['_renderblock' => $block])
 			->render();
@@ -76,7 +75,7 @@ class Engine
 	 * Renders template to string.
 	 * @return string
 	 */
-	public function renderToString($name, array $params = [], $block = NULL)
+	public function renderToString($name, array $params = [], $block = null)
 	{
 		$template = $this->createTemplate($name, $params + ['_renderblock' => $block]);
 		return $template->capture([$template, 'render']);
@@ -90,7 +89,7 @@ class Engine
 	public function createTemplate($name, array $params = [])
 	{
 		$class = $this->getTemplateClass($name);
-		if (!class_exists($class, FALSE)) {
+		if (!class_exists($class, false)) {
 			$this->loadTemplate($name);
 		}
 		return new $class($this, $params, $this->filters, $this->providers, $name);
@@ -119,7 +118,7 @@ class Engine
 
 		} catch (\Exception $e) {
 			if (!$e instanceof CompileException) {
-				$e = new CompileException("Thrown exception '{$e->getMessage()}'", NULL, $e);
+				$e = new CompileException("Thrown exception '{$e->getMessage()}'", 0, $e);
 			}
 			$line = isset($tokens) ? $this->getCompiler()->getLine() : $this->getParser()->getLine();
 			throw $e->setSource($source, $line, $name);
@@ -146,7 +145,7 @@ class Engine
 		}
 
 		$class = $this->getTemplateClass($name);
-		if (!class_exists($class, FALSE)) {
+		if (!class_exists($class, false)) {
 			$this->loadTemplate($name);
 		}
 	}
@@ -159,7 +158,7 @@ class Engine
 	{
 		if (!$this->tempDirectory) {
 			$code = $this->compile($name);
-			if (@eval('?>' . $code) === FALSE) { // @ is escalated to exception
+			if (@eval('?>' . $code) === false) { // @ is escalated to exception
 				throw (new CompileException('Error in template: ' . error_get_last()['message']))
 					->setSource($code, error_get_last()['line'], "$name (compiled)");
 			}
@@ -168,17 +167,19 @@ class Engine
 
 		$file = $this->getCacheFile($name);
 
-		if (!$this->isExpired($file, $name) && (@include $file) !== FALSE) { // @ - file may not exist
+		if (!$this->isExpired($file, $name) && (@include $file) !== false) { // @ - file may not exist
 			return;
 		}
 
-		if (!is_dir($this->tempDirectory)) {
-			@mkdir($this->tempDirectory); // @ - directory may already exist
+		if (!is_dir($this->tempDirectory) && !@mkdir($this->tempDirectory) && !is_dir($this->tempDirectory)) { // @ - dir may already exist
+			throw new \RuntimeException("Unable to create directory '$this->tempDirectory'. " . error_get_last()['message']);
 		}
 
-		$handle = fopen("$file.lock", 'c+');
-		if (!$handle || !flock($handle, LOCK_EX)) {
-			throw new \RuntimeException("Unable to acquire exclusive lock '$file.lock'.");
+		$handle = @fopen("$file.lock", 'c+'); // @ is escalated to exception
+		if (!$handle) {
+			throw new \RuntimeException("Unable to create file '$file.lock'. " . error_get_last()['message']);
+		} elseif (!@flock($handle, LOCK_EX)) { // @ is escalated to exception
+			throw new \RuntimeException("Unable to acquire exclusive lock on '$file.lock'. " . error_get_last()['message']);
 		}
 
 		if (!is_file($file) || $this->isExpired($file, $name)) {
@@ -187,11 +188,11 @@ class Engine
 				@unlink("$file.tmp"); // @ - file may not exist
 				throw new \RuntimeException("Unable to create '$file'.");
 			} elseif (function_exists('opcache_invalidate')) {
-				@opcache_invalidate($file, TRUE); // @ can be restricted
+				@opcache_invalidate($file, true); // @ can be restricted
 			}
 		}
 
-		if ((include $file) === FALSE) {
+		if ((include $file) === false) {
 			throw new \RuntimeException("Unable to load '$file'.");
 		}
 
@@ -237,9 +238,9 @@ class Engine
 
 	/**
 	 * Registers run-time filter.
-	 * @param  string|NULL
+	 * @param  string|null
 	 * @param  callable
-	 * @return self
+	 * @return static
 	 */
 	public function addFilter($name, $callback)
 	{
@@ -272,7 +273,7 @@ class Engine
 
 	/**
 	 * Adds new macro.
-	 * @return self
+	 * @return static
 	 */
 	public function addMacro($name, IMacro $macro)
 	{
@@ -283,7 +284,7 @@ class Engine
 
 	/**
 	 * Adds new provider.
-	 * @return self
+	 * @return static
 	 */
 	public function addProvider($name, $value)
 	{
@@ -303,7 +304,7 @@ class Engine
 
 
 	/**
-	 * @return self
+	 * @return static
 	 */
 	public function setContentType($type)
 	{
@@ -314,7 +315,7 @@ class Engine
 
 	/**
 	 * Sets path to temporary directory.
-	 * @return self
+	 * @return static
 	 */
 	public function setTempDirectory($path)
 	{
@@ -325,9 +326,9 @@ class Engine
 
 	/**
 	 * Sets auto-refresh mode.
-	 * @return self
+	 * @return static
 	 */
-	public function setAutoRefresh($on = TRUE)
+	public function setAutoRefresh($on = true)
 	{
 		$this->autoRefresh = (bool) $on;
 		return $this;
@@ -361,7 +362,7 @@ class Engine
 
 
 	/**
-	 * @return self
+	 * @return static
 	 */
 	public function setLoader(ILoader $loader)
 	{
@@ -380,5 +381,4 @@ class Engine
 		}
 		return $this->loader;
 	}
-
 }

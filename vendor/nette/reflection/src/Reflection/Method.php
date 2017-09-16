@@ -52,7 +52,7 @@ class Method extends \ReflectionMethod
 	/**
 	 * @param  string|object
 	 * @param  string
-	 * @return self
+	 * @return static
 	 */
 	public static function from($class, $method)
 	{
@@ -88,7 +88,7 @@ class Method extends \ReflectionMethod
 
 
 	/**
-	 * @return self
+	 * @return static
 	 */
 	public function getPrototype()
 	{
@@ -102,7 +102,7 @@ class Method extends \ReflectionMethod
 	 */
 	public function getExtension()
 	{
-		return ($name = $this->getExtensionName()) ? new Extension($name) : NULL;
+		return ($name = $this->getExtensionName()) ? new Extension($name) : null;
 	}
 
 
@@ -142,7 +142,7 @@ class Method extends \ReflectionMethod
 	public function getAnnotation($name)
 	{
 		$res = AnnotationsParser::getAll($this);
-		return isset($res[$name]) ? end($res[$name]) : NULL;
+		return isset($res[$name]) ? end($res[$name]) : null;
 	}
 
 
@@ -164,5 +164,4 @@ class Method extends \ReflectionMethod
 	{
 		return $this->getAnnotation('description');
 	}
-
 }

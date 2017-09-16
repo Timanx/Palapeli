@@ -29,7 +29,7 @@ class AnnotationsParser
 	public static $useReflection;
 
 	/** @var bool */
-	public static $autoRefresh = TRUE;
+	public static $autoRefresh = true;
 
 	/** @var array */
 	public static $inherited = ['description', 'param', 'return'];
@@ -62,7 +62,7 @@ class AnnotationsParser
 			$file = $r->getFileName();
 
 		} elseif ($r instanceof \ReflectionFunction) {
-			$type = NULL;
+			$type = null;
 			$member = $r->getName();
 			$file = $r->getFileName();
 
@@ -70,6 +70,10 @@ class AnnotationsParser
 			$type = $r->getDeclaringClass()->getName();
 			$member = '$' . $r->getName();
 			$file = $r->getDeclaringClass()->getFileName();
+		}
+
+		if (self::$useReflection === null) { // detects whether is reflection available
+			self::$useReflection = (bool) ClassType::from(__CLASS__)->getDocComment();
 		}
 
 		if (!self::$useReflection) { // auto-expire cache
@@ -83,17 +87,13 @@ class AnnotationsParser
 			return self::$cache[$type][$member];
 		}
 
-		if (self::$useReflection === NULL) { // detects whether is reflection available
-			self::$useReflection = (bool) ClassType::from(__CLASS__)->getDocComment();
-		}
-
 		if (self::$useReflection) {
 			$annotations = self::parseComment($r->getDocComment());
 
 		} else {
 			$outerCache = self::getCache();
 
-			if (self::$cache === NULL) {
+			if (self::$cache === null) {
 				self::$cache = (array) $outerCache->load('list');
 				self::$timestamps = isset(self::$cache['*']) ? self::$cache['*'] : [];
 			}
@@ -155,13 +155,13 @@ class AnnotationsParser
 		}
 
 		$filename = $reflector->getFileName();
-		$parsed = static::getCache()->load($filename, function (& $dp) use ($filename) {
+		$parsed = static::getCache()->load($filename, function (&$dp) use ($filename) {
 			if (self::$autoRefresh) {
 				$dp[Nette\Caching\Cache::FILES] = $filename;
 			}
 			return self::parsePhp(file_get_contents($filename));
 		});
-		$uses = array_change_key_case((array) $tmp = & $parsed[$reflector->getName()]['use']);
+		$uses = array_change_key_case((array) $tmp = &$parsed[$reflector->getName()]['use']);
 		$parts = explode('\\', $name, 2);
 		$parts[0] = strtolower($parts[0]);
 		if (isset($uses[$parts[0]])) {
@@ -184,11 +184,11 @@ class AnnotationsParser
 	 */
 	private static function parseComment($comment)
 	{
-		static $tokens = ['true' => TRUE, 'false' => FALSE, 'null' => NULL, '' => TRUE];
+		static $tokens = ['true' => true, 'false' => false, 'null' => null, '' => true];
 
 		$res = [];
 		$comment = preg_replace('#^\s*\*\s?#ms', '', trim($comment, '/*'));
-		$parts = preg_split('#^\s*(?=@'.self::RE_IDENTIFIER.')#m', $comment, 2);
+		$parts = preg_split('#^\s*(?=@' . self::RE_IDENTIFIER . ')#m', $comment, 2);
 
 		$description = trim($parts[0]);
 		if ($description !== '') {
@@ -198,9 +198,9 @@ class AnnotationsParser
 		$matches = Strings::matchAll(
 			isset($parts[1]) ? $parts[1] : '',
 			'~
-				(?<=\s|^)@('.self::RE_IDENTIFIER.')[ \t]*      ##  annotation
+				(?<=\s|^)@(' . self::RE_IDENTIFIER . ')[ \t]*      ##  annotation
 				(
-					\((?>'.self::RE_STRING.'|[^\'")@]+)+\)|  ##  (value)
+					\((?>' . self::RE_STRING . '|[^\'")@]+)+\)|  ##  (value)
 					[^(@\r\n][^@\r\n]*|)                     ##  value
 			~xi'
 		);
@@ -211,7 +211,7 @@ class AnnotationsParser
 			if (substr($value, 0, 1) === '(') {
 				$items = [];
 				$key = '';
-				$val = TRUE;
+				$val = true;
 				$value[0] = ',';
 				while ($m = Strings::match(
 					$value,
@@ -267,22 +267,23 @@ class AnnotationsParser
 	 */
 	public static function parsePhp($code)
 	{
-		if (Strings::match($code, '#//nette'.'loader=(\S*)#')) {
+		if (Strings::match($code, '#//nette' . 'loader=(\S*)#')) {
 			return;
 		}
 
 		$tokens = @token_get_all($code);
-		$namespace = $class = $classLevel = $level = $docComment = NULL;
+		$namespace = $class = $classLevel = $level = $docComment = null;
 		$res = $uses = [];
 
-		while (list(, $token) = each($tokens)) {
+		while ($token = current($tokens)) {
+			next($tokens);
 			switch (is_array($token) ? $token[0] : $token) {
 				case T_DOC_COMMENT:
 					$docComment = $token[1];
 					break;
 
 				case T_NAMESPACE:
-					$namespace = self::fetch($tokens, [T_STRING, T_NS_SEPARATOR]) . '\\';
+					$namespace = ltrim(self::fetch($tokens, [T_STRING, T_NS_SEPARATOR]) . '\\', '\\');
 					$uses = [];
 					break;
 
@@ -320,8 +321,23 @@ class AnnotationsParser
 
 				case T_USE:
 					while (!$class && ($name = self::fetch($tokens, [T_STRING, T_NS_SEPARATOR]))) {
-						if (self::fetch($tokens, T_AS)) {
-							$uses[self::fetch($tokens, T_STRING)] = ltrim($name, '\\');
+						$name = ltrim($name, '\\');
+						if (self::fetch($tokens, '{')) {
+							while ($suffix = self::fetch($tokens, [T_STRING, T_NS_SEPARATOR])) {
+								if (self::fetch($tokens, T_AS)) {
+									$uses[self::fetch($tokens, T_STRING)] = $name . $suffix;
+								} else {
+									$tmp = explode('\\', $suffix);
+									$uses[end($tmp)] = $name . $suffix;
+								}
+								if (!self::fetch($tokens, ',')) {
+									break;
+								}
+							}
+
+						} elseif (self::fetch($tokens, T_AS)) {
+							$uses[self::fetch($tokens, T_STRING)] = $name;
+
 						} else {
 							$tmp = explode('\\', $name);
 							$uses[end($tmp)] = $name;
@@ -340,12 +356,12 @@ class AnnotationsParser
 
 				case '}':
 					if ($level === $classLevel) {
-						$class = $classLevel = NULL;
+						$class = $classLevel = null;
 					}
 					$level--;
 					// break omitted
 				case ';':
-					$docComment = NULL;
+					$docComment = null;
 			}
 		}
 
@@ -353,14 +369,14 @@ class AnnotationsParser
 	}
 
 
-	private static function fetch(& $tokens, $take)
+	private static function fetch(&$tokens, $take)
 	{
-		$res = NULL;
+		$res = null;
 		while ($token = current($tokens)) {
 			list($token, $s) = is_array($token) ? $token : [$token, $token];
-			if (in_array($token, (array) $take, TRUE)) {
+			if (in_array($token, (array) $take, true)) {
 				$res .= $s;
-			} elseif (!in_array($token, [T_DOC_COMMENT, T_WHITESPACE, T_COMMENT], TRUE)) {
+			} elseif (!in_array($token, [T_DOC_COMMENT, T_WHITESPACE, T_COMMENT], true)) {
 				break;
 			}
 			next($tokens);
@@ -400,5 +416,4 @@ class AnnotationsParser
 	{
 		return new Nette\Caching\Cache(static::getCacheStorage(), 'Nette.Reflection.Annotations');
 	}
-
 }

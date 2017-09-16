@@ -39,12 +39,12 @@ class DateTime extends \DateTime implements \JsonSerializable
 	/**
 	 * DateTime object factory.
 	 * @param  string|int|\DateTimeInterface
-	 * @return self
+	 * @return static
 	 */
 	public static function from($time)
 	{
 		if ($time instanceof \DateTimeInterface) {
-			return new static($time->format('Y-m-d H:i:s'), $time->getTimezone());
+			return new static($time->format('Y-m-d H:i:s.u'), $time->getTimezone());
 
 		} elseif (is_numeric($time)) {
 			if ($time <= self::YEAR) {
@@ -52,9 +52,23 @@ class DateTime extends \DateTime implements \JsonSerializable
 			}
 			return (new static('@' . $time))->setTimeZone(new \DateTimeZone(date_default_timezone_get()));
 
-		} else { // textual or NULL
+		} else { // textual or null
 			return new static($time);
 		}
+	}
+
+
+	/**
+	 * Creates DateTime object.
+	 * @return static
+	 */
+	public static function fromParts($year, $month, $day, $hour = 0, $minute = 0, $second = 0)
+	{
+		$s = sprintf('%04d-%02d-%02d %02d:%02d:%02.5f', $year, $month, $day, $hour, $minute, $second);
+		if (!checkdate($month, $day, $year) || $hour < 0 || $hour > 23 || $minute < 0 || $minute > 59 || $second < 0 || $second >= 60) {
+			throw new Nette\InvalidArgumentException("Invalid date '$s'");
+		}
+		return new static($s);
 	}
 
 
@@ -69,7 +83,7 @@ class DateTime extends \DateTime implements \JsonSerializable
 
 	/**
 	 * @param  string
-	 * @return self
+	 * @return static
 	 */
 	public function modifyClone($modify = '')
 	{
@@ -80,7 +94,7 @@ class DateTime extends \DateTime implements \JsonSerializable
 
 	/**
 	 * @param  int
-	 * @return self
+	 * @return static
 	 */
 	public function setTimestamp($timestamp)
 	{
@@ -104,12 +118,12 @@ class DateTime extends \DateTime implements \JsonSerializable
 	 * Returns new DateTime object formatted according to the specified format.
 	 * @param string The format the $time parameter should be in
 	 * @param string String representing the time
-	 * @param string|\DateTimeZone desired timezone (default timezone is used if NULL is passed)
-	 * @return self|FALSE
+	 * @param string|\DateTimeZone desired timezone (default timezone is used if null is passed)
+	 * @return static|false
 	 */
-	public static function createFromFormat($format, $time, $timezone = NULL)
+	public static function createFromFormat($format, $time, $timezone = null)
 	{
-		if ($timezone === NULL) {
+		if ($timezone === null) {
 			$timezone = new \DateTimeZone(date_default_timezone_get());
 
 		} elseif (is_string($timezone)) {
@@ -120,7 +134,7 @@ class DateTime extends \DateTime implements \JsonSerializable
 		}
 
 		$date = parent::createFromFormat($format, $time, $timezone);
-		return $date ? static::from($date) : FALSE;
+		return $date ? static::from($date) : false;
 	}
 
 
@@ -132,5 +146,4 @@ class DateTime extends \DateTime implements \JsonSerializable
 	{
 		return $this->format('c');
 	}
-
 }

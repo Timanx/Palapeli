@@ -31,7 +31,7 @@ class ControlGroup
 
 
 	/**
-	 * @return self
+	 * @return static
 	 */
 	public function add(...$items)
 	{
@@ -56,6 +56,28 @@ class ControlGroup
 
 
 	/**
+	 * @return void
+	 */
+	public function remove(IControl $control)
+	{
+		$this->controls->detach($control);
+	}
+
+
+	/**
+	 * @return void
+	 */
+	public function removeOrphans()
+	{
+		foreach ($this->controls as $control) {
+			if (!$control->getForm(false)) {
+				$this->controls->detach($control);
+			}
+		}
+	}
+
+
+	/**
 	 * @return IControl[]
 	 */
 	public function getControls()
@@ -67,19 +89,19 @@ class ControlGroup
 	/**
 	 * Sets user-specific option.
 	 * Options recognized by DefaultFormRenderer
-	 * - 'label' - textual or Html object label
+	 * - 'label' - textual or IHtmlString object label
 	 * - 'visual' - indicates visual group
 	 * - 'container' - container as Html object
-	 * - 'description' - textual or Html object description
+	 * - 'description' - textual or IHtmlString object description
 	 * - 'embedNext' - describes how render next group
 	 *
-	 * @param  string key
-	 * @param  mixed  value
-	 * @return self
+	 * @param  string
+	 * @param  mixed
+	 * @return static
 	 */
 	public function setOption($key, $value)
 	{
-		if ($value === NULL) {
+		if ($value === null) {
 			unset($this->options[$key]);
 
 		} else {
@@ -91,11 +113,11 @@ class ControlGroup
 
 	/**
 	 * Returns user-specific option.
-	 * @param  string key
-	 * @param  mixed  default value
+	 * @param  string
+	 * @param  mixed
 	 * @return mixed
 	 */
-	public function getOption($key, $default = NULL)
+	public function getOption($key, $default = null)
 	{
 		return isset($this->options[$key]) ? $this->options[$key] : $default;
 	}
@@ -109,5 +131,4 @@ class ControlGroup
 	{
 		return $this->options;
 	}
-
 }

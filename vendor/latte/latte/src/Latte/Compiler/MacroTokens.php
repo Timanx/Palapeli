@@ -23,14 +23,17 @@ class MacroTokens extends TokenIterator
 		T_KEYWORD = 8,
 		T_CHAR = 9;
 
-	/** @var Tokenizer */
-	private static $tokenizer;
-
 	/** @var int */
 	public $depth = 0;
 
+	/** @var Tokenizer */
+	private static $tokenizer;
 
-	public function __construct($input = NULL)
+
+	/**
+	 * @param  string|array
+	 */
+	public function __construct($input = [])
 	{
 		parent::__construct(is_array($input) ? $input : $this->parse($input));
 		$this->ignored = [self::T_COMMENT, self::T_WHITESPACE];
@@ -47,7 +50,7 @@ class MacroTokens extends TokenIterator
 			self::T_CAST => '\((?:expand|string|array|int|integer|float|bool|boolean|object)\)', // type casting
 			self::T_VARIABLE => '\$[\w\pL_]+',
 			self::T_NUMBER => '[+-]?[0-9]+(?:\.[0-9]+)?(?:e[0-9]+)?',
-			self::T_SYMBOL => '[\w\pL_]+(?:-[\w\pL_]+)*',
+			self::T_SYMBOL => '[\w\pL_]+(?:-+[\w\pL_]+)*',
 			self::T_CHAR => '::|=>|->|\+\+|--|<<|>>|<=>|<=|>=|===|!==|==|!=|<>|&&|\|\||\?\?|\?>|\*\*|\.\.\.|[^"\']', // =>, any char except quotes
 		], 'u');
 		return self::$tokenizer->tokenize($s);
@@ -56,14 +59,15 @@ class MacroTokens extends TokenIterator
 
 	/**
 	 * Appends simple token or string (will be parsed).
-	 * @return self
+	 * @return static
 	 */
-	public function append($val, $position = NULL)
+	public function append($val, $position = null)
 	{
-		if ($val != NULL) { // intentionally @
+		if ($val != null) { // intentionally @
 			array_splice(
 				$this->tokens,
-				$position === NULL ? count($this->tokens) : $position, 0,
+				$position === null ? count($this->tokens) : $position,
+				0,
 				is_array($val) ? [$val] : $this->parse($val)
 			);
 		}
@@ -73,11 +77,11 @@ class MacroTokens extends TokenIterator
 
 	/**
 	 * Prepends simple token or string (will be parsed).
-	 * @return self
+	 * @return static
 	 */
 	public function prepend($val)
 	{
-		if ($val != NULL) { // intentionally @
+		if ($val != null) { // intentionally @
 			array_splice($this->tokens, 0, 0, is_array($val) ? [$val] : $this->parse($val));
 		}
 		return $this;
@@ -86,19 +90,17 @@ class MacroTokens extends TokenIterator
 
 	/**
 	 * Reads single token (optionally delimited by comma) from string.
-	 * @param  string
 	 * @return string
 	 */
 	public function fetchWord()
 	{
 		$words = $this->fetchWords();
-		return $words ? implode(':', $words) : FALSE;
+		return $words ? implode(':', $words) : false;
 	}
 
 
 	/**
 	 * Reads single tokens delimited by colon from string.
-	 * @param  string
 	 * @return array
 	 */
 	public function fetchWords()
@@ -108,8 +110,7 @@ class MacroTokens extends TokenIterator
 		} while ($this->nextToken(':'));
 
 		if (count($words) === 1 && ($space = $this->nextValue(self::T_WHITESPACE))
-			&& (($dot = $this->nextValue('.')) || $this->isPrev('.')))
-		{
+			&& (($dot = $this->nextValue('.')) || $this->isPrev('.'))) {
 			$words[0] .= $space . $dot . $this->joinUntil(',');
 		}
 		$this->nextToken(',');
@@ -134,5 +135,4 @@ class MacroTokens extends TokenIterator
 			$this->depth--;
 		}
 	}
-
 }

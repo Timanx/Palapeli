@@ -70,7 +70,7 @@ class Url implements \JsonSerializable
 	/** @var string */
 	private $host = '';
 
-	/** @var int|NULL */
+	/** @var int|null */
 	private $port;
 
 	/** @var string */
@@ -87,16 +87,16 @@ class Url implements \JsonSerializable
 	 * @param  string|self
 	 * @throws Nette\InvalidArgumentException if URL is malformed
 	 */
-	public function __construct($url = NULL)
+	public function __construct($url = null)
 	{
 		if (is_string($url)) {
 			$p = @parse_url($url); // @ - is escalated to exception
-			if ($p === FALSE) {
+			if ($p === false) {
 				throw new Nette\InvalidArgumentException("Malformed or unsupported URI '$url'.");
 			}
 
 			$this->scheme = isset($p['scheme']) ? $p['scheme'] : '';
-			$this->port = isset($p['port']) ? $p['port'] : NULL;
+			$this->port = isset($p['port']) ? $p['port'] : null;
 			$this->host = isset($p['host']) ? rawurldecode($p['host']) : '';
 			$this->user = isset($p['user']) ? rawurldecode($p['user']) : '';
 			$this->password = isset($p['pass']) ? rawurldecode($p['pass']) : '';
@@ -115,7 +115,7 @@ class Url implements \JsonSerializable
 	/**
 	 * Sets the scheme part of URI.
 	 * @param  string
-	 * @return self
+	 * @return static
 	 */
 	public function setScheme($value)
 	{
@@ -137,7 +137,7 @@ class Url implements \JsonSerializable
 	/**
 	 * Sets the user name part of URI.
 	 * @param  string
-	 * @return self
+	 * @return static
 	 */
 	public function setUser($value)
 	{
@@ -159,7 +159,7 @@ class Url implements \JsonSerializable
 	/**
 	 * Sets the password part of URI.
 	 * @param  string
-	 * @return self
+	 * @return static
 	 */
 	public function setPassword($value)
 	{
@@ -181,7 +181,7 @@ class Url implements \JsonSerializable
 	/**
 	 * Sets the host part of URI.
 	 * @param  string
-	 * @return self
+	 * @return static
 	 */
 	public function setHost($value)
 	{
@@ -202,9 +202,21 @@ class Url implements \JsonSerializable
 
 
 	/**
+	 * Returns the part of domain.
+	 * @return string
+	 */
+	public function getDomain($level = 2)
+	{
+		$parts = ip2long($this->host) ? [$this->host] : explode('.', $this->host);
+		$parts = $level >= 0 ? array_slice($parts, -$level) : array_slice($parts, 0, $level);
+		return implode('.', $parts);
+	}
+
+
+	/**
 	 * Sets the port part of URI.
 	 * @param  int
-	 * @return self
+	 * @return static
 	 */
 	public function setPort($value)
 	{
@@ -215,20 +227,20 @@ class Url implements \JsonSerializable
 
 	/**
 	 * Returns the port part of URI.
-	 * @return int|NULL
+	 * @return int|null
 	 */
 	public function getPort()
 	{
 		return $this->port
 			? $this->port
-			: (isset(self::$defaultPorts[$this->scheme]) ? self::$defaultPorts[$this->scheme] : NULL);
+			: (isset(self::$defaultPorts[$this->scheme]) ? self::$defaultPorts[$this->scheme] : null);
 	}
 
 
 	/**
 	 * Sets the path part of URI.
 	 * @param  string
-	 * @return self
+	 * @return static
 	 */
 	public function setPath($value)
 	{
@@ -253,7 +265,7 @@ class Url implements \JsonSerializable
 	/**
 	 * Sets the query part of URI.
 	 * @param  string|array
-	 * @return self
+	 * @return static
 	 */
 	public function setQuery($value)
 	{
@@ -265,7 +277,7 @@ class Url implements \JsonSerializable
 	/**
 	 * Appends the query part of URI.
 	 * @param  string|array
-	 * @return self
+	 * @return static
 	 */
 	public function appendQuery($value)
 	{
@@ -300,7 +312,7 @@ class Url implements \JsonSerializable
 	 * @param mixed
 	 * @return mixed
 	 */
-	public function getQueryParameter($name, $default = NULL)
+	public function getQueryParameter($name, $default = null)
 	{
 		return isset($this->query[$name]) ? $this->query[$name] : $default;
 	}
@@ -308,8 +320,8 @@ class Url implements \JsonSerializable
 
 	/**
 	 * @param string
-	 * @param mixed NULL unsets the parameter
-	 * @return self
+	 * @param mixed null unsets the parameter
+	 * @return static
 	 */
 	public function setQueryParameter($name, $value)
 	{
@@ -321,7 +333,7 @@ class Url implements \JsonSerializable
 	/**
 	 * Sets the fragment part of URI.
 	 * @param  string
-	 * @return self
+	 * @return static
 	 */
 	public function setFragment($value)
 	{
@@ -376,7 +388,8 @@ class Url implements \JsonSerializable
 	 */
 	public function getHostUrl()
 	{
-		return ($this->scheme ? $this->scheme . ':' : '') . '//' . $this->getAuthority();
+		return ($this->scheme ? $this->scheme . ':' : '')
+			. (($authority = $this->getAuthority()) || $this->scheme ? '//' . $authority : '');
 	}
 
 
@@ -387,7 +400,7 @@ class Url implements \JsonSerializable
 	public function getBasePath()
 	{
 		$pos = strrpos($this->path, '/');
-		return $pos === FALSE ? '' : substr($this->path, 0, $pos + 1);
+		return $pos === false ? '' : substr($this->path, 0, $pos + 1);
 	}
 
 
@@ -423,7 +436,7 @@ class Url implements \JsonSerializable
 		ksort($query);
 		$query2 = $this->query;
 		ksort($query2);
-		$http = in_array($this->scheme, ['http', 'https'], TRUE);
+		$http = in_array($this->scheme, ['http', 'https'], true);
 		return $url->scheme === $this->scheme
 			&& !strcasecmp($url->host, $this->host)
 			&& $url->getPort() === $this->getPort()
@@ -437,7 +450,7 @@ class Url implements \JsonSerializable
 
 	/**
 	 * Transforms URL to canonical form.
-	 * @return self
+	 * @return static
 	 */
 	public function canonicalize()
 	{
@@ -500,5 +513,4 @@ class Url implements \JsonSerializable
 		parse_str($s, $res);
 		return $res;
 	}
-
 }
