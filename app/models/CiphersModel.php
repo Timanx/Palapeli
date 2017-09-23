@@ -5,7 +5,8 @@ namespace App\Models;
 use App\Presenters\BasePresenter;
 use Nette;
 
-class CiphersModel {
+class CiphersModel
+{
 
     /** @var Nette\Database\Context */
     private $database;
@@ -74,5 +75,27 @@ class CiphersModel {
                 SET pdf_file_id = ?
                 WHERE year = ? AND checkpoint_number = ?
             ', $pdfId, $this->year, $this->checkpoint);
+    }
+
+    public function getDeadSolution($checkpointNumber = null)
+    {
+        return $this->database->query('
+            SELECT COALESCE(dead_solution, solution)
+            FROM ciphers
+            WHERE checkpoint_number = ? AND year = ?
+        ',
+            $checkpointNumber ?? $this->checkpoint, $this->year
+        )->fetchField('dead_solution');
+    }
+
+    public function checkCode($code, $checkpointNumber)
+    {
+        $requiredCode = $this->database->query('
+            SELECT code
+            FROM ciphers
+            WHERE year = ? AND checkpoint_number = ?
+        ', $this->year, $checkpointNumber)->fetchField('code');
+
+        return mb_strtoupper($code) === mb_strtoupper($requiredCode);
     }
 }

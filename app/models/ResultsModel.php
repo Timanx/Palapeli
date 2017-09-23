@@ -272,9 +272,43 @@ class ResultsModel {
             ORDER BY results.entry_time, LTRIM(name) COLLATE utf8_czech_ci ASC
         ', $checkpointNumber, $this->year, ($checkpointNumber == 0 ? 0 : $checkpointNumber - 1), $this->year)->fetchAll();
         }
+    }
 
+    public function getLastCheckpointData($teamId)
+    {
+        return $this->database->query('
+            SELECT *, TIME_FORMAT(results.exit_time, \'%H:%i\') AS exit_time_fmt 
+            FROM results
+            WHERE 
+              team_id = ? AND 
+              year = ? AND 
+              entry_time IS NOT NULL
+            ORDER BY checkpoint_number DESC
+        ', $teamId, $this->year
+        )->fetch();
+    }
 
+    public function getLastCheckpointNumber($teamId)
+    {
+        return $this->database->query('
+            SELECT checkpoint_number 
+            FROM results
+            WHERE 
+              team_id = ? AND 
+              year = ? AND 
+              entry_time IS NOT NULL
+            ORDER BY checkpoint_number DESC
+        ', $teamId, $this->year
+        )->fetchField('checkpoint_number');
+    }
 
-
+    public function getFirstEmptyCheckpoint($teamId)
+    {
+        return $this->database->query('
+           SELECT COALESCE(MAX(checkpoint_number) + 1, 0) AS checkpoint_number
+           FROM results
+           WHERE team_id = ? AND year = ? AND entry_time IS NOT NULL
+        ', $teamId, $this->year
+        )->fetchField('checkpoint_number');
     }
 }

@@ -13,8 +13,6 @@ class CheckpointCard extends BaseControl
     /** @var TeamsModel */
     private $teamsModel;
 
-    private $teamId;
-
     public function __construct(ResultsModel $resultsModel, YearsModel $yearsModel, TeamsModel $teamsModel)
     {
         parent::__construct();
@@ -122,7 +120,7 @@ class CheckpointCard extends BaseControl
 
         for ($i = 0; $i < count($data); $i++) {
             $teamContainer = $form->addContainer('team' . $i);
-            $teamName = $teamContainer->addText('entryTime', $data[$i]['name'])->setType('time')->setDefaultValue((isset($data[$i]['entry_time']) ? $data[$i]['entry_time'] : self::EMPTY_TIME_VALUE));
+            $teamName = $teamContainer->addText('entryTime', $data[$i]['name'])->setType('time')->setDefaultValue((isset($data[$i]['entry_time']) ? $data[$i]['entry_time'] : \App\Presenters\BasePresenter::EMPTY_TIME_VALUE));
             if ($checkpoint > 1 && !$data[$i]['visited_previous']) {
                 $teamName->getLabelPrototype()->addAttributes(['class' => 'dead', 'title' => 'Tým nemá vyplněný příchod na předchozím stanovišti']);
             }

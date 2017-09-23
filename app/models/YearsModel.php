@@ -5,7 +5,8 @@ namespace App\Models;
 use App\Presenters\BasePresenter;
 use Nette;
 
-class YearsModel {
+class YearsModel
+{
 
     /** @var Nette\Database\Context */
     private $database;
@@ -60,9 +61,9 @@ class YearsModel {
         ')->fetchAll();
     }
 
-    public function isRegistrationOpen() : bool
+    public function isRegistrationOpen(): bool
     {
-        return (bool) $this->database->query('
+        return (bool)$this->database->query('
             SELECT (CURRENT_TIMESTAMP BETWEEN registration_start AND registration_end)
             FROM years
             WHERE year = ?
@@ -70,9 +71,9 @@ class YearsModel {
         ', $this->year)->fetchField();
     }
 
-    public function hasRegistrationStarted() : bool
+    public function hasRegistrationStarted(): bool
     {
-        return (bool) $this->database->query('
+        return (bool)$this->database->query('
             SELECT CURRENT_TIMESTAMP >= registration_start
             FROM years
             WHERE year = ?
@@ -80,9 +81,9 @@ class YearsModel {
         ', $this->year)->fetchField();
     }
 
-    public function hasRegistrationEnded() : bool
+    public function hasRegistrationEnded(): bool
     {
-        return (bool) $this->database->query('
+        return (bool)$this->database->query('
             SELECT CURRENT_TIMESTAMP > registration_end
             FROM years
             WHERE year = ?
@@ -108,18 +109,19 @@ class YearsModel {
         ', $this->year)->fetchField();
     }
 
-    public function hasGameStarted() : bool
+    public function hasGameStarted(): bool
     {
-        return (bool) $this->database->query('
+        return (bool)$this->database->query('
             SELECT CURRENT_TIMESTAMP >= game_start
             FROM years
             WHERE year = ?
 
         ', $this->year)->fetchField();
     }
-    public function hasGameEnded() : bool
+
+    public function hasGameEnded(): bool
     {
-        return (bool) $this->database->query('
+        return (bool)$this->database->query('
             SELECT CURRENT_TIMESTAMP > game_end
             FROM years
             WHERE year = ?
@@ -152,5 +154,15 @@ class YearsModel {
             FROM years
             WHERE is_current
         ')->fetchField();
+    }
+
+    public function getEndgameData()
+    {
+        return $this->database->query('
+            SELECT afterparty_location, COALESCE(TIME_FORMAT(afterparty_time, \'%H:%i\'), \'(dozvíte se v cíli)\') AS afterparty_time, finish_location, COALESCE(TIME_FORMAT(finish_open_time, \'%H:%i\'), \'09:00\') AS finish_open_time
+            FROM years
+            WHERE year = ?
+        ', $this->year
+        )->fetch();
     }
 }

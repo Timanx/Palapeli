@@ -16,7 +16,6 @@ class DiscussionControl extends BaseControl
     /** @var DiscussionModel */
     private $discussionModel;
     private $thread;
-    private $teamId;
     private $teamName;
 
     private $threads;
@@ -32,11 +31,6 @@ class DiscussionControl extends BaseControl
     public function setThread($thread)
     {
         $this->thread = $thread;
-    }
-
-    public function setTeamId($teamId)
-    {
-        $this->teamId = $teamId;
     }
 
     public function setTeamName($teamName)

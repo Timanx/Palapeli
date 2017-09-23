@@ -1,0 +1,107 @@
+<script>
+	function toggleDeadScreen()
+	{
+		var actions = document.getElementById('actions-container');
+		var dead = document.getElementById('dead-confirm-container');
+
+		if (actions.style.display === 'block') {
+		    actions.style.display = 'none';
+		    dead.style.display = 'block';
+		} else {
+            dead.style.display = 'none';
+            actions.style.display = 'block';
+		}
+
+	}
+	function toggleEndScreen()
+	{
+		var actions = document.getElementById('actions-container');
+		var end = document.getElementById('end-confirm-container');
+
+		if (actions.style.display === 'block') {
+		    actions.style.display = 'none';
+            end.style.display = 'block';
+		} else {
+            end.style.display = 'none';
+            actions.style.display = 'block';
+		}
+
+	}
+</script>
+
+<div class="action-screen-container">
+
+	{if !$teamEnded}
+
+
+	<div class="actions-container" id="actions-container" style="display: block;">
+
+		<div n:foreach="$flashes as $flash" n:class="flash, $flash->type">{$flash->message}</div>
+		<div class="checkpoint-heading">
+			{$nextCheckpointNumber}. STANOVIŠTĚ
+		</div>
+
+		<div class="code-input-form">
+			{form codeInput}
+				{input code}{input send}
+			{/form}
+		</div>
+
+		<div class="exit-time-forms-container">
+				<div class="exit-time-input-form">
+				{form exitTimeInput}
+					{input exitTime}{input send}
+				{/form}
+			</div>
+			<div n:if="!isset($lastCheckpointData->exit_time)" class="exit-time-now-form">
+				{form exitTimeNow}
+					{input send}
+				{/form}
+			</div>
+		</div>
+
+		<div class="open-dead-form" onclick="toggleDeadScreen()">
+			TOTÁLKA
+		</div>
+		<div class="open-end-form" onclick="toggleEndScreen()">
+			UKONČIT HRU
+		</div>
+	</div>
+	<div class="dead-confirm-container" id="dead-confirm-container" style="display: none;">
+		<div class="headline">
+			OPRAVDU CHCETE TOTÁLNÍ NÁPOVĚDU?
+		</div>
+		<div class="consequences">
+			Touto akcí zjistíte polohu následujícího stanoviště. Šifry přeskočené totální nápovědou se vám však nezapočítávají do výsledků. Pokud totální nápovědu opravdu chcete, zadejte znovu heslo aktuální šifry:
+		</div>
+
+		<div class="code-input-form">
+			{form askForDead}
+				{input code}{input send}
+			{/form}
+		</div>
+		<div class="cancel" onclick="toggleDeadScreen()">
+			ZPĚT
+		</div>
+	</div>
+	<div class="end-confirm-container" id="end-confirm-container" style="display: none;">
+		<div class="headline">
+			OPRAVDU CHCETE UKONČIT HRU?
+		</div>
+		<div class="consequences">
+			Touto akcí ukončíte hru. Nebudete moci zadávat hesla dalších stanovišť ani otevírat totální nápovědy. Zobrazí se vám poloha cíle a místo a čas konání afterparty. Chcete-li skutečně ukončit hru, zadejte znovu heslo aktuální šifry:
+		</div>
+
+		<div class="code-input-form">
+			{form askForEnd}
+				{input code}{input send}
+			{/form}
+		</div>
+		<div class="cancel" onclick="toggleEndScreen()">
+			ZPĚT
+		</div>
+	</div>
+	{else}
+		<div n:foreach="$flashes as $flash" n:class="flash, $flash->type">{$flash->message}</div>
+	{/if}
+</div>

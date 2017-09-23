@@ -4,6 +4,7 @@ use Nette\Application\UI;
 
 class BaseControl extends Control {
     protected $year;
+    protected $teamId;
 
     public function __construct()
     {
@@ -13,5 +14,10 @@ class BaseControl extends Control {
     public function setYear($year)
     {
         $this->year = $year;
+    }
+
+    public function setTeamId($teamId)
+    {
+        $this->teamId = $teamId;
     }
 }

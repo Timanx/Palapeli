@@ -1,6 +1,6 @@
 <?php
 
-interface ITeamCardFactory
+interface IActionScreenFactory
 {
     /** @return ActionScreen */
     function create();

@@ -308,8 +308,6 @@ class TeamPresenter extends BasePresenter
 
         $data = $this->teamsModel->getTeamData($teamId);
 
-        $data = $data[0];
-
         $form = new UI\Form;
         $form->addText('name', 'Jméno týmu:')->setDisabled()->setDefaultValue($data->name);
         $form->addPassword('password', 'Nové heslo:')->setRequired(false)->addRule(UI\Form::MAX_LENGTH, 'Heslo může mít maximálně 255 znaků', 255);

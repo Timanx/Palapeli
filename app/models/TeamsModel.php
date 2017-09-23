@@ -129,7 +129,7 @@ class TeamsModel
         )->fetchField();
     }
 
-    public function isTeamRegistered($teamId) : bool
+    public function isTeamRegistered($teamId): bool
     {
         $result = $this->database->query('
             SELECT 1
@@ -224,7 +224,7 @@ class TeamsModel
         ', $teamName)->fetchField();
     }
 
-    public function checkPassword($teamId, $password) : bool
+    public function checkPassword($teamId, $password): bool
     {
         $passwordOK = $this->database->query('
                 SELECT 1
@@ -233,7 +233,7 @@ class TeamsModel
             $password, $teamId
         )->fetchField();
 
-        if($passwordOK == 1) {
+        if ($passwordOK == 1) {
             return true;
         } else {
             return false;
@@ -350,6 +350,24 @@ class TeamsModel
                 UPDATE teamsyear SET paid = ?
                 WHERE team_id = ? AND year = ?
             ', $paymentStatus, $teamId, $this->year);
+    }
+
+    public function teamEnded($teamId)
+    {
+        $now = new Nette\Utils\DateTime();
+        $this->database->query('
+                UPDATE teamsyear SET end_time = ?
+                WHERE team_id = ? AND year = ?
+            ', $now, $teamId, $this->year);
+    }
+
+    public function hasTeamEnded($teamId): bool
+    {
+        return ($this->database->query('
+            SELECT end_time
+            FROM teamsyear
+            WHERE team_id = ? AND year = ?
+        ', $teamId, $this->year)->fetchField('end_time') !== null);
     }
 
 }
