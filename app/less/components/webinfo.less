@@ -1,56 +1,122 @@
 @import "mixins";
 
-.menu-container {
-  display: table;
-  width: 100%;
-  .item {
-    width: 25%;
-    height: 60px;
-    border-style: solid;
-    border-color: black;
-    border-width: 1px 1px 1px 0px;
+@blue: #005BD0;
+@red: #FF0000;
+@yellow: #FFCA05;
+@green: #69B300;
+@blue-tint: #A9CEFF;
+@red-tint: #FFB1B1;
+@yellow-tint: #FFEBA2;
+@green-tint: #D7FF9F;
+
+.logo-container {
+  padding: 10px;
+  .name {
+    line-height: 30px;
+    display: inline-block;
+    vertical-align: top;
+    padding-left: 5px;
+    padding-top: 2px;
     font-weight: bold;
-    text-align: center;
-    display: table-cell;
-    vertical-align: middle;
-    .text {
-      padding: 0px 10px;
-    }
-    &:first-child {
-      border-left-width: 1px;
-    }
   }
 }
 
-.code-input-form {
-  input[type="text"] {
-    display: inline-block;
-    width: 80%;
-    height: 30px;
-    margin: 0;
-    position: relative;
-    top: -4px;
-  }
-  input[type="submit"] {
-    display: inline-block;
-    width: 34px;
-    height: 34px;
-    margin: 0;
+.menu-container {
+  display: table;
+  width: 100%;
+  margin-bottom: 20px;
+  background-color: darken(@blue, 20%);
+  padding: 5px;
+  .item {
+    width: 25%;
+    height: 60px;
+    font-weight: normal;
+    font-size: 9pt;
+    text-align: center;
+    display: table-cell;
+    vertical-align: middle;
+    color: white;
+    cursor: pointer;
+
+    background-color: darken(@blue, 20%);
+    &#item1.active {
+      background-color: @blue;
+    }
+    &#item2.active {
+      background-color: @green;
+    }
+    &#item3.active {
+      background-color: @yellow;
+    }
+    &#item4.active {
+      background-color: @red;
+    }
   }
 }
-.exit-time-input-form {
-  input[type="text"] {
-    display: inline-block;
-    width: 80%;
-    height: 30px;
-    margin: 0;
-    position: relative;
-    top: -4px;
+.action-screen-container {
+  font-family: 'Source Sans Pro', sans-serif;
+  text-align: center;
+  .checkpoint-heading {
+    text-align: center;
+    font-weight: bold;
+    line-height: 50px;
+    font-size: 25px;
   }
-  input[type="submit"] {
+  .code-input-form {
+    margin-bottom: 27px;
+    input[type="text"] {
+      display: inline-block;
+      width: 60%;
+      height: 40px;
+      margin: 0;
+      vertical-align: top;
+      .calc(margin-left, "10% - 27px");
+      font-size: 20px;
+    }
+    input[type="submit"] {
+      display: inline-block;
+      width: 44px;
+      height: 44px;
+      margin: 0;
+      vertical-align: top;
+    }
+  }
+  .exit-time-forms-container {
+    margin-bottom: 27px;
+    text-align: center;
+    .exit-time-input-form {
+      display: inline-block;
+      form {
+        display: inline-block;
+      }
+      input[type="time"] {
+        display: inline-block;
+        height: 40px;
+        margin: 0;
+        vertical-align: top;
+      }
+      input[type="submit"] {
+        display: inline-block;
+        width: 44px;
+        height: 44px;
+        margin: 0;
+        vertical-align: top;
+        &.now {
+          margin-left: 30px;
+        }
+      }
+
+    }
+  }
+
+  .button {
+    background-color: @blue;
+    margin-bottom: 27px;
     display: inline-block;
-    width: 34px;
-    height: 34px;
-    margin: 0;
+    padding: 10px;
+    height: 24px;
+    line-height: 24px;
+    font-weight: 600;
+    color: white;
   }
 }

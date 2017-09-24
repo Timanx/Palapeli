@@ -130,7 +130,7 @@ class ActionScreen extends BaseControl
     public function createComponentExitTimeNow($name, $time = null)
     {
         $form = new UI\Form;
-        $form->addSubmit('send', 'TEĎ');
+        $form->addSubmit('send', 'TEĎ')->setAttribute('class', 'now');
         $form->onSuccess[] = [$this, 'exitTimeNowSucceeded'];
         return $form;
     }

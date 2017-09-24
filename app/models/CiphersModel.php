@@ -80,7 +80,7 @@ class CiphersModel
     public function getDeadSolution($checkpointNumber = null)
     {
         return $this->database->query('
-            SELECT COALESCE(dead_solution, solution)
+            SELECT COALESCE(dead_solution, solution) AS dead_solution
             FROM ciphers
             WHERE checkpoint_number = ? AND year = ?
         ',

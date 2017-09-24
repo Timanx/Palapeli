@@ -109,24 +109,28 @@
 
 	<div class="logo-container">
 		{include ../../../components/SVG/logo_basic.svg, dim => '30px'}
-		<span>PALAPELI</span>
+		<span class="name">PALAPELI</span>
 	</div>
 
 	<div class="menu-container">
 		<div class="item" id="item1">
+			{include ../../../components/SVG/webinfoIcons/actions.svg}
 			<div class="text">AKCE</div>
 		</div><!--
 		--><div class="item" id="item2">
+			{include ../../../components/SVG/webinfoIcons/team.svg}
 			<div class="text">KARTA TÝMU</div>
 		</div><!--
 		--><div class="item" id="item3">
+			{include ../../../components/SVG/webinfoIcons/list.svg}
 			<div class="text">1. ŠIFRA</div>
 		</div><!--
 		--><div class="item" id="item4">
+			{include ../../../components/SVG/webinfoIcons/info.svg}
 			<div class="text">INFO</div>
 		</div>
 	</div>
-
+	<div class="webinfo-container">
 
 		{block content}
 				{if !isset($teamId)}
@@ -138,6 +142,7 @@
 					{/block}
 				{/if}
 		{/block}
+	</div>
 </div>
 {block scripts}
 	<script src="https://nette.github.io/resources/js/netteForms.min.js"></script>
