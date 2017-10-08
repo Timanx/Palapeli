@@ -2,6 +2,8 @@
 use App\Models\ResultsModel;
 use App\Models\TeamsModel;
 use App\Models\YearsModel;
+use App\Models\LogModel;
+use App\Models\CiphersModel;
 use Nette\Application\UI;
 
 class ActionScreen extends BaseControl
@@ -12,18 +14,28 @@ class ActionScreen extends BaseControl
     private $yearsModel;
     /** @var TeamsModel */
     private $teamsModel;
-    /** @var \App\Models\CiphersModel */
+    /** @var  LogModel */
+    private $logModel;
+    /** @var CiphersModel */
     private $ciphersModel;
     /** @var Nette\Http\Session */
     private $session;
 
     private $lastCheckpointData;
+    private $defaultScreen;
+
+    const END_CODE = 'JEZIMADEMDOM';
+
+    const DEAD_SCREEN = 0;
+    const END_SCREEN = 1;
+
 
     public function __construct(
         ResultsModel $resultsModel,
         YearsModel $yearsModel,
         TeamsModel $teamsModel,
-        \App\Models\CiphersModel $ciphersModel,
+        CiphersModel $ciphersModel,
+        LogModel $logModel,
         \Nette\Http\Session $session
     )
     {
@@ -32,6 +44,7 @@ class ActionScreen extends BaseControl
         $this->yearsModel = $yearsModel;
         $this->teamsModel = $teamsModel;
         $this->ciphersModel = $ciphersModel;
+        $this->logModel = $logModel;
         $this->session = $session;
     }
 
@@ -42,23 +55,35 @@ class ActionScreen extends BaseControl
         $teamId = $this->session->getSection('team')->teamId ?? NULL;
 
         $this->teamsModel->setYear($this->year);
+        $this->resultsModel->setYear($this->year);
+
+        $this->yearsModel->setYear($this->year);
+
+        $checkpointNumber = $this->resultsModel->getFirstEmptyCheckpoint($teamId);
+
+
         if ($this->teamsModel->hasTeamEnded($teamId)) {
             $this->template->teamEnded = true;
 
-            $this->yearsModel->setYear($this->year);
 
             $data = $this->yearsModel->getEndgameData();
-            $this->flashMessage('Již jste ukončili hru a ve hře tak nemůžete pokračovat.');
-            $this->flashMessage(sprintf('Pozice cíle: %s (otevřen od %s)', $data->finish_location, $data->finish_open_time), 'info');
+            if ($checkpointNumber > $data->checkpoint_count) {
+                $this->flashMessage('Hru jste úspěšně dokončili! Gratulujeme.', 'success');
+            } else {
+                $this->flashMessage('Již jste ukončili hru a ve hře tak nemůžete pokračovat.');
+                $this->flashMessage(sprintf('Pozice cíle: %s (otevřen od %s)', $data->finish_location, $data->finish_open_time), 'info');
+            }
             if ($data->afterparty_location !== null) {
                 $this->flashMessage(sprintf('Místo konání afterparty: %s (od %s)', $data->afterparty_location, $data->afterparty_time), 'info');
             }
         } else {
 
-            $this->template->teamEnded = false;
-            $this->resultsModel->setYear($this->year);
 
-            $this->template->nextCheckpointNumber = $this->resultsModel->getFirstEmptyCheckpoint($teamId);
+            $this->template->checkpointCount = $this->yearsModel->getCheckpointCount();
+            $this->template->teamEnded = false;
+
+            $this->template->nextCheckpointNumber = $checkpointNumber;
+            $this->template->endCode = self::END_CODE;
 
             $this->lastCheckpointData = $this->resultsModel->getLastCheckpointData($teamId);
 
@@ -82,6 +107,8 @@ class ActionScreen extends BaseControl
     {
         $this->ciphersModel->setYear($this->year);
         $this->resultsModel->setYear($this->year);
+        $this->yearsModel->setYear($this->year);
+        $this->teamsModel->setYear($this->year);
 
         $teamId = $this->session->getSection('team')->teamId ?? NULL;
         $checkpointNumber = $this->resultsModel->getFirstEmptyCheckpoint($teamId);
@@ -90,9 +117,18 @@ class ActionScreen extends BaseControl
         $codeCorrect = $this->ciphersModel->checkCode($form->values['code'], $checkpointNumber);
 
         if ($codeCorrect) {
-            $this->flashMessage('Údaje z karty týmu byly úspěšně uloženy', 'success');
             $now = new \Nette\Utils\DateTime();
             $this->resultsModel->insertResultsRow($teamId, $checkpointNumber, $now);
+            $this->logModel->log(LogModel::LT_ENTER_CHECKPOINT, $teamId, $checkpointNumber, $this->year);
+
+            if ($this->yearsModel->getCheckpointCount() == $checkpointNumber) {
+                $this->teamsModel->teamEnded($teamId);
+                $this->flashMessage(sprintf('Gratulujeme k dokončení Palapeli! Hru jste dokončili jako %s., výsledky se započítanými totálkami budou vyhlášeny po skončení hry.', $this->resultsModel->geTeamsArrivedCount($checkpointNumber)), 'success');
+            } elseif ($this->yearsModel->getCheckpointCount() == $checkpointNumber + 1) {
+                $this->flashMessage(sprintf('Dorazili jste do cíle jako %s. K dokončení hry je nutné vyřešit cílové heslo a zadat ho do systému.', $this->resultsModel->geTeamsArrivedCount($checkpointNumber)), 'success');
+            } else {
+                $this->flashMessage(sprintf('Dorazili jste na stanoviště %s jako %s.', $checkpointNumber, $this->resultsModel->geTeamsArrivedCount($checkpointNumber)), 'success');
+            }
         } else {
             $this->flashMessage('Nesprávně zadané heslo', 'error');
         }
@@ -153,7 +189,7 @@ class ActionScreen extends BaseControl
         $this->redirect('this');
     }
 
-       public function createComponentAskForDead()
+    public function createComponentAskForDead()
     {
 
         $form = new UI\Form;
@@ -190,12 +226,12 @@ class ActionScreen extends BaseControl
             $now = new \Nette\Utils\DateTime();
             $this->resultsModel->insertResultsRow($teamId, $checkpointNumber, null, $now, true);
             $this->flashMessage(sprintf('Řešením šifry číslo %s je: %s', $checkpointNumber, $deadSolution), 'info');
+            $this->logModel->log(LogModel::LT_OPEN_DEAD, $teamId, $checkpointNumber, $this->year);
+            $this->redirect('this');
         } else {
             $this->flashMessage('Nesprávně zadané heslo', 'error');
+            $this->getPresenter()->redirect('WebInfo:', self::  DEAD_SCREEN);
         }
-
-
-        $this->redirect('this');
     }
 
     public function askForEndSucceeded(UI\Form $form)
@@ -207,20 +243,17 @@ class ActionScreen extends BaseControl
 
         $teamId = $this->session->getSection('team')->teamId ?? NULL;
 
-
-        $checkpointNumber = $this->resultsModel->getLastCheckpointNumber($teamId);
-
-        $codeCorrect = $this->ciphersModel->checkCode($form->values['code'], $checkpointNumber);
+        $codeCorrect = (mb_strtoupper($form->values['code']) === self::END_CODE);
 
         if ($codeCorrect) {
-            $this->flashMessage('Ukončili jste hru.', 'info');
             $this->teamsModel->teamEnded($teamId);
+            $this->logModel->log(LogModel::LT_END_GAME, $teamId, null, $this->year);
+            $this->redirect('this');
         } else {
             $this->flashMessage('Nesprávně zadané heslo', 'error');
+            $this->getPresenter()->redirect('WebInfo:', self::END_SCREEN);
         }
 
-
-        $this->redirect('this');
     }
 
 }

@@ -12,7 +12,7 @@ use DiscussionControl;
 use Nette;
 use Nette\Application\UI;
 use Nette\Http\FileUpload;
-use ActionScreen;
+use InfoScreen;
 use UpdatesForm;
 
 
@@ -195,7 +195,7 @@ class AdministrationPresenter extends BasePresenter
     {
         parent::getYearData();
 
-        /** @var ActionScreen $control */
+        /** @var InfoScreen $control */
         $control = $this->teamCardFactory->create();
         $control->setYear($this->selectedYear);
         return $control;

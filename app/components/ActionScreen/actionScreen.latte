@@ -1,42 +1,11 @@
-<script>
-	function toggleDeadScreen()
-	{
-		var actions = document.getElementById('actions-container');
-		var dead = document.getElementById('dead-confirm-container');
-
-		if (actions.style.display === 'block') {
-		    actions.style.display = 'none';
-		    dead.style.display = 'block';
-		} else {
-            dead.style.display = 'none';
-            actions.style.display = 'block';
-		}
-
-	}
-	function toggleEndScreen()
-	{
-		var actions = document.getElementById('actions-container');
-		var end = document.getElementById('end-confirm-container');
-
-		if (actions.style.display === 'block') {
-		    actions.style.display = 'none';
-            end.style.display = 'block';
-		} else {
-            end.style.display = 'none';
-            actions.style.display = 'block';
-		}
-
-	}
-</script>
-
 <div class="action-screen-container">
+
+	<div n:foreach="$flashes as $flash" n:class="flash, $flash->type">{$flash->message}</div>
 
 	{if !$teamEnded}
 
 
 	<div class="actions-container" id="actions-container" style="display: block;">
-
-		<div n:foreach="$flashes as $flash" n:class="flash, $flash->type">{$flash->message}</div>
 		<div class="checkpoint-heading">
 			HESLO STANOVIŠTĚ {$nextCheckpointNumber}
 
@@ -90,7 +59,7 @@
 			OPRAVDU CHCETE UKONČIT HRU?
 		</div>
 		<div class="consequences">
-			Touto akcí ukončíte hru. Nebudete moci zadávat hesla dalších stanovišť ani otevírat totální nápovědy. Zobrazí se vám poloha cíle a místo a čas konání afterparty. Chcete-li skutečně ukončit hru, zadejte znovu heslo aktuální šifry:
+			Touto akcí ukončíte hru. Nebudete moci zadávat hesla dalších stanovišť ani otevírat totální nápovědy. Zobrazí se vám poloha cíle a místo a čas konání afterparty. Chcete-li skutečně ukončit hru, zadejte do následujícího pole heslo {$endCode}:
 		</div>
 
 		<div class="code-input-form">
@@ -102,7 +71,42 @@
 			ZPĚT
 		</div>
 	</div>
-	{else}
-		<div n:foreach="$flashes as $flash" n:class="flash, $flash->type">{$flash->message}</div>
 	{/if}
 </div>
+
+<script>
+    function toggleDeadScreen()
+    {
+        var actions = document.getElementById('actions-container');
+        var dead = document.getElementById('dead-confirm-container');
+
+        if (actions.style.display === 'block') {
+            actions.style.display = 'none';
+            dead.style.display = 'block';
+        } else {
+            dead.style.display = 'none';
+            actions.style.display = 'block';
+        }
+
+    }
+    function toggleEndScreen()
+    {
+        var actions = document.getElementById('actions-container');
+        var end = document.getElementById('end-confirm-container');
+
+        if (actions.style.display === 'block') {
+            actions.style.display = 'none';
+            end.style.display = 'block';
+        } else {
+            end.style.display = 'none';
+            actions.style.display = 'block';
+        }
+
+    }
+
+	{if $defaultScreen === ActionScreen::END_SCREEN && !$teamEnded}
+    	toggleEndScreen();
+	{elseif $defaultScreen === ActionScreen::DEAD_SCREEN && !$teamEnded}
+    	toggleEndScreen();
+	{/if}
+</script>
