@@ -1,0 +1,16 @@
+services:
+	- IDiscussionControlFactory
+	- ICheckpointCardFactory
+	- ITeamCardFactory
+	- IUpdatesFormFactory
+	- IActionScreenFactory
+	- IInfoScreenFactory
+	- App\Models\TeamsModel
+	- App\Models\CiphersModel
+	- App\Models\DiscussionModel
+	- App\Models\FilesModel
+	- App\Models\ReportsModel
+	- App\Models\UpdatesModel
+	- App\Models\YearsModel
+	- App\Models\ResultsModel
+	- App\Models\LogModel
