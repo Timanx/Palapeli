@@ -3,61 +3,101 @@
 <div class="rules">
 
 	<div class="ruleContainer">
-		<h3 id="about">O HŘE</h3>
+		<h3 id="summary">SHRNUTÍ</h3>
+		<table style="margin-bottom: 40px">
+			<tr>
+				<td>
+					Kdy:
+				</td>
+				<td>
+					{$yearData->date|date: 'j. n. Y'|noescape} od {$yearData->game_start|date: 'H:i'|noescape} do {$yearData->game_end|date: 'H:i'|noescape}
+				</td>
+			</tr>
+			<tr>
+				<td>
+					Kde:
+				</td>
+				<td>
+					Brno a okolí
+				</td>
+			</tr>
+			<tr>
+				<td>
+					Pro koho:
+				</td>
+				<td>
+					čtyřčlenné týmy
+				</td>
+			</tr>
+			<tr>
+				<td>
+					Systém:
+				</td>
+				<td>
+					Denní, lineární, možnost totálek
+				</td>
+			</tr>
+			<tr>
+				<td>
+					Startovné:
+				</td>
+				<td>
+					{$yearData->entry_fee} Kč
+				</td>
+			</tr>
+		</table>
+	</div>
+
+	<div class="ruleContainer">
+		<h3 id="about">O CO JDE</h3>
 		<p>
-		Palapeli je lineární denní šifrovací hra. Od podobných her se poněkud liší, koná se totiž jako jedna z mála v zimě, a to konkrétně {$yearData->date|date: 'j. n. Y'|noescape}. Letos proběhne již {$yearData->year}. ročník. Hru pro vás za pomoci mnoha dalších lidí připravují stálí i občasní členové týmu <a href="http://kvik.wz.cz" target="_blank">KVÍK!</a> Wal, Tíman, Soňa, Tinka, Kačka, Míša a Dark.
+			Palapeli je denní zimní lineární <a href="http://sifrovacky.cz" target="_blank">šifrovačka</a>. Hra proběhne {$yearData->date|date: 'j. n. Y'|noescape} v Brně a okolí, trasa bývá spíše terénní. Palapeli mívá lehčí šifry s možností stanoviště přeskakovat pomocí totálek, hře však přidává na obtížnosti počasí, které v lednu bývá mrazivé. Letos proběhne již {$yearData->year}. ročník. Hru pro vás za pomoci mnoha dalších lidí připravují stálí i občasní členové týmu <a href="http://kvik.wz.cz" target="_blank">KVÍK!</a>.
 		</p>
 	</div>
 
 	<div class="ruleContainer">
 	<h3 id="conditions">PODMÍNKY ÚČASTI</h3>
 	<p>
-		Počet členů týmu je 1–4. Týmy se musí <a href="{plink Team:registration}">zaregistrovat</a> nejpozději {$yearData->registration_end|date: 'j. n. Y'|noescape}. Startovné činí {$yearData->entry_fee} Kč na tým, zasílá se na účet, jehož číslo vám bude sděleno po registraci. Týmy, které do {$yearData->entry_fee_deadline|date: 'j. n. Y'|noescape} nezaplatí startovné a nezažádají o výjimku placení na startu, se hry nebudou moci zúčastnit. Startovné vracíme v případě zrušení účasti do {$yearData->entry_fee_return_deadline|date: 'j. n. Y'|noescape}. Účastníci mladší než osmnáct let musí mít v týmu alespoň jednoho dospělého. Organizátoři nenesou za bezpečnost ani jednání hráčů zodpovědnost.
-		{if $yearData->team_limit > 0}
+		Hra je určena pro maximálně čtyřčlenné týmy. Hráči mladší 18 let musí mít v týmu alespoň jednoho dospělého.
+		Týmy se mohou <a href="{plink Team:registration}">registrovat</a> na těchto stránkách od {$yearData->registration_start|date: 'j. n. Y'|noescape} nejpozději do {$yearData->registration_end|date: 'j. n. Y'|noescape}. {if $yearData->team_limit > 0}
 			Limit počtu hrajících týmů je {$yearData->team_limit}.
-		{/if}
+		 Týmy registrované nad limit jsou považovány za náhradníky a dostanou se do hry, pouze pokud některé hrající týmy zruší účast. Většinou se na náhradníky dostane, takže se neváhejte registrovat, i když jste pod čarou.{/if}
+		Startovné činí {$yearData->entry_fee_deadline|date: 'j. n. Y'|noescape} Kč na tým a je třeba je zaplatit na účet sdělený registrovaným týmům nejpozději do {$yearData->entry_fee_deadline|date: 'j. n. Y'|noescape}, jinak bude neplatící tým nahrazen týmem pod čarou. Podrobnosti o platbě se týmy dozví po registraci. Organizátoři nenesou za bezpečnost ani jednání hráčů zodpovědnost.
 	</p>
-	</div>
-
-	<div class="ruleContainer">
-		<h3 id="difficulty">NÁROČNOST</h3>
-		<p>
-			Určitě nepočítejte s nějakým maratonem typu <a href="http://tmou.cz" target="_blank">TMOU</a>, ale žádná pohodička to taky nebude. Největším problémem bude asi zima a (snad) sněhová vánice. Většina šifer by měla být luštitelná pro všechny, díky možnosti využití <a href="#hints">absolutních nápověd</a> je hra vhodná i pro mladší a méně zkušené hráče. Šifer bude okolo deseti, jejich přesný počet se dozvíte na startu. Délka trasy bude okolo 15 km.
-		</p>
 	</div>
 
 	<div class="ruleContainer">
 		<h3 id="scheme">SCHÉMA HRY</h3>
 		<p>
-			Palapeli probíhá podle základních pravidlech ostatních šifrovaček, stejně tak se počítá s tím, že týmy budou dodržovat zásady fair play, tedy co nejméně haluzit, nestalkovat ostatní týmy a podobně. Na startu obdrží týmy první šifru, z ní získají polohu následujícího stanoviště. Tam najdou další šifru a tak dále. Veškerý text psaný kurzívou slouží pouze jako upřesnění či nápověda a není součástí šifry. Za úspěšné dokončení hry se považuje dosažení cíle, správné vyřešení cílového hesla, odevzdání karty týmu a archu s nápovědami a předložení řešení všech šifer do 19:00. Start bude velmi pravděpodobně v 9:00 někde v Brně nebo blízkém okolí. K vyřešení šifry se může hodit cokoliv, co tým dostane od organizátorů v průběhu hry, klidně i části předchozích šifer (viz <a href="{plink Game:ciphers, 4, 5}">Rubikova kostka</a> z pátého ročníku).
+			Hru Palapeli tvoří přibližně 10 stanovišť se šiframi. Vyluštěním šifry na stanovišti se tým dozví polohu dalšího stanoviště.
+			Na stanovišti týmy najdou buď orga, který jim vydá šifru, nebo mrtvou schránku se šifrou. Týmům je povoleno vzít si jednu porci zadání. Šifra je v záhlaví zřetelně označena logem Palapeli. Záhlaví šifry a text psaný kurzívou neobsahuje šifru, není-li výslovně řečeno jinak.
+			Pokud se vám nepodaří šifru vyluštit, lze v <a href="#hints">Palainfu</a> požádat o totálku. Tím dané stanoviště přeskočíte a dozvíte se polohu dalšího stanoviště. Takto přeskočená šifra se vám odečte v prvním kritériu při vyhodnocení výsledků.
+			Některá stanoviště mají stanovenu zavírací dobu. Tu se tým dozví v <a href="#hints">Palainfu</a>. Znamená to, že aby tým měl jistotu, že šifru bude moci vyzvednout, musí na toto stanoviště přijít nejpozději v zavírací dobu. Je možné, že tým bude moci šifru vyzvednout i po zavírací době, avšak nemá to jisté. Jakmile se stanoviště skutečně uzavře, zobrazí se o tom informace v <a href="#hints">Palainfu</a>. Pokud tým dorazí na stanoviště po uzavření a nenajde šifru, pro pokračování ve hře musí využít totálku.
 		</p>
 	</div>
 
 	<div class="ruleContainer">
 		<h3 id="transport">PŘESUNY</h3>
 		<p>
-			Mezi stanovišti je možno přesouvat se pouze pěšky, pomocí MHD, na bobech, běžkách, bruslích nebo saních. GPS můžete používat dle libosti. Navazující stanoviště od sebe nejsou vzdálena více než 2&thinsp;km vzdušnou čarou.
+			Pro účast na hře je nutné, aby alespoň jeden člen týmu měl přístup na internet kvůli zadávání průchodu hrou a čerpání nápověd. Internet se může hodit i pro googlení informací.
+			Mezi stanovišti je povoleno se přesouvat pouze pěšky, na běžkách, na bobech, na saních nebo na bruslích. Je povoleno používání jakýchkoli prostředků pro orientaci v terénu. Používání MHD není zakázáno, ale trasa většinou přesuny pomocí MHD neumožňuje. Chcete-li na hru vzít psa, můžete, ale minimálně na stanovištích musí mít košík a být na vodítku. Do cíle psi nesmí.
+
 		</p>
 	</div>
 
 	<div class="ruleContainer">
-		<h3 id="hints">NÁPOVĚDY</h3>
+		<h3 id="hints">PALAINFO</h3>
 		<p>
-			Pokud se vám nepodaří šifru vyluštit, můžete otevřít obálku s totální nápovědou k dané šifře. Arch s nápovědami obdržíte na startu. Takto přeskočená šifra se vám však nebude počítat do prvního kritéria při vyhodnocování výsledků. <a href="#finish"><em>(viz odstavec Cíl)</em></a> Pokud otevřete nápovědu a nestihnete se zapsat na následujícím stanovišti, tato nápověda se vám nezapočítává.
-		</p>
-	</div>
-
-	<div class="ruleContainer">
-		<h3 id="stats">STATISTIKA PRŮCHODU</h3>
-		<p>
-			Abyste se mohli po hře dosyta nabažit grafů a statistik, vždy hned po příchodu na stanoviště zapište na přiložený papír čas a jméno týmu. Taky dostanete kartu týmu, kam byste měli tyto údaje také zapisovat, spolu s časem vyluštění šifry, případně časem otevření nápovědy (kvůli statistikám obtížnosti šifer a délky přesunů).
+			Novinkou tohoto ročníku je Palainfo. Jde o systém, kam týmy zapisují příchody na stanoviště a odchody ze stanovišť, žádají o totálky či vzdávají hru, čerpají informace o stavu startovního pole před nimi a dostávají další informace ze hry.
+			Proto pro průchod hrou je nezbytné, aby alespoň jeden člen týmu měl po celou dobu hry k dispozici zařízení s připojením na internet (na rychlosti by nemělo záležet).
+			Pro registrované týmy se Palainfo zpřístupní společně s posledními informacemi před hrou, aby bylo možno fungování Palainfa otestovat.
 		</p>
 	</div>
 
 	<div class="ruleContainer">
 		<h3 id="finish">CÍL</h3>
 		<p>
-			Cíl je v teple v civilizaci. Pořadí týmů bude vytvořeno podle následujících kritérií:
+			Cíl je v teple a v dosahu zóny 101 IDS JMK. Pro úspěšné dosažení cíle musí alespoň jeden člen týmu organizátorům odevzdat závěrečné heslo. Pořadí týmů bude vytvořeno podle následujících kritérií:
 			<ol>
 			<li>Nejvyšší navštívené stanoviště (příchod do cíle a vyluštění cílového hesla se berou jako
 			dvě samostatná stanoviště) <strong>mínus počet totálek</strong> <em>(Pokud by tedy na hře bylo 10 stanovišť bez startu a cíle, může tato hodnota být až 12).</em></li>
@@ -65,6 +105,28 @@
 			<li>Čas příchodu na nejvyšší navštívené stanoviště.</li>
 			</ol>
 		</p>
+	</div>
+
+	<div class="ruleContainer">
+		<h3 id="afterparty">AFTERPARTY</h3>
+		<p>
+			Po hře se bude konat afterparty v některé brněnské hospodě. Její polohu se dozvíte v cíli od organizátorů a také v <a href="#hints">Palainfu</a> po ukončení hry. Rádi vás na ní uvidíme.
+		</p>
+	</div>
+
+	<div class="ruleContainer">
+		<h3 id="other">DALŠÍ POKYNY</h3>
+			Pro hru Palapeli platí standardní pravidla chování na šifrovačkách, tedy
+			<ul>
+			<li>chovejte se podle principu fair-play,</li>
+			<li>neluštěte šifru v bezprostřední blízkosti stanoviště,</li>
+			<li>neopisujte a nesledujte ostatní týmy za účelem nalezení dalšího stanoviště</li>
+			<li>zbytečně nehaluzte,</li>
+			<li>nevyužívejte k luštění šifry nikoho, kdo není v týmu,</li>
+			<li>v lese se chovejte tak, jak se v lese chovat má,</li>
+			<li>dodržujte pravidla a právní předpisy.</li>
+
+			</ul>
 	</div>
 </div>
 {/block}

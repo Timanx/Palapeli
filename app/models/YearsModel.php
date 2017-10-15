@@ -45,11 +45,22 @@ class YearsModel
 
     public function getCurrentYearData()
     {
-        return $this->database->query('
+        $year = $this->database->query('
             SELECT *
             FROM years
             WHERE is_current'
         )->fetch();
+
+        if ($year === false) {
+            $year = $this->database->query('
+            SELECT *
+            FROM years
+            ORDER BY date DESC
+            LIMIT 1'
+            )->fetch();
+        }
+
+        return $year;
     }
 
     public function getYearNames()
@@ -94,7 +105,7 @@ class YearsModel
     public function getRegistrationStart()
     {
         return $this->database->query('
-            SELECT registration_start
+            SELECT DATE_FORMAT(registration_start, \'%e. %c. %Y v %H:%i\')
             FROM years
             WHERE year = ?
         ', $this->year)->fetchField();

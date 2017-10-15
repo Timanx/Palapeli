@@ -31,7 +31,7 @@ class TeamPresenter extends BasePresenter
         $this->yearsModel->setYear($this->selectedYear);
         $this->template->hasRegistrationStarted = $this->yearsModel->hasRegistrationStarted();
         $this->template->isRegistrationOpen = $this->yearsModel->isRegistrationOpen();
-        $this->template->registrationStart = $this->yearsModel->getRegistrationStart();
+        $this->template->registrationStart = $a = $this->yearsModel->getRegistrationStart();
 
         $teamLimit = $this->yearsModel->getTeamLimit();
         $this->template->displayStandbyWarning = $teamLimit && $this->teamsModel->getTeamsCount() >= $teamLimit;

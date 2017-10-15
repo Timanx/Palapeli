@@ -5,6 +5,9 @@
 			<div class="flash info" n:if="$displayStandbyWarning">
 				Již je naplněna kapacita maximálního možného počtu týmů na hře. Stále se však můžete zaregistrovat jako náhradníci. Nebo nám můžete pomoci s testováním - máte-li zájem, ozvěte se prosím na mail organizatori@palapeli.cz.
 			</div>
+			<div class="flash info">
+				Pozor, došlo k výrazné změně pravidel oproti minulým ročníkům - místo papírových karet týmu a totálek bude průběh hry hlídat internetové Palainfo a je tedy nutné mít v týmu přístup k internetu. Více informací v <a href="{plink Info:rules}">pravidlech</a>.
+			</div>
 			<p class="information">
 				Pokud jste se účastnili některého z předchozích ročníků, budete do aktuálního ročníku přihlášeni automaticky po přihlášení do účtu vašeho týmu. Přihlásit se můžete <a href="{plink Team:}">ZDE</a>.
 			</p>
@@ -93,7 +96,7 @@
 				{control registrationForm}
 			</div>
 		{elseif !$hasRegistrationStarted}
-			<div class="flash info">Registrace do {$selectedYear}. ročníku bude spuštěna až {$registrationStart|date: '%j. %n. %Y v %H:%i'|noescape}.</div>
+			<div class="flash info">Registrace do {$selectedYear}. ročníku bude spuštěna až {$registrationStart|noescape}.</div>
 		{else}
 			<div class="flash info">Registrace do {$selectedYear}. ročníku již není možná.</div>
 		{/if}
