@@ -40,19 +40,19 @@
 					{$i}.
 				</td>
 				<td class="team">
-					{$team->name|noescape}
+					{$team['name']|noescape}
 				</td>
 				<td>
-					{$team->max_checkpoint}
+					{$team['max_checkpoint']}
 				</td>
 				<td>
-					{$team->total_hints}
+					{$team['total_hints']}
 				</td>
 				<td>
-					{ifset $team->total_hints}{$team->max_checkpoint - $team->total_hints}{/ifset}
+					{ifset $team['total_hints']}{$team['max_checkpoint'] - $team['total_hints']}{/ifset}
 				</td>
 				<td>
-					{$team->finish_time}
+					{$team['finish_time']}
 				</td>
 			</tr>
 			{var $i = $i + 1}

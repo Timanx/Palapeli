@@ -13,8 +13,6 @@ class TeamCard extends BaseControl
     /** @var TeamsModel */
     private $teamsModel;
 
-    private $teamId;
-
     public function __construct(ResultsModel $resultsModel, YearsModel $yearsModel, TeamsModel $teamsModel)
     {
         parent::__construct();

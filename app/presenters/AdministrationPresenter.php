@@ -40,17 +40,18 @@ class AdministrationPresenter extends BasePresenter
     /** @var  \ICheckpointCardFactory */
     private $checkpointCardFactory;
 
-    public function __construct(\IDiscussionControlFactory $discussionControlFactory,
-                                \IUpdatesFormFactory $updatesFormFactory,
-                                \ITeamCardFactory $teamCardFactory,
-                                \ICheckpointCardFactory $checkpointCardFactory,
-                                YearsModel $yearsModel,
-                                TeamsModel $teamsModel,
-                                ReportsModel $reportsModel,
-                                ResultsModel $resultsModel,
-                                CiphersModel $ciphersModel,
-                                FilesModel $filesModel)
-    {
+    public function __construct(
+        \IDiscussionControlFactory $discussionControlFactory,
+        \IUpdatesFormFactory $updatesFormFactory,
+        \ITeamCardFactory $teamCardFactory,
+        \ICheckpointCardFactory $checkpointCardFactory,
+        YearsModel $yearsModel,
+        TeamsModel $teamsModel,
+        ReportsModel $reportsModel,
+        ResultsModel $resultsModel,
+        CiphersModel $ciphersModel,
+        FilesModel $filesModel
+    ) {
         $this->discussionControlFactory = $discussionControlFactory;
         $this->updatesFormFactory = $updatesFormFactory;
         $this->teamCardFactory = $teamCardFactory;
@@ -75,13 +76,18 @@ class AdministrationPresenter extends BasePresenter
         $this->prepareHeading('Karta týmu');
     }
 
-    public function renderCheckpointCard($checkpoint = null)
+    public function renderCheckpointCard($checkpoint = null, $previous = false)
     {
         parent::render();
         $this->prepareHeading('Karta stanoviště');
 
         $this->teamsModel->setYear($this->selectedYear);
         $this->yearsModel->setYear($this->selectedYear);
+
+        /** @var \CheckpointCard $component */
+        $component = $this->getComponent('checkpointCard');
+        $component->setCheckpointNumber($checkpoint);
+        $component->setOrderByPrevious($previous);
 
         $this->template->teamsCount = $this->teamsModel->getTeamsCount();
         $this->template->checkpointCount = $this->yearsModel->getCheckpointCount();
@@ -154,7 +160,7 @@ class AdministrationPresenter extends BasePresenter
 
         $this->teamsModel->setYear($this->selectedYear);
 
-        $this->teamsModel->getPlayingTeams();
+        $this->template->data = $this->teamsModel->getPlayingTeams();
     }
 
     protected function createComponentDiscussion()
@@ -195,7 +201,7 @@ class AdministrationPresenter extends BasePresenter
     {
         parent::getYearData();
 
-        /** @var InfoScreen $control */
+        /** @var \TeamCard $control */
         $control = $this->teamCardFactory->create();
         $control->setYear($this->selectedYear);
         return $control;
@@ -206,7 +212,7 @@ class AdministrationPresenter extends BasePresenter
         parent::getYearData();
 
         /** @var \CheckpointCard $control */
-        $control = $this->teamCardFactory->create();
+        $control = $this->checkpointCardFactory->create();
         $control->setYear($this->selectedYear);
         return $control;
     }

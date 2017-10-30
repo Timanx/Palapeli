@@ -2,6 +2,6 @@
 
 interface ITeamCardFactory
 {
-    /** @return InfoScreen */
+    /** @return TeamCard */
     function create();
 }

@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Presenters;
 
 use App\Models\CiphersModel;
@@ -27,7 +28,7 @@ class GamePresenter extends BasePresenter
     /** @var  \IDiscussionControlFactory */
     private $discussionControlFactory;
 
-    public function __construct(YearsModel $yearsModel,ResultsModel $resultsModel, TeamsModel $teamsModel, ReportsModel $reportsModel, CiphersModel $ciphersModel, \IDiscussionControlFactory $discussionControlFactory)
+    public function __construct(YearsModel $yearsModel, ResultsModel $resultsModel, TeamsModel $teamsModel, ReportsModel $reportsModel, CiphersModel $ciphersModel, \IDiscussionControlFactory $discussionControlFactory)
     {
         parent::__construct();
         $this->yearsModel = $yearsModel;
@@ -59,7 +60,7 @@ class GamePresenter extends BasePresenter
 
     public function renderCiphers($checkpoint = 0, $year = null)
     {
-        if(isset($year)) {
+        if (isset($year)) {
             $this->session->getSection('selected')->year = $year;
             $this->session->getSection('selected')->calendarYear = $year + 2011;
         }
@@ -109,7 +110,7 @@ class GamePresenter extends BasePresenter
         $this->yearsModel->setYear($this->selectedYear);
         $this->resultsModel->setYear($this->selectedYear);
 
-        $this->template->data = $this->resultsModel->getTeamStandings();
+        $this->template->data = $data =$this->resultsModel->getTeamStandings();
         $this->template->resultsPublic = $this->resultsModel->getResultsPublic();
         $this->template->resultsFinal = $this->resultsModel->getResultsFinal();
         $this->template->hasGameStarted = $this->yearsModel->hasGameStarted();
@@ -142,12 +143,12 @@ class GamePresenter extends BasePresenter
 
         $cipherData = [];
 
-        foreach($data as $row) {
-            if(!isset($cipherData[$row->checkpoint_number])) {
+        foreach ($data as $row) {
+            if (!isset($cipherData[$row->checkpoint_number])) {
                 $cipherData[$row->checkpoint_number] = ['dead' => 0, 'hint' => 0, 'solved' => 0, 'no-data' => 0];
             }
-            if($row->filled) {
-                if(!$row->continued) {
+            if ($row->filled) {
+                if (!$row->continued) {
                     $cipherData[$row->checkpoint_number]['dead']++;
                 } elseif ($row->used_hint) {
                     $cipherData[$row->checkpoint_number]['hint']++;
@@ -159,10 +160,10 @@ class GamePresenter extends BasePresenter
             }
         }
 
-        for($i = 0; $i < count($cipherData) - 1; $i++) {
+        for ($i = 0; $i < count($cipherData) - 1; $i++) {
             $nextSum = array_sum($cipherData[$i + 1]);
             $thisSum = array_sum($cipherData[$i]);
-            if($nextSum > $thisSum) {
+            if ($nextSum > $thisSum) {
                 $cipherData[$i]['no-data'] += $nextSum - $thisSum;
             }
         }
@@ -188,7 +189,8 @@ class GamePresenter extends BasePresenter
         $this->template->hasGameEnded = $this->yearsModel->hasGameEnded();
     }
 
-    protected function createComponentCipherDiscussion() {
+    protected function createComponentCipherDiscussion()
+    {
 
         /** @var DiscussionControl $control */
         $control = $this->discussionControlFactory->create();

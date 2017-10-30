@@ -1,4 +1,5 @@
 <?php
+
 use App\Models\ResultsModel;
 use App\Models\TeamsModel;
 use App\Models\YearsModel;
@@ -13,6 +14,9 @@ class CheckpointCard extends BaseControl
     /** @var TeamsModel */
     private $teamsModel;
 
+    private $checkpointNumber;
+    private $orderByPrevious;
+
     public function __construct(ResultsModel $resultsModel, YearsModel $yearsModel, TeamsModel $teamsModel)
     {
         parent::__construct();
@@ -21,17 +25,25 @@ class CheckpointCard extends BaseControl
         $this->teamsModel = $teamsModel;
     }
 
+    public function setCheckpointNumber($number) {
+        $this->checkpointNumber = $number;
+    }
+
+    public function setOrderByPrevious($value) {
+        $this->orderByPrevious = $value;
+    }
+
     public function render()
     {
-        $this->template->setFile(__DIR__ . '/teamCard.latte');
-
-        $teamId = $_GET['teamCard-team'] ?? NULL;
+        $this->template->setFile(__DIR__ . '/checkpointCard.latte');
 
         $this->yearsModel->setYear($this->year);
+        $this->teamsModel->setYear($this->year);
+        $this->resultsModel->setYear($this->year);
         $this->template->selectedYear = $this->year;
+        $this->template->checkpoint = $this->checkpointNumber;
+        $this->template->teamsCount = $this->teamsModel->getTeamsCount();
         $this->template->checkpointCount = $this->yearsModel->getCheckpointCount();
-        $this->template->teamName = $this->teamsModel->getTeamName($teamId);
-        $this->template->teamId = $teamId;
 
         $this->template->render();
     }
@@ -39,11 +51,7 @@ class CheckpointCard extends BaseControl
     public function createComponentSelectCheckpointForm()
     {
         $checkpoint = (isset($_GET['checkpoint']) ? $_GET['checkpoint'] : null);
-        if (!isset($this->selectedYear)) {
-            $this->getYearData();
-        }
-
-        $this->yearsModel->setYear($this->selectedYear);
+        $this->yearsModel->setYear($this->year);
 
         $checkpointCount = $this->yearsModel->getCheckpointCount();
 
@@ -73,17 +81,12 @@ class CheckpointCard extends BaseControl
             $checkpoint = $values['checkpoint'] - 1;
         }
 
-        $this->redirect('this', ['checkpoint' => $checkpoint, 'previous' => $values['previous']]);
+        $this->getPresenter()->redirect('Administration:checkpointCard', ['checkpoint' => $checkpoint, 'previous' => $values['previous']]);
     }
 
     public function createComponentSelectOnlyCheckpointForm()
     {
-        $checkpoint = (isset($_GET['checkpoint']) ? $_GET['checkpoint'] : null);
-        if (!isset($this->selectedYear)) {
-            $this->getYearData();
-        }
-
-        $this->yearsModel->setYear($this->selectedYear);
+        $this->yearsModel->setYear($this->year);
 
         $checkpointCount = $this->yearsModel->getCheckpointCount();
 
@@ -109,10 +112,7 @@ class CheckpointCard extends BaseControl
     {
         $checkpoint = $_GET['checkpoint'];
         $previous = array_key_exists('previous', $_GET) && $_GET['previous'];
-        if (!isset($this->selectedYear)) {
-            $this->getYearData();
-        }
-        $this->resultsModel->setYear($this->selectedYear);
+        $this->resultsModel->setYear($this->year);
 
         $data = $this->resultsModel->getCheckpointEntryTimes($checkpoint, (bool)$previous);
 
@@ -137,16 +137,13 @@ class CheckpointCard extends BaseControl
     {
         $checkpoint = $_GET['checkpoint'];
 
-        if (!isset($this->selectedYear)) {
-            $this->getYearData();
-        }
-        $this->yearsModel->setYear($this->selectedYear);
-        $this->resultsModel->setYear($this->selectedYear);
+        $this->yearsModel->setYear($this->year);
+        $this->resultsModel->setYear($this->year);
 
         $checkpointCount = $this->yearsModel->getCheckpointCount();
 
         foreach ($values as $team) {
-            if (!isset($team['entryTime']) || $team['entryTime'] == '' || $team['entryTime'] == self::EMPTY_TIME_VALUE) {
+            if (!isset($team['entryTime']) || $team['entryTime'] == '' || $team['entryTime'] == \App\Presenters\BasePresenter::EMPTY_TIME_VALUE) {
                 $team['entryTime'] = NULL;
             }
 

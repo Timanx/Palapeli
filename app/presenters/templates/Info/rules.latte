@@ -58,20 +58,20 @@
 	<div class="ruleContainer">
 	<h3 id="conditions">PODMÍNKY ÚČASTI</h3>
 	<p>
-		Hra je určena pro maximálně čtyřčlenné týmy. Hráči mladší 18 let musí mít v týmu alespoň jednoho dospělého.
+		Hra je určena pro maximálně čtyřčlenné týmy. Hráči mladší 18 let musí mít v týmu alespoň jednoho dospělého.<br>
 		Týmy se mohou <a href="{plink Team:registration}">registrovat</a> na těchto stránkách od {$yearData->registration_start|date: 'j. n. Y'|noescape} nejpozději do {$yearData->registration_end|date: 'j. n. Y'|noescape}. {if $yearData->team_limit > 0}
 			Limit počtu hrajících týmů je {$yearData->team_limit}.
-		 Týmy registrované nad limit jsou považovány za náhradníky a dostanou se do hry, pouze pokud některé hrající týmy zruší účast. Většinou se na náhradníky dostane, takže se neváhejte registrovat, i když jste pod čarou.{/if}
-		Startovné činí {$yearData->entry_fee_deadline|date: 'j. n. Y'|noescape} Kč na tým a je třeba je zaplatit na účet sdělený registrovaným týmům nejpozději do {$yearData->entry_fee_deadline|date: 'j. n. Y'|noescape}, jinak bude neplatící tým nahrazen týmem pod čarou. Podrobnosti o platbě se týmy dozví po registraci. Organizátoři nenesou za bezpečnost ani jednání hráčů zodpovědnost.
+		 Týmy registrované nad limit jsou považovány za náhradníky a dostanou se do hry, pouze pokud některé hrající týmy zruší účast. Většinou se na náhradníky dostane, takže se neváhejte registrovat, i když jste pod čarou.<br>{/if}
+		Startovné činí {$yearData->entry_fee|noescape} Kč na tým a je třeba je zaplatit na účet sdělený registrovaným týmům nejpozději do {$yearData->entry_fee_deadline|date: 'j. n. Y'|noescape}, jinak bude neplatící tým nahrazen týmem pod čarou. Podrobnosti o platbě se týmy dozví po registraci. Organizátoři nenesou za bezpečnost ani jednání hráčů zodpovědnost.
 	</p>
 	</div>
 
 	<div class="ruleContainer">
-		<h3 id="scheme">SCHÉMA HRY</h3>
+		<h3 id="scheme">SYSTÉM HRY</h3>
 		<p>
-			Hru Palapeli tvoří přibližně 10 stanovišť se šiframi. Vyluštěním šifry na stanovišti se tým dozví polohu dalšího stanoviště.
+			Hru Palapeli tvoří přibližně 10 stanovišť se šiframi. Vyluštěním šifry na stanovišti se tým dozví polohu dalšího stanoviště.<br>
 			Na stanovišti týmy najdou buď orga, který jim vydá šifru, nebo mrtvou schránku se šifrou. Týmům je povoleno vzít si jednu porci zadání. Šifra je v záhlaví zřetelně označena logem Palapeli. Záhlaví šifry a text psaný kurzívou neobsahuje šifru, není-li výslovně řečeno jinak.
-			Pokud se vám nepodaří šifru vyluštit, lze v <a href="#hints">Palainfu</a> požádat o totálku. Tím dané stanoviště přeskočíte a dozvíte se polohu dalšího stanoviště. Takto přeskočená šifra se vám odečte v prvním kritériu při vyhodnocení výsledků.
+			Pokud se vám nepodaří šifru vyluštit, lze v <a href="#hints">Palainfu</a> požádat o totálku. Tím dané stanoviště přeskočíte a dozvíte se polohu dalšího stanoviště. Takto přeskočená šifra se vám odečte v prvním kritériu při vyhodnocení výsledků.<br>
 			Některá stanoviště mají stanovenu zavírací dobu. Tu se tým dozví v <a href="#hints">Palainfu</a>. Znamená to, že aby tým měl jistotu, že šifru bude moci vyzvednout, musí na toto stanoviště přijít nejpozději v zavírací dobu. Je možné, že tým bude moci šifru vyzvednout i po zavírací době, avšak nemá to jisté. Jakmile se stanoviště skutečně uzavře, zobrazí se o tom informace v <a href="#hints">Palainfu</a>. Pokud tým dorazí na stanoviště po uzavření a nenajde šifru, pro pokračování ve hře musí využít totálku.
 		</p>
 	</div>
@@ -80,7 +80,7 @@
 		<h3 id="transport">PŘESUNY</h3>
 		<p>
 			Pro účast na hře je nutné, aby alespoň jeden člen týmu měl přístup na internet kvůli zadávání průchodu hrou a čerpání nápověd. Internet se může hodit i pro googlení informací.
-			Mezi stanovišti je povoleno se přesouvat pouze pěšky, na běžkách, na bobech, na saních nebo na bruslích. Je povoleno používání jakýchkoli prostředků pro orientaci v terénu. Používání MHD není zakázáno, ale trasa většinou přesuny pomocí MHD neumožňuje. Chcete-li na hru vzít psa, můžete, ale minimálně na stanovištích musí mít košík a být na vodítku. Do cíle psi nesmí.
+			Mezi stanovišti je povoleno se přesouvat pouze pěšky, na běžkách, na bobech, na saních nebo na bruslích. Je povoleno používání jakýchkoli prostředků pro orientaci v terénu. Používání MHD není zakázáno, ale trasa většinou přesuny pomocí MHD neumožňuje.<br> Chcete-li na hru vzít psa, můžete, ale minimálně na stanovištích musí mít košík a být na vodítku. Do cíle psi nesmí.
 
 		</p>
 	</div>
@@ -88,8 +88,8 @@
 	<div class="ruleContainer">
 		<h3 id="hints">PALAINFO</h3>
 		<p>
-			Novinkou tohoto ročníku je Palainfo. Jde o systém, kam týmy zapisují příchody na stanoviště a odchody ze stanovišť, žádají o totálky či vzdávají hru, čerpají informace o stavu startovního pole před nimi a dostávají další informace ze hry.
-			Proto pro průchod hrou je nezbytné, aby alespoň jeden člen týmu měl po celou dobu hry k dispozici zařízení s připojením na internet (na rychlosti by nemělo záležet).
+			Novinkou tohoto ročníku je Palainfo. Jde o systém, kam týmy zapisují příchody na stanoviště a odchody ze stanovišť, žádají o totálky či vzdávají hru, čerpají informace o stavu startovního pole před nimi a dostávají další informace ze hry.<br>
+			Proto pro průchod hrou je nezbytné, aby alespoň jeden člen týmu měl po celou dobu hry k dispozici zařízení s připojením na internet (na rychlosti by nemělo záležet).<br>
 			Pro registrované týmy se Palainfo zpřístupní společně s posledními informacemi před hrou, aby bylo možno fungování Palainfa otestovat.
 		</p>
 	</div>
