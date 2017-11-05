@@ -253,6 +253,34 @@ class AdministrationPresenter extends BasePresenter
         return null;
     }
 
+    public function createComponentSelectOnlyCheckpointForm()
+    {
+        if (!$this->selectedYear) {
+            parent::getYearData();
+        }
+
+        $this->yearsModel->setYear($this->selectedYear);
+
+        $checkpointCount = $this->yearsModel->getCheckpointCount();
+
+        $options = [];
+        for ($i = 0; $i < $checkpointCount; $i++) {
+            $options[$i] = ($i == $checkpointCount - 1 ? 'Cíl' : ($i == 0 ? 'Start' : $i . '. stanoviště'));
+        }
+        array_unshift($options, 'Vyberte stanoviště');
+
+
+        $form = new UI\Form;
+        $form->addSelect('checkpoint', '', $options, 1)->setAttribute('onchange', 'this.form.submit()');
+        $form->onSuccess[] = [$this, 'onlyCheckpointSelected'];
+        return $form;
+    }
+
+    public function onlyCheckpointSelected(UI\Form $form, array $values)
+    {
+        $this->redirect('this', ['checkpoint' => ($values['checkpoint'] == 0 ? 0 : $values['checkpoint'] - 1)]);
+    }
+
     public function cipherFormSucceeded(UI\Form $form, array $values)
     {
         $checkpoint = $_GET['checkpoint'];

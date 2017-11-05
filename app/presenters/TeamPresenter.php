@@ -162,16 +162,25 @@ class TeamPresenter extends BasePresenter
 
     protected function createComponentLoginForm()
     {
+        if(!$this->selectedYear) {
+            parent::getYearData();
+        }
+
         $form = new UI\Form;
         $form->addText('name', 'Jméno týmu:')->setRequired('Zadejte prosím jméno týmu.');
         $form->addPassword('password', 'Heslo:')->setRequired('Zadejte prosím heslo.');
         $form->addSubmit('login', 'PŘIHLÁSIT');
+        $form->addHidden('year', $this->selectedYear);
         $form->onSuccess[] = [$this, 'loginFormSucceeded'];
         return $form;
     }
 
     protected function createComponentRegistrationForm()
     {
+        if(!$this->selectedYear) {
+            parent::getYearData();
+        }
+
         $form = new UI\Form;
         $form->addText('name', '*Jméno týmu:')->setRequired('Zadejte prosím jméno týmu.')->addRule(UI\Form::MAX_LENGTH, 'Název týmu může mít maximálně 255 znaků', 255)->setAttribute('style', 'width:calc(100% - 10px)');
         $form->addPassword('password', '*Heslo:')->setRequired('Zadejte prosím heslo.')->addRule(UI\Form::MAX_LENGTH, 'Heslo může mít maximálně 255 znaků', 255);
@@ -185,18 +194,15 @@ class TeamPresenter extends BasePresenter
         $form->addText('email1', '*E-mail na 1. člena:')->setRequired('Zadejte prosím e-mail.')->addRule(UI\Form::EMAIL, 'E-mail není ve správném tvaru.')->addRule(UI\Form::MAX_LENGTH, 'E-mail prvního člena může mít maximálně 255 znaků', 255);
         $form->addText('email2', 'Záložní e-mail:')->setRequired(false)->addRule(UI\Form::EMAIL, 'Záložní-mail není ve správném tvaru.')->addRule(UI\Form::MAX_LENGTH, 'E-mail druhého člena může mít maximálně 255 znaků', 255);
         $form->addSubmit('login', 'REGISTROVAT');
+        $form->addHidden('year', $this->selectedYear);
         $form->onSuccess[] = [$this, 'registrationFormSucceeded'];
         return $form;
     }
 
     public function registrationFormSucceeded(UI\Form $form, array $values)
     {
-        if(!$this->selectedYear) {
-            parent::getYearData();
-        }
-
-        $this->teamsModel->setYear($this->selectedYear);
-        $this->yearsModel->setYear($this->selectedYear);
+        $this->teamsModel->setYear($values['year']);
+        $this->yearsModel->setYear($values['year']);
 
         $takenNames = $this->teamsModel->getTakenNames();
 
@@ -228,13 +234,10 @@ class TeamPresenter extends BasePresenter
 
     public function loginFormSucceeded(UI\Form $form, array $values)
     {
-        if(!$this->selectedYear) {
-            parent::getYearData();
-        }
         $teamId = $this->teamsModel->getTeamId($values['name']);
 
-        $this->yearsModel->setYear($this->selectedYear);
-        $this->teamsModel->setYear($this->selectedYear);
+        $this->yearsModel->setYear($values['year']);
+        $this->teamsModel->setYear($values['year']);
 
         if (!isset($teamId)) {
             $form->addError(Nette\Utils\Html::el('div', ['class' => 'flash info'])->setHtml('Tým se zadaným názvem neexistuje.'));
@@ -253,7 +256,7 @@ class TeamPresenter extends BasePresenter
 
                     $currentYearNumber = $this->yearsModel->getCurrentYearNumber();
 
-                    if (!$registered && $this->selectedYear == $currentYearNumber) {
+                    if (!$registered && $values['year'] == $currentYearNumber) {
                         if (!$this->yearsModel->isRegistrationOpen()) {
                             $this->flashMessage('Tým ' . $values ['name'] . ' byl úspěšně přihlášen. Registrace do aktuálního ročníku je však již uzavřena. Pro úpravu údajů z jiných ročníků prosíme vyberte jiný ročník.', 'success');
                             $this->session->getSection('team')->teamId = $teamId;
@@ -280,8 +283,8 @@ class TeamPresenter extends BasePresenter
                             }
                             $this->redirect('Team:edit');
                         }
-                    } elseif (!$registered && $this->selectedYear != $currentYearNumber) {
-                        $this->flashMessage('Tým ' . $values ['name'] . ' byl úspěšně přihlášen. ' . $this->selectedYear . '. ročníku se však neúčastnil, pro úpravu údajů z jiných ročníků prosíme vyberte jiný ročník.', 'success');
+                    } elseif (!$registered && $values['year'] != $currentYearNumber) {
+                        $this->flashMessage('Tým ' . $values ['name'] . ' byl úspěšně přihlášen. ' . $values['year'] . '. ročníku se však neúčastnil, pro úpravu údajů z jiných ročníků prosíme vyberte jiný ročník.', 'success');
                         $this->session->getSection('team')->teamId = $teamId;
                         $this->session->getSection('team')->teamName = $values['name'];
                         $this->redirect('Info:');
@@ -320,17 +323,14 @@ class TeamPresenter extends BasePresenter
         $form->addText('phone2', 'Záložní telefon:')->setDefaultValue($data->phone2)->setRequired(false)->addRule(UI\Form::MAX_LENGTH, 'Telefon druhého člena může mít maximálně 20 znaků', 20);
         $form->addText('email1', '*E-mail na 1. člena:')->setRequired('Zadejte prosím e-mail.')->addRule(UI\Form::EMAIL, 'E-mail není ve správném tvaru.')->setDefaultValue($data->email1)->addRule(UI\Form::MAX_LENGTH, 'E-mail prvního člena může mít maximálně 255 znaků', 255);
         $form->addText('email2', 'Záložní e-mail:')->setRequired(false)->addRule(UI\Form::EMAIL, 'Záložní-mail není ve správném tvaru.')->setRequired(false)->setDefaultValue($data->email2)->addRule(UI\Form::MAX_LENGTH, 'E-mail druhého člena může mít maximálně 255 znaků', 255);
+        $form->addHidden('year', $this->selectedYear);
         $form->addSubmit('edit', 'ZMĚNIT ÚDAJE');
         $form->onSuccess[] = [$this, 'editFormSucceeded'];
         return $form;
     }
 
     public  function editFormSucceeded(UI\Form $form, array $values) {
-        if(!$this->selectedYear) {
-            parent::getYearData();
-        }
-
-        $this->teamsModel->setYear($this->selectedYear);
+        $this->teamsModel->setYear($values['year']);
 
         $teamId = $this->session->getSection('team')->teamId;
 
@@ -359,20 +359,16 @@ class TeamPresenter extends BasePresenter
         $form->getElementPrototype()->setAttribute('class', 'center');
         $form->addCheckbox('cancelConfirm', 'Skutečně chci zrušit účast týmu ' . $teamName)->setRequired('Potvrďte prosím zrušení účasti zaškrtnutím checkboxu.')->setAttribute('class', 'nowrap');
         $form->addSubmit('cancel', 'ZRUŠIT ÚČAST')->setAttribute('class', 'autoWidth');
+        $form->addHidden('year', $this->selectedYear);
         $form->onSuccess[] = [$this, 'cancelFormSucceeded'];
         return $form;
     }
 
     public  function cancelFormSucceeded(UI\Form $form, array $values) {
-
-        if(!$this->selectedYear) {
-            parent::getYearData();
-        }
-
         $teamId = $this->session->getSection('team')->teamId;
 
-        $this->teamsModel->setYear($this->selectedYear);
-        $this->yearsModel->setYear($this->selectedYear);
+        $this->teamsModel->setYear($values['year']);
+        $this->yearsModel->setYear($values['year']);
 
         $paid = $this->teamsModel->getTeamPaymentStatus($teamId);
 
