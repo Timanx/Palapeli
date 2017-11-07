@@ -121,6 +121,10 @@ class TeamPresenter extends BasePresenter
 
     public function actionRegisterLogged()
     {
+        if(!$this->selectedYear) {
+            parent::getYearData();
+        }
+
         $this->teamsModel->setYear($this->selectedYear);
         $this->yearsModel->setYear($this->selectedYear);
 
