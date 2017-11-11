@@ -5,6 +5,7 @@ services:
 	- IUpdatesFormFactory
 	- IActionScreenFactory
 	- IInfoScreenFactory
+	- ICheckpointScreenFactory
 	- App\Models\TeamsModel
 	- App\Models\CiphersModel
 	- App\Models\DiscussionModel

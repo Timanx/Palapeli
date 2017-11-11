@@ -249,7 +249,7 @@ class ResultsModel {
         }
     }
 
-    public function getCheckpointEntryTimes($checkpointNumber, $orderByPrevious = false)
+    public function getCheckpointEntryTimes($checkpointNumber, $orderByPrevious = false, $notNulls = false)
     {
         if($orderByPrevious) {
             return $this->database->query('
@@ -258,9 +258,9 @@ class ResultsModel {
             LEFT JOIN results ON teamsyear.year = results.year AND teamsyear.team_id = results.team_id AND results.checkpoint_number = ?
             LEFT JOIN teams ON teamsyear.team_id = teams.id
             LEFT JOIN results AS previous_results ON previous_results.year = ? AND previous_results.checkpoint_number = ? AND previous_results.team_id = teamsyear.team_id
-            WHERE teamsyear.year = ?
+            WHERE teamsyear.year = ? AND ?
             ORDER BY results.entry_time, previous_results.entry_time IS NOT NULL DESC, previous_results.entry_time, LTRIM(name) COLLATE utf8_czech_ci ASC
-        ', $checkpointNumber, $this->year, ($checkpointNumber == 0 ? 0 : $checkpointNumber - 1), $this->year)->fetchAll();
+        ', $checkpointNumber, $this->year, ($checkpointNumber == 0 ? 0 : $checkpointNumber - 1), $this->year, $this->database::literal($notNulls ? 'results.team_id IS NOT NULL' : 'TRUE'))->fetchAll();
         } else {
             return $this->database->query('
             SELECT TIME_FORMAT(results.entry_time, \'%H:%i\') AS entry_time, teams.id, teams.name, previous_results.entry_time IS NOT NULL AS visited_previous
@@ -268,9 +268,9 @@ class ResultsModel {
             LEFT JOIN results ON teamsyear.year = results.year AND teamsyear.team_id = results.team_id AND results.checkpoint_number = ?
             LEFT JOIN teams ON teamsyear.team_id = teams.id
             LEFT JOIN results AS previous_results ON previous_results.year = ? AND previous_results.checkpoint_number = ? AND previous_results.team_id = teamsyear.team_id
-            WHERE teamsyear.year = ?
+            WHERE teamsyear.year = ? AND ?
             ORDER BY results.entry_time, LTRIM(name) COLLATE utf8_czech_ci ASC
-        ', $checkpointNumber, $this->year, ($checkpointNumber == 0 ? 0 : $checkpointNumber - 1), $this->year)->fetchAll();
+        ', $checkpointNumber, $this->year, ($checkpointNumber == 0 ? 0 : $checkpointNumber - 1), $this->year, $this->database::literal($notNulls ? 'results.team_id IS NOT NULL' : 'TRUE'))->fetchAll();
         }
     }
 

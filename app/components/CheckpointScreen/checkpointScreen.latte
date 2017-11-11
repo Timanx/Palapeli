@@ -1,0 +1,34 @@
+<div class="checkpoint-screen-container screen-container">
+
+	<div n:foreach="$flashes as $flash" n:class="flash, $flash->type">{$flash->message}</div>
+
+	<div class="checkpoint-container">
+		{if count($checkpointData) == 0}
+			Na stanoviště zatím nedošel žádný tým.
+		{else}
+
+			{var $i = 1}
+			{foreach $checkpointData as $row}
+
+				<div class="team-entry{if $current == $row->id} current{/if}">
+
+					<div class="team-order">
+						{$i}.
+					</div><!--
+
+					--><div class="team-name">
+						{$row->name|noescape}
+					</div><!--
+
+					--><div class="team-time">
+						{$row->entry_time|noescape}
+					</div>
+					{var $i = $i + 1}
+				</div>
+
+			{/foreach}
+
+		{/if}
+	</div>
+
+</div>

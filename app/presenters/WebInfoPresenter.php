@@ -11,19 +11,23 @@ class WebInfoPresenter extends BasePresenter
     private $yearsModel;
     /** @var \IActionScreenFactory $actionScreen */
     private $actionScreen;
-    /** @var \IInfoScreenFactory $actionScreen */
+    /** @var \IInfoScreenFactory $infoScreen */
     private $infoScreen;
+    /** @var \ICheckpointScreenFactory $checkpointScreen */
+    private $checkpointScreen;
 
     public function __construct(
         YearsModel $yearsModel,
         \IActionScreenFactory $actionScreen,
-        \IInfoScreenFactory $infoScreen
+        \IInfoScreenFactory $infoScreen,
+        \ICheckpointScreenFactory $checkpointScreen
     )
     {
         parent::__construct();
         $this->actionScreen = $actionScreen;
         $this->yearsModel = $yearsModel;
         $this->infoScreen = $infoScreen;
+        $this->checkpointScreen = $checkpointScreen;
     }
 
     public function renderDefault($defaultScreen = null)
@@ -44,6 +48,10 @@ class WebInfoPresenter extends BasePresenter
         $component = $this->getComponent('infoScreen');
     }
 
+    public function renderCheckpoint()
+    {
+        parent::render();
+    }
 
 
     protected function createComponentActionScreen()
@@ -67,4 +75,16 @@ class WebInfoPresenter extends BasePresenter
 
         return $control;
     }
+
+    protected function createComponentCheckpointScreen()
+    {
+        /** @var \CheckpointScreen $control */
+        $control = $this->checkpointScreen->create();
+
+        $control->setTeamId($this->session->getSection('team')->teamId);
+        $control->setYear($this->yearsModel->getCurrentYearNumber());
+
+        return $control;
+    }
+
 }

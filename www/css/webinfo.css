@@ -1,3 +1,7 @@
+.screen-container {
+  font-family: 'Source Sans Pro', sans-serif;
+  padding: 0px 20px;
+}
 .logo-container {
   padding: 10px;
 }
@@ -11,7 +15,10 @@
 }
 .menu-container {
   display: table;
-  width: 100%;
+  width: calc(100% - 10px);
+  width: -moz-calc(100% - 10px);
+  width: -webkit-calc(100% - 10px);
+  width: -o-calc(100% - 10px);
   margin-bottom: 20px;
   background-color: #002e6a;
   padding: 5px;
@@ -108,4 +115,37 @@
   font-weight: 600;
   color: white;
   cursor: pointer;
+}
+.checkpoint-screen-container .checkpoint-container {
+  margin: auto;
+  max-width: 286px;
+}
+.checkpoint-screen-container .checkpoint-container .team-entry.current {
+  background-color: #D7FF9F;
+}
+.checkpoint-screen-container .checkpoint-container .team-entry div {
+  display: inline-block;
+  font-size: 14pt;
+}
+.checkpoint-screen-container .checkpoint-container .team-entry div.team-name {
+  width: calc(100% - 86px);
+  width: -moz-calc(100% - 86px);
+  width: -webkit-calc(100% - 86px);
+  width: -o-calc(100% - 86px);
+  max-width: 200px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  margin-left: 10px;
+}
+.checkpoint-screen-container .checkpoint-container .team-entry div.team-time {
+  width: 43px;
+  margin-left: 10px;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.checkpoint-screen-container .checkpoint-container .team-entry div.team-order {
+  width: 23px;
+  white-space: nowrap;
+  overflow: hidden;
 }

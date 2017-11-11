@@ -9,6 +9,11 @@
 @yellow-tint: #FFEBA2;
 @green-tint: #D7FF9F;
 
+.screen-container {
+  font-family: 'Source Sans Pro', sans-serif;
+  padding: 0px 20px;
+}
+
 .logo-container {
   padding: 10px;
   .name {
@@ -23,7 +28,7 @@
 
 .menu-container {
   display: table;
-  width: 100%;
+  .calc(width, "100% - 10px");
   margin-bottom: 20px;
   background-color: darken(@blue, 20%);
   padding: 5px;
@@ -53,6 +58,7 @@
     }
   }
 }
+
 .action-screen-container {
   font-family: 'Source Sans Pro', sans-serif;
   text-align: center;
@@ -119,5 +125,42 @@
     font-weight: 600;
     color: white;
     cursor: pointer;
+  }
+}
+
+.checkpoint-screen-container {
+  .checkpoint-container {
+    margin: auto;
+    max-width: 286px;
+    .team-entry {
+      &.current {
+        background-color: #D7FF9F;
+      }
+
+      div {
+        display: inline-block;
+        font-size: 14pt;
+        &.team-name {
+          .calc(width, "100% - 86px");
+          max-width: 200px;
+          white-space: nowrap;
+          text-overflow: ellipsis;
+          overflow: hidden;
+          margin-left: 10px;
+        }
+        &.team-time {
+          width: 43px;
+          margin-left: 10px;
+          white-space: nowrap;
+          overflow: hidden;
+
+        }
+        &.team-order {
+          width: 23px;
+          white-space: nowrap;
+          overflow: hidden;
+        }
+      }
+    }
   }
 }
