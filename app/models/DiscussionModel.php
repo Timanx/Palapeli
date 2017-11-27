@@ -51,6 +51,13 @@ class DiscussionModel {
     {
         $this->database->query('
             INSERT INTO discussion (name, team_id, unlogged_team_name, created, message, thread) VALUES (?, ?, ?, ?, ?, ?)
-        ', $author, $teamId (!isset($teamId) && strlen($unloggedTeamName) > 0 ? $unloggedTeamName : NULL), date('Y-m-d H:i:s', time()), $message, $thread);
+        ',
+            $author,
+            $teamId,
+            (!isset($teamId) && strlen($unloggedTeamName) > 0 ? $unloggedTeamName : null),
+            date('Y-m-d H:i:s', time()),
+            $message,
+            $thread
+        );
     }
 }
