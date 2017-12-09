@@ -15,12 +15,15 @@ class WebInfoPresenter extends BasePresenter
     private $infoScreen;
     /** @var \ICheckpointScreenFactory $checkpointScreen */
     private $checkpointScreen;
+    /** @var  \ICardScreenFactory $cardScreen */
+    private $cardScreen;
 
     public function __construct(
         YearsModel $yearsModel,
         \IActionScreenFactory $actionScreen,
         \IInfoScreenFactory $infoScreen,
-        \ICheckpointScreenFactory $checkpointScreen
+        \ICheckpointScreenFactory $checkpointScreen,
+        \ICardScreenFactory $cardScreen
     )
     {
         parent::__construct();
@@ -28,6 +31,7 @@ class WebInfoPresenter extends BasePresenter
         $this->yearsModel = $yearsModel;
         $this->infoScreen = $infoScreen;
         $this->checkpointScreen = $checkpointScreen;
+        $this->cardScreen = $cardScreen;
     }
 
     public function renderDefault($defaultScreen = null)
@@ -53,6 +57,11 @@ class WebInfoPresenter extends BasePresenter
         parent::render();
     }
 
+    public function renderCard()
+    {
+        parent::render();
+    }
+
 
     protected function createComponentActionScreen()
     {
@@ -69,6 +78,17 @@ class WebInfoPresenter extends BasePresenter
     {
         /** @var \InfoScreen $control */
         $control = $this->infoScreen->create();
+
+        $control->setTeamId($this->session->getSection('team')->teamId);
+        $control->setYear($this->yearsModel->getCurrentYearNumber());
+
+        return $control;
+    }
+
+    protected function createComponentCardScreen()
+    {
+        /** @var \CardScreen $control */
+        $control = $this->cardScreen->create();
 
         $control->setTeamId($this->session->getSection('team')->teamId);
         $control->setYear($this->yearsModel->getCurrentYearNumber());

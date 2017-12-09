@@ -50,7 +50,7 @@ class ActionScreen extends BaseControl
 
     public function render()
     {
-        $this->template->setFile(__DIR__ . '/ActionScreen.latte');
+        $this->template->setFile(__DIR__ . '/actionScreen.latte');
 
         $teamId = $this->session->getSection('team')->teamId ?? NULL;
 

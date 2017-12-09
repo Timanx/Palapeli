@@ -22,6 +22,9 @@ class InfoScreen extends BaseControl
 
     public function render()
     {
+
+        $this->template->setFile(__DIR__ . '/infoScreen.latte');
+
         $this->logModel->setYear($this->year);
 
         $data = $this->logModel->getLogsForTeam($this->teamId);
@@ -58,6 +61,9 @@ class InfoScreen extends BaseControl
         }
 
         $this->template->customFlashes = $flashes;
+
+
+        $this->template->render();
 
     }
 

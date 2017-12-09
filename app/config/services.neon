@@ -6,6 +6,7 @@ services:
 	- IActionScreenFactory
 	- IInfoScreenFactory
 	- ICheckpointScreenFactory
+	- ICardScreenFactory
 	- App\Models\TeamsModel
 	- App\Models\CiphersModel
 	- App\Models\DiscussionModel
