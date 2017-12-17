@@ -2,7 +2,7 @@
 	<div class="menuItemsContainer" style="width:100%;">
 		<a href="{plink Team:edit}">
 			<div class="menuItemContainer">
-				<p class="menuText{if $presenter->isLinkCurrent('Team:edit')} selected{/if}">Údaje</p>
+				<p class="menuText{if $presenter->isLinkCurrent('Team:edit')} selected{/if}">Změnit údaje</p>
 			</div>
 		</a>
 		{if $isSelectedYearCurrent}
@@ -13,13 +13,13 @@
 			</a>
 			<a href="{plink Team:cancel}">
 				<div class="menuItemContainer">
-					<p class="menuText{if $presenter->isLinkCurrent('Team:cancel')} selected{/if}">Zrušení</p>
+					<p class="menuText{if $presenter->isLinkCurrent('Team:cancel')} selected{/if}">Zrušit účast</p>
 				</div>
 			</a>
 		{/if}
 		<a href="{plink Team:logout}">
 			<div class="menuItemContainer">
-				<p class="menuText{if $presenter->isLinkCurrent('Team:logout')} selected{/if}">Odhlášení</p>
+				<p class="menuText{if $presenter->isLinkCurrent('Team:logout')} selected{/if}">Odhlásit</p>
 			</div>
 		</a>
 	</div>

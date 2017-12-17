@@ -64,4 +64,12 @@ class LogModel
     {
         //TODO
     }
+
+    public function getLogTypes()
+    {
+        return $this->database->query('
+            SELECT id, name
+            FROM log_type
+        ')->fetchPairs('id', 'name');
+    }
 }

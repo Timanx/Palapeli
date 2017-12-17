@@ -11,11 +11,12 @@
 
 .screen-container {
   font-family: 'Source Sans Pro', sans-serif;
-  padding: 0px 20px;
+  padding: 0px 15px;
 }
 
 .logo-container {
   padding: 10px;
+  background-color: white;
   .name {
     line-height: 30px;
     display: inline-block;
@@ -28,33 +29,23 @@
 
 .menu-container {
   display: table;
-  .calc(width, "100% - 10px");
-  margin-bottom: 20px;
-  background-color: darken(@blue, 20%);
-  padding: 5px;
+  width: 100%;
+  position: fixed;
+  bottom: 0;
+
   .item {
     width: 25%;
     height: 60px;
-    font-weight: normal;
-    font-size: 9pt;
+    font-size: 11pt;
+    font-weight: bold;
     text-align: center;
     display: table-cell;
     vertical-align: middle;
-    color: white;
+    color: #929292;
     cursor: pointer;
-
-    background-color: darken(@blue, 20%);
-    &#item1.active {
-      background-color: @blue;
-    }
-    &#item2.active {
-      background-color: @green;
-    }
-    &#item3.active {
-      background-color: @yellow;
-    }
-    &#item4.active {
-      background-color: @red;
+    background-color: #EEE;
+    &.selected {
+      color: @blue;
     }
   }
 }
@@ -62,6 +53,7 @@
 .action-screen-container {
   font-family: 'Source Sans Pro', sans-serif;
   text-align: center;
+  padding: 0px 15px;
   .checkpoint-heading {
     text-align: center;
     font-weight: bold;
@@ -88,7 +80,7 @@
     }
   }
   .exit-time-forms-container {
-    margin-bottom: 27px;
+    margin-bottom: 40px;
     text-align: center;
     .exit-time-input-form {
       display: inline-block;
@@ -117,7 +109,7 @@
 
   .button {
     background-color: @blue;
-    margin-bottom: 27px;
+    margin-bottom: 16px;
     display: inline-block;
     padding: 10px;
     height: 24px;
@@ -125,6 +117,15 @@
     font-weight: 600;
     color: white;
     cursor: pointer;
+  }
+  .headline {
+    text-align: center;
+    font-weight: bold;
+    font-size: 25px;
+    margin-bottom: 15px;
+  }
+  .consequences {
+    margin-bottom: 20px;
   }
 }
 
@@ -181,4 +182,18 @@
   input[type="checkbox"]:disabled {
     width: 20px;
   }
+}
+
+.wrapper:after {
+  height: 0px !important;
+}
+
+.wrapper {
+  min-height: 0% !important;
+  margin-bottom: 0px !important;
+}
+
+.webinfo-container {
+  padding-bottom: 80px;
+  padding-top: 30px;
 }

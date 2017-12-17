@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Presenters;
 
 use App\Models\CiphersModel;
@@ -39,23 +40,28 @@ class AdministrationPresenter extends BasePresenter
     private $teamCardFactory;
     /** @var  \ICheckpointCardFactory */
     private $checkpointCardFactory;
+    /** @var  \ITeamMessageFactory */
+    private $teamMessageFactory;
 
     public function __construct(
         \IDiscussionControlFactory $discussionControlFactory,
         \IUpdatesFormFactory $updatesFormFactory,
         \ITeamCardFactory $teamCardFactory,
         \ICheckpointCardFactory $checkpointCardFactory,
+        \ITeamMessageFactory $teamMessageFactory,
         YearsModel $yearsModel,
         TeamsModel $teamsModel,
         ReportsModel $reportsModel,
         ResultsModel $resultsModel,
         CiphersModel $ciphersModel,
         FilesModel $filesModel
-    ) {
+    )
+    {
         $this->discussionControlFactory = $discussionControlFactory;
         $this->updatesFormFactory = $updatesFormFactory;
         $this->teamCardFactory = $teamCardFactory;
         $this->checkpointCardFactory = $checkpointCardFactory;
+        $this->teamMessageFactory = $teamMessageFactory;
         $this->yearsModel = $yearsModel;
         $this->teamsModel = $teamsModel;
         $this->resultsModel = $resultsModel;
@@ -153,14 +159,20 @@ class AdministrationPresenter extends BasePresenter
         $this->template->emails = $this->teamsModel->getPlayingTeamsEmails();
     }
 
-    public function renderTeamTable()
+    public function renderTeamTable($orderByRegistration = false)
     {
         parent::render();
         $this->prepareHeading('Tabulka údajů o týmech');
 
         $this->teamsModel->setYear($this->selectedYear);
 
-        $this->template->data = $this->teamsModel->getPlayingTeams();
+        $this->template->data = ($orderByRegistration ? $this->teamsModel->getPlayingTeamsByRegistration() : $this->teamsModel->getPlayingTeams());
+    }
+
+    public function renderTeamMessage()
+    {
+        parent::render();
+        $this->prepareHeading('Odeslat zprávu týmům');
     }
 
     protected function createComponentDiscussion()
@@ -217,6 +229,16 @@ class AdministrationPresenter extends BasePresenter
         return $control;
     }
 
+    protected function createComponentTeamMessage()
+    {
+        parent::getYearData();
+
+        /** @var \TeamMessage $control */
+        $control = $this->teamMessageFactory->create();
+        $control->setYear($this->selectedYear);
+        return $control;
+    }
+
     public function createComponentCipherForm()
     {
         $checkpoint = $_GET['checkpoint'];
@@ -240,8 +262,9 @@ class AdministrationPresenter extends BasePresenter
         return $form;
     }
 
-    private function uploadFile(FileUpload $file, $path,  $target_name) {
-        if($file->getError() == UPLOAD_ERR_OK) {
+    private function uploadFile(FileUpload $file, $path, $target_name)
+    {
+        if ($file->getError() == UPLOAD_ERR_OK) {
             $target_file = $path . $target_name;
 
             $tmpFile = $file->getTemporaryFile();
@@ -285,21 +308,21 @@ class AdministrationPresenter extends BasePresenter
     {
         $checkpoint = $_GET['checkpoint'];
 
-        if(!file_exists('cipher_images')) {
+        if (!file_exists('cipher_images')) {
             mkdir('cipher_images');
         }
 
-        if(!file_exists('cipher_images/' . $this->selectedYear)) {
+        if (!file_exists('cipher_images/' . $this->selectedYear)) {
             mkdir('cipher_images/' . $this->selectedYear);
         }
 
         $target_dir = 'cipher_images/' . $this->selectedYear . '/' . $checkpoint . '/';
-        if(!file_exists($target_dir)) {
+        if (!file_exists($target_dir)) {
             mkdir($target_dir);
         }
 
         $checkpointString = $checkpoint;
-        if($checkpoint < 10) {
+        if ($checkpoint < 10) {
             $checkpointString = '0' . $checkpoint;
         }
 
@@ -315,15 +338,15 @@ class AdministrationPresenter extends BasePresenter
 
         $this->ciphersModel->upsertCipher($checkpoint, $values['name'], $values['cipher_description'], $values['solution_description'], $values['solution']);
 
-        if($values['solution_image']->getError() == UPLOAD_ERR_OK) {
+        if ($values['solution_image']->getError() == UPLOAD_ERR_OK) {
             $this->ciphersModel->updateSolutionImage($solution_image_id);
         }
 
-        if($values['cipher_image']->getError() == UPLOAD_ERR_OK) {
+        if ($values['cipher_image']->getError() == UPLOAD_ERR_OK) {
             $this->ciphersModel->updateCipherImage($cipher_image_id);
         }
 
-        if($values['pdf_file']->getError() == UPLOAD_ERR_OK) {
+        if ($values['pdf_file']->getError() == UPLOAD_ERR_OK) {
             $this->ciphersModel->updatePDF($pdf_file_id);
         }
 
@@ -351,7 +374,7 @@ class AdministrationPresenter extends BasePresenter
     public function editPayments(UI\Form $form, array $values)
     {
         $this->teamsModel->setYear($this->selectedYear);
-        foreach($values as $teamId => $paymentStatus) {
+        foreach ($values as $teamId => $paymentStatus) {
             $this->teamsModel->editTeamPayment($teamId, $paymentStatus);
         }
 
@@ -428,7 +451,7 @@ class AdministrationPresenter extends BasePresenter
         $this->teamsModel->setYear($this->selectedYear);
         $teamId = $this->teamsModel->getTeamId($values['team']);
 
-        if(!$teamId) {
+        if (!$teamId) {
             $form->addError('Tým se zadaným názvem neexistuje');
         }
 

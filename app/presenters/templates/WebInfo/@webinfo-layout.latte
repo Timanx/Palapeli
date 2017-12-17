@@ -106,28 +106,22 @@
 <body>
 
 <div class="wrapper" id="wrapper">
-
-	<div class="logo-container">
-		{include ../../../components/SVG/logo_basic.svg, dim => '30px'}
-		<span class="name">PALAPELI</span>
-	</div>
-
-	<div class="menu-container">
-		<a href="{plink WebInfo:}" class="item" id="item1">
-			{include ../../../components/SVG/webinfoIcons/actions.svg}
+	<div class="menu-container" id="webinfo-menu">
+		<a href="{plink WebInfo:}" class="item{ifCurrent WebInfo:} selected{/ifCurrent}" id="item1">
+			{*include ../../../components/SVG/webinfoIcons/actions.svg*}
 			<div class="text">AKCE</div>
 		</a><!--
-		--><a href="{plink WebInfo:card}"class="item" id="item2">
-			{include ../../../components/SVG/webinfoIcons/team.svg}
-			<div class="text">KARTA TÝMU</div>
+		--><a href="{plink WebInfo:card}"class="item{ifCurrent WebInfo:card} selected{/ifCurrent}" id="item2">
+			{*include ../../../components/SVG/webinfoIcons/team.svg*}
+			<div class="text">KARTA</div>
 		</a><!--
 
-		--><a href="{plink WebInfo:checkpoint}" class="item" id="item3">
-			{include ../../../components/SVG/webinfoIcons/list.svg}
-			<div class="text">STANOVIŠTĚ</div>
+		--><a href="{plink WebInfo:checkpoint}" class="item{ifCurrent WebInfo:checkpoint} selected{/ifCurrent}" id="item3">
+			{*include ../../../components/SVG/webinfoIcons/list.svg*}
+			<div class="text">PŘÍCHODY</div>
 		</a><!--
-		--><a href="{plink WebInfo:info}" class="item" id="item4">
-			{include ../../../components/SVG/webinfoIcons/info.svg}
+		--><a href="{plink WebInfo:info}" class="item{ifCurrent WebInfo:info} selected{/ifCurrent}" id="item4">
+			{*include ../../../components/SVG/webinfoIcons/info.svg*}
 			<div class="text">INFO</div>
 		</a>
 	</div>

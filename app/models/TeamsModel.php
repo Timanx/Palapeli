@@ -83,6 +83,19 @@ class TeamsModel
         )->fetchAll();
     }
 
+    public function getPlayingTeamsByRegistration()
+    {
+        return $this->database->query('
+                SELECT teams.id, LTRIM(teams.name) AS name, ty.*, teams.phone1, teams.phone2, teams.email1, teams.email2
+                FROM teams
+                LEFT JOIN teamsyear ty ON teams.id = ty.team_id
+                WHERE year = ?
+                ORDER BY registered
+                LIMIT ?',
+            $this->year, $this->teamLimit ?? PHP_INT_MAX
+        )->fetchAll();
+    }
+
     public function getStandbyTeams()
     {
         return $this->database->query('

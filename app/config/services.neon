@@ -3,6 +3,7 @@ services:
 	- ICheckpointCardFactory
 	- ITeamCardFactory
 	- IUpdatesFormFactory
+	- ITeamMessageFactory
 	- IActionScreenFactory
 	- IInfoScreenFactory
 	- ICheckpointScreenFactory

@@ -1,9 +1,10 @@
 .screen-container {
   font-family: 'Source Sans Pro', sans-serif;
-  padding: 0px 20px;
+  padding: 0px 15px;
 }
 .logo-container {
   padding: 10px;
+  background-color: white;
 }
 .logo-container .name {
   line-height: 30px;
@@ -15,41 +16,29 @@
 }
 .menu-container {
   display: table;
-  width: calc(100% - 10px);
-  width: -moz-calc(100% - 10px);
-  width: -webkit-calc(100% - 10px);
-  width: -o-calc(100% - 10px);
-  margin-bottom: 20px;
-  background-color: #002e6a;
-  padding: 5px;
+  width: 100%;
+  position: fixed;
+  bottom: 0;
 }
 .menu-container .item {
   width: 25%;
   height: 60px;
-  font-weight: normal;
-  font-size: 9pt;
+  font-size: 11pt;
+  font-weight: bold;
   text-align: center;
   display: table-cell;
   vertical-align: middle;
-  color: white;
+  color: #929292;
   cursor: pointer;
-  background-color: #002e6a;
+  background-color: #EEE;
 }
-.menu-container .item#item1.active {
-  background-color: #005BD0;
-}
-.menu-container .item#item2.active {
-  background-color: #69B300;
-}
-.menu-container .item#item3.active {
-  background-color: #FFCA05;
-}
-.menu-container .item#item4.active {
-  background-color: #FF0000;
+.menu-container .item.selected {
+  color: #005BD0;
 }
 .action-screen-container {
   font-family: 'Source Sans Pro', sans-serif;
   text-align: center;
+  padding: 0px 15px;
 }
 .action-screen-container .checkpoint-heading {
   text-align: center;
@@ -80,7 +69,7 @@
   vertical-align: top;
 }
 .action-screen-container .exit-time-forms-container {
-  margin-bottom: 27px;
+  margin-bottom: 40px;
   text-align: center;
 }
 .action-screen-container .exit-time-forms-container .exit-time-input-form {
@@ -107,7 +96,7 @@
 }
 .action-screen-container .button {
   background-color: #005BD0;
-  margin-bottom: 27px;
+  margin-bottom: 16px;
   display: inline-block;
   padding: 10px;
   height: 24px;
@@ -115,6 +104,15 @@
   font-weight: 600;
   color: white;
   cursor: pointer;
+}
+.action-screen-container .headline {
+  text-align: center;
+  font-weight: bold;
+  font-size: 25px;
+  margin-bottom: 15px;
+}
+.action-screen-container .consequences {
+  margin-bottom: 20px;
 }
 .checkpoint-screen-container .checkpoint-container {
   margin: auto;
@@ -161,4 +159,15 @@
 }
 .card-screen-container input[type="checkbox"]:disabled {
   width: 20px;
+}
+.wrapper:after {
+  height: 0px !important;
+}
+.wrapper {
+  min-height: 0% !important;
+  margin-bottom: 0px !important;
+}
+.webinfo-container {
+  padding-bottom: 80px;
+  padding-top: 30px;
 }
