@@ -1,5 +1,11 @@
-<div class="info-screen-container">
+<div class="info-screen-container screen-container">
 
-	<div n:foreach="$customFlashes as $flash" n:class="flash, $flash->type">{$flash->message}</div>
+	<div class="checkpoint-heading">
+		AKTUÁLNÍ INFO
+	</div>
+
+	<div class="messages-container">
+		<div n:foreach="$customFlashes as $flash" n:class="flash, $flash->type">{$flash->message|noescape}</div>
+	</div>
 
 </div>

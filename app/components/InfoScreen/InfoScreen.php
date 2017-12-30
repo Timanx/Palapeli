@@ -42,10 +42,10 @@ class InfoScreen extends BaseControl
                         $message .= 'Ukončili jste hru.';
                         break;
                     case LogModel::LT_OPEN_DEAD:
-                        $message .= sprintf('Otevřeli jste totálku na stanovišti %s.', $row->checkpoint_number);
+                        $message .= sprintf('Otevřeli jste totálku na stanovišti&nbsp;%s.', $row->checkpoint_number);
                             break;
                     case LogModel::LT_ENTER_CHECKPOINT:
-                        $message .= sprintf('Přišli jste na stanoviště číslo %s.', $row->checkpoint_number);
+                        $message .= sprintf('Přišli jste na stanoviště číslo&nbsp;%s.', $row->checkpoint_number);
                         $type = 'success';
                         break;
                     case LogModel::LT_GAME_START:

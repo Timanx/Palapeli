@@ -1,5 +1,9 @@
 <div class="checkpoint-screen-container screen-container">
 
+	<div class="checkpoint-heading">
+		PŘÍCHODY NA STANOVIŠTĚ {$checkpointNumber|noescape}
+	</div>
+
 	<div n:foreach="$flashes as $flash" n:class="flash, $flash->type">{$flash->message}</div>
 
 	<div class="checkpoint-container">

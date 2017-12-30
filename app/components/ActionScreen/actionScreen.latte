@@ -1,14 +1,19 @@
-<div class="action-screen-container">
+<div n:foreach="$flashes as $flash" n:class="flash, $flash->type">{$flash->message}</div>
 
-	<div n:foreach="$flashes as $flash" n:class="flash, $flash->type">{$flash->message}</div>
+<div class="action-screen-container screen-container">
 
 	{if !$teamEnded}
 
 
 	<div class="actions-container" id="actions-container" style="display: block;">
 		<div class="checkpoint-heading">
-			HESLO STANOVIŠTĚ {$nextCheckpointNumber}
-
+			{if $nextCheckpointNumber == 0}
+				HESLO STARTOVNÍ ŠIFRY
+			{elseif $nextCheckpointNumber == $checkpointCount - 1}
+				HESLO CÍLOVÉHO STANOVIŠTĚ
+			{else}
+				HESLO STANOVIŠTĚ {$nextCheckpointNumber}
+			{/if}
 		</div>
 
 		<div class="code-input-form">

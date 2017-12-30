@@ -1,7 +1,10 @@
+<div class="checkpoint-heading">
+	KARTA TÝMU
+</div>
+
+<div n:foreach="$flashes as $flash" n:class="flash, $flash->type">{$flash->message}</div>
+
 <div class="card-screen-container screen-container">
-
-	<div n:foreach="$flashes as $flash" n:class="flash, $flash->type">{$flash->message}</div>
-
 	{form teamCardForm}
 		<table class="card">
 			<tr class="headings">
@@ -11,9 +14,8 @@
 				<th class="spacing" title="Čas odchodu ze stanoviště">
 					ODCHOD
 				</th>
-				<th class="right" title="Zda tým bral totálku (pouze pokud došel na další stanoviště)">
-					<span class="largeScreen">TOTÁLKA</span>
-					<span class="responsive">TOT.</span>
+				<th class="right" title="Zda jste brali totálku (pouze pokud jste došli na další stanoviště)">
+					TOTÁLKA
 				</th>
 			</tr>
 			{for $i = 0; $i < $checkpointCount; $i++}

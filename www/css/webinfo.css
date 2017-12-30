@@ -1,6 +1,21 @@
+body {
+  font-family: 'Raleway', sans-serif;
+  -webkit-font-feature-settings: "lnum" 1;
+  -moz-font-feature-settings: "lnum" 1;
+  font-feature-settings: "lnum" 1;
+}
+.flash {
+  font-family: 'Source Sans Pro', sans-serif;
+}
+.checkpoint-heading {
+  text-align: center;
+  font-weight: bold;
+  line-height: 50px;
+  font-size: 25px;
+  font-family: 'Source Sans Pro', sans-serif;
+}
 .screen-container {
   font-family: 'Source Sans Pro', sans-serif;
-  padding: 0px 15px;
 }
 .logo-container {
   padding: 10px;
@@ -38,27 +53,20 @@
 .action-screen-container {
   font-family: 'Source Sans Pro', sans-serif;
   text-align: center;
-  padding: 0px 15px;
-}
-.action-screen-container .checkpoint-heading {
-  text-align: center;
-  font-weight: bold;
-  line-height: 50px;
-  font-size: 25px;
+  padding: 0px 35px;
 }
 .action-screen-container .code-input-form {
   margin-bottom: 27px;
 }
 .action-screen-container .code-input-form input[type="text"] {
   display: inline-block;
-  width: 60%;
+  width: calc(100% - 54px);
+  width: -moz-calc(100% - 54px);
+  width: -webkit-calc(100% - 54px);
+  width: -o-calc(100% - 54px);
   height: 40px;
   margin: 0;
   vertical-align: top;
-  margin-left: calc(10% - 27px);
-  margin-left: -moz-calc(10% - 27px);
-  margin-left: -webkit-calc(10% - 27px);
-  margin-left: -o-calc(10% - 27px);
   font-size: 20px;
 }
 .action-screen-container .code-input-form input[type="submit"] {
@@ -67,6 +75,8 @@
   height: 44px;
   margin: 0;
   vertical-align: top;
+  background-image: url('../images/send_arrow.svg');
+  background-repeat: no-repeat;
 }
 .action-screen-container .exit-time-forms-container {
   margin-bottom: 40px;
@@ -81,8 +91,11 @@
 .action-screen-container .exit-time-forms-container .exit-time-input-form input[type="time"] {
   display: inline-block;
   height: 40px;
+  width: 100px;
   margin: 0;
   vertical-align: top;
+  text-align: right;
+  font-size: 18pt;
 }
 .action-screen-container .exit-time-forms-container .exit-time-input-form input[type="submit"] {
   display: inline-block;
@@ -90,9 +103,12 @@
   height: 44px;
   margin: 0;
   vertical-align: top;
+  background-image: url('../images/send_arrow.svg');
+  background-repeat: no-repeat;
 }
 .action-screen-container .exit-time-forms-container .exit-time-input-form input[type="submit"].now {
   margin-left: 30px;
+  background-image: none;
 }
 .action-screen-container .button {
   background-color: #005BD0;
@@ -100,10 +116,15 @@
   display: inline-block;
   padding: 10px;
   height: 24px;
+  font-size: 20px;
   line-height: 24px;
   font-weight: 600;
   color: white;
   cursor: pointer;
+  width: calc(100% - 20px);
+  width: -moz-calc(100% - 20px);
+  width: -webkit-calc(100% - 20px);
+  width: -o-calc(100% - 20px);
 }
 .action-screen-container .headline {
   text-align: center;
@@ -116,7 +137,7 @@
 }
 .checkpoint-screen-container .checkpoint-container {
   margin: auto;
-  max-width: 286px;
+  text-align: center;
 }
 .checkpoint-screen-container .checkpoint-container .team-entry.current {
   background-color: #D7FF9F;
@@ -135,17 +156,23 @@
   text-overflow: ellipsis;
   overflow: hidden;
   margin-left: 10px;
+  text-align: left;
 }
 .checkpoint-screen-container .checkpoint-container .team-entry div.team-time {
   width: 43px;
   margin-left: 10px;
   white-space: nowrap;
   overflow: hidden;
+  text-align: right;
 }
 .checkpoint-screen-container .checkpoint-container .team-entry div.team-order {
   width: 23px;
   white-space: nowrap;
   overflow: hidden;
+  text-align: right;
+}
+.card-screen-container {
+  padding: 0px 15px;
 }
 .card-screen-container input:disabled {
   background-color: #CCC;
