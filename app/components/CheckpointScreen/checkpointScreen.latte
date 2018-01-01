@@ -1,13 +1,25 @@
 <div class="checkpoint-screen-container screen-container">
 
 	<div class="checkpoint-heading">
-		PŘÍCHODY NA STANOVIŠTĚ {$checkpointNumber|noescape}
+		{if $checkpointNumber === false}
+			PŘÍCHODY NA STANOVIŠTĚ
+		{elseif $checkpointNumber == 0}
+			PŘÍCHODY NA START
+		{elseif $checkpointNumber == $checkpointCount - 1}
+			PŘÍCHODY DO CÍLE
+		{elseif $checkpointNumber == $checkpointCount}
+			ČASY VYŘEŠENÍ CÍLOVÉHO HESLA
+		{else}
+			PŘÍCHODY NA STANOVIŠTĚ {$checkpointNumber|noescape}
+		{/if}
 	</div>
 
 	<div n:foreach="$flashes as $flash" n:class="flash, $flash->type">{$flash->message}</div>
 
 	<div class="checkpoint-container">
-		{if count($checkpointData) == 0}
+		{if $checkpointData === null}
+			<div class="flash info">Zatím jste nedošli na žádné stanoviště. Jakmile tak učiníte, budou se zde ukazovat časy příchodů všech týmů na stanoviště, na kterém se právě nacházíte.</div>
+		{elseif count($checkpointData) == 0}
 			Na stanoviště zatím nedošel žádný tým.
 		{else}
 
@@ -20,11 +32,13 @@
 						{$i}.
 					</div><!--
 
-					--><div class="team-name">
+					-->
+					<div class="team-name">
 						{$row->name|noescape}
 					</div><!--
 
-					--><div class="team-time">
+					-->
+					<div class="team-time">
 						{$row->entry_time|noescape}
 					</div>
 					{var $i = $i + 1}

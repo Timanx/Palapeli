@@ -311,4 +311,14 @@ class ResultsModel {
         ', $teamId, $this->year
         )->fetchField('checkpoint_number');
     }
+
+    public function hasTeamOpenedDead($teamId, $checkpointNumber)
+    {
+        return $this->database->query('
+            SELECT used_hint
+            FROM results
+            WHERE team_id = ? AND checkpoint_number = ? AND year = ?       
+        ', $teamId, $checkpointNumber, $this->year
+        )->fetchField();
+    }
 }

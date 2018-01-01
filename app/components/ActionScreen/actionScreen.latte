@@ -39,9 +39,12 @@
 				</div>
 			</div>
 
-			<div n:if="$nextCheckpointNumber > 1 && $nextCheckpointNumber < $checkpointCount" class="open-dead-form button" onclick="toggleDeadScreen()">
+			<div n:if="$nextCheckpointNumber > 1 && $nextCheckpointNumber < $checkpointCount && !$deadOpened" class="open-dead-form button" onclick="toggleDeadScreen()">
 				TOTÁLKA K ŠIFŘE {$lastCheckpointData->checkpoint_number}
 			</div>
+			{if $deadOpened}
+				<div class="flash info">Řešení šifry {$lastCheckpointData->checkpoint_number}: {$deadSolution}</div>
+			{/if}
 			<br/>
 			<div class="open-end-form button" onclick="toggleEndScreen()">
 				UKONČIT HRU

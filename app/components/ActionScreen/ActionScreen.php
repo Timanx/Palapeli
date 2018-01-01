@@ -1,4 +1,5 @@
 <?php
+
 use App\Models\ResultsModel;
 use App\Models\TeamsModel;
 use App\Models\YearsModel;
@@ -56,6 +57,7 @@ class ActionScreen extends BaseControl
 
         $this->teamsModel->setYear($this->year);
         $this->resultsModel->setYear($this->year);
+        $this->ciphersModel->setYear($this->year);
 
         $this->yearsModel->setYear($this->year);
 
@@ -82,10 +84,16 @@ class ActionScreen extends BaseControl
             $this->template->checkpointCount = $this->yearsModel->getCheckpointCount();
             $this->template->teamEnded = false;
 
+
+            $this->lastCheckpointData = $lastCheckpointData = $this->resultsModel->getLastCheckpointData($teamId);
+
+            $this->template->deadOpened = $this->resultsModel->hasTeamOpenedDead($this->teamId, $lastCheckpointData->checkpoint_number);
+
+            $this->template->deadSolution = $this->ciphersModel->getDeadSolution($lastCheckpointData->checkpoint_number);
+
             $this->template->nextCheckpointNumber = $checkpointNumber;
             $this->template->endCode = self::END_CODE;
 
-            $this->lastCheckpointData = $this->resultsModel->getLastCheckpointData($teamId);
 
             $this->template->lastCheckpointData = $this->lastCheckpointData;
         }
@@ -126,6 +134,8 @@ class ActionScreen extends BaseControl
                 $this->flashMessage(sprintf('Gratulujeme k dokončení Palapeli! Hru jste dokončili jako %s., výsledky se započítanými totálkami budou vyhlášeny po skončení hry.', $this->resultsModel->geTeamsArrivedCount($checkpointNumber)), 'success');
             } elseif ($this->yearsModel->getCheckpointCount() == $checkpointNumber + 1) {
                 $this->flashMessage(sprintf('Dorazili jste do cíle jako %s. K dokončení hry je nutné vyřešit cílové heslo a zadat ho do systému.', $this->resultsModel->geTeamsArrivedCount($checkpointNumber)), 'success');
+            } elseif ($checkpointNumber == 0) {
+                $this->flashMessage(sprintf('Vítejte na startu Palapeli. Heslo startovní šifry jste zadali jako %s.', $this->resultsModel->geTeamsArrivedCount($checkpointNumber)), 'success');
             } else {
                 $this->flashMessage(sprintf('Dorazili jste na stanoviště %s jako %s.', $checkpointNumber, $this->resultsModel->geTeamsArrivedCount($checkpointNumber)), 'success');
             }

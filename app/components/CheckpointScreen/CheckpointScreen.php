@@ -73,7 +73,8 @@ class CheckpointScreen extends BaseControl
             }
         }
 
-        $this->template->checkpointData = $data = $this->resultsModel->getCheckpointEntryTimes($checkpointNumber, false, true);
+        $this->template->checkpointData = ($checkpointNumber !== false ? $this->resultsModel->getCheckpointEntryTimes($checkpointNumber, false, true) : null);
+        $this->template->checkpointCount = $this->yearsModel->getCheckpointCount();
 
         $this->template->checkpointNumber = $checkpointNumber;
         $this->template->current = $this->teamId;
