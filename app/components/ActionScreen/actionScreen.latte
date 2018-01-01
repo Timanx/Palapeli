@@ -5,83 +5,90 @@
 	{if !$teamEnded}
 
 
-	<div class="actions-container" id="actions-container" style="display: block;">
-		<div class="checkpoint-heading">
-			{if $nextCheckpointNumber == 0}
-				HESLO STARTOVNÍ ŠIFRY
-			{elseif $nextCheckpointNumber == $checkpointCount - 1}
-				HESLO CÍLOVÉHO STANOVIŠTĚ
-			{else}
-				HESLO STANOVIŠTĚ {$nextCheckpointNumber}
-			{/if}
-		</div>
+		<div class="actions-container" id="actions-container" style="display: block;">
+			<div class="checkpoint-heading">
+				{if $nextCheckpointNumber == 0}
+					HESLO STARTOVNÍ ŠIFRY
+				{elseif $nextCheckpointNumber == $checkpointCount - 1}
+					HESLO CÍLOVÉHO STANOVIŠTĚ
+				{else}
+					HESLO STANOVIŠTĚ {$nextCheckpointNumber}
+				{/if}
+			</div>
 
-		<div class="code-input-form">
-			{form codeInput}
-				{input code}{input send}
-			{/form}
-		</div>
-
-		<div n:if="$nextCheckpointNumber > 0" class="exit-time-forms-container">
-			<div class="checkpoint-heading">ODCHOD ZE STANOVIŠTĚ {$lastCheckpointData->checkpoint_number}</div>
-				<div class="exit-time-input-form">
-				{form exitTimeInput}
-					{input exitTime}{input send}{if !isset($lastCheckpointData->exit_time)}{form exitTimeNow}{input send}{/form}{/if}
+			<div class="code-input-form">
+				{form codeInput}
+					{input code}{input send}
 				{/form}
+			</div>
 
+			<div n:if="$nextCheckpointNumber > 0" class="exit-time-forms-container">
+				<div class="checkpoint-heading">
+					{if $nextCheckpointNumber == 1}
+						ODCHOD ZE STARTU
+					{elseif $nextCheckpointNumber == $checkpointCount}
+						VYŘEŠENÍ CÍLOVÉHO HESLA
+					{else}
+						ODCHOD ZE STANOVIŠTĚ {$lastCheckpointData->checkpoint_number}
+					{/if}
+				</div>
+				<div class="exit-time-input-form">
+					{form exitTimeInput}
+						{input exitTime}{input send}{if !isset($lastCheckpointData->exit_time)}{form exitTimeNow}{input send}{/form}{/if}
+					{/form}
+				</div>
+			</div>
 
-
+			<div n:if="$nextCheckpointNumber > 1 && $nextCheckpointNumber < $checkpointCount" class="open-dead-form button" onclick="toggleDeadScreen()">
+				TOTÁLKA K ŠIFŘE {$lastCheckpointData->checkpoint_number}
+			</div>
+			<br/>
+			<div class="open-end-form button" onclick="toggleEndScreen()">
+				UKONČIT HRU
 			</div>
 		</div>
+		<div class="dead-confirm-container" id="dead-confirm-container" style="display: none;">
+			<div class="headline">
+				OPRAVDU CHCETE TOTÁLNÍ NÁPOVĚDU?
+			</div>
+			<div class="consequences">
+				Touto akcí zjistíte polohu následujícího stanoviště. Šifry přeskočené totální nápovědou se vám však
+				nezapočítávají do výsledků. Pokud totální nápovědu opravdu chcete, zadejte znovu heslo aktuální šifry:
+			</div>
 
-		<div n:if="$nextCheckpointNumber > 0" class="open-dead-form button" onclick="toggleDeadScreen()">
-			TOTÁLKA K ŠIFŘE {$lastCheckpointData->checkpoint_number}
+			<div class="code-input-form">
+				{form askForDead}
+					{input code}{input send}
+				{/form}
+			</div>
+			<div class="cancel button" onclick="toggleDeadScreen()">
+				ZPĚT
+			</div>
 		</div>
-		<br />
-		<div class="open-end-form button" onclick="toggleEndScreen()">
-			UKONČIT HRU
-		</div>
-	</div>
-	<div class="dead-confirm-container" id="dead-confirm-container" style="display: none;">
-		<div class="headline">
-			OPRAVDU CHCETE TOTÁLNÍ NÁPOVĚDU?
-		</div>
-		<div class="consequences">
-			Touto akcí zjistíte polohu následujícího stanoviště. Šifry přeskočené totální nápovědou se vám však nezapočítávají do výsledků. Pokud totální nápovědu opravdu chcete, zadejte znovu heslo aktuální šifry:
-		</div>
+		<div class="end-confirm-container" id="end-confirm-container" style="display: none;">
+			<div class="headline">
+				OPRAVDU CHCETE UKONČIT HRU?
+			</div>
+			<div class="consequences">
+				Touto akcí ukončíte hru. Nebudete moci zadávat hesla dalších stanovišť ani otevírat totální nápovědy.
+				Zobrazí se vám poloha cíle a místo a čas konání afterparty. Chcete-li skutečně ukončit hru, zadejte do
+				následujícího pole heslo {$endCode}:
+			</div>
 
-		<div class="code-input-form">
-			{form askForDead}
-				{input code}{input send}
-			{/form}
+			<div class="code-input-form">
+				{form askForEnd}
+					{input code}{input send}
+				{/form}
+			</div>
+			<div class="cancel button" onclick="toggleEndScreen()">
+				ZPĚT
+			</div>
 		</div>
-		<div class="cancel button" onclick="toggleDeadScreen()">
-			ZPĚT
-		</div>
-	</div>
-	<div class="end-confirm-container" id="end-confirm-container" style="display: none;">
-		<div class="headline">
-			OPRAVDU CHCETE UKONČIT HRU?
-		</div>
-		<div class="consequences">
-			Touto akcí ukončíte hru. Nebudete moci zadávat hesla dalších stanovišť ani otevírat totální nápovědy. Zobrazí se vám poloha cíle a místo a čas konání afterparty. Chcete-li skutečně ukončit hru, zadejte do následujícího pole heslo {$endCode}:
-		</div>
-
-		<div class="code-input-form">
-			{form askForEnd}
-				{input code}{input send}
-			{/form}
-		</div>
-		<div class="cancel button" onclick="toggleEndScreen()">
-			ZPĚT
-		</div>
-	</div>
 	{/if}
 </div>
 
 <script>
-    function toggleDeadScreen()
-    {
+    function toggleDeadScreen() {
         var actions = document.getElementById('actions-container');
         var dead = document.getElementById('dead-confirm-container');
 
@@ -94,8 +101,8 @@
         }
 
     }
-    function toggleEndScreen()
-    {
+
+    function toggleEndScreen() {
         var actions = document.getElementById('actions-container');
         var end = document.getElementById('end-confirm-container');
 
@@ -110,8 +117,8 @@
     }
 
 	{if $defaultScreen === ActionScreen::END_SCREEN && !$teamEnded}
-    	toggleEndScreen();
+    toggleEndScreen();
 	{elseif $defaultScreen === ActionScreen::DEAD_SCREEN && !$teamEnded}
-    	toggleEndScreen();
+    toggleEndScreen();
 	{/if}
 </script>

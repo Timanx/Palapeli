@@ -10,14 +10,18 @@ class InfoScreen extends BaseControl
 {
     /** @var  LogModel */
     private $logModel;
+    /** @var CiphersModel */
+    private $ciphersModel;
 
 
     public function __construct(
-        LogModel $logModel
+        LogModel $logModel,
+        CiphersModel $ciphersModel
     )
     {
         parent::__construct();
         $this->logModel = $logModel;
+        $this->ciphersModel = $ciphersModel;
     }
 
     public function render()
@@ -26,6 +30,7 @@ class InfoScreen extends BaseControl
         $this->template->setFile(__DIR__ . '/infoScreen.latte');
 
         $this->logModel->setYear($this->year);
+        $this->ciphersModel->setYear($this->year);
 
         $data = $this->logModel->getLogsForTeam($this->teamId);
 
@@ -42,7 +47,9 @@ class InfoScreen extends BaseControl
                         $message .= 'Ukončili jste hru.';
                         break;
                     case LogModel::LT_OPEN_DEAD:
-                        $message .= sprintf('Otevřeli jste totálku na stanovišti&nbsp;%s.', $row->checkpoint_number);
+                        $solution = $this->ciphersModel->getDeadSolution($row->checkpoint_number);
+
+                        $message .= sprintf('Otevřeli jste totálku na stanovišti&nbsp;%s. Znění: %s', $row->checkpoint_number, $solution);
                             break;
                     case LogModel::LT_ENTER_CHECKPOINT:
                         $message .= sprintf('Přišli jste na stanoviště číslo&nbsp;%s.', $row->checkpoint_number);
