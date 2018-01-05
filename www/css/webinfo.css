@@ -34,6 +34,7 @@ body {
   width: 100%;
   position: fixed;
   bottom: 0;
+  z-index: 1000;
 }
 .menu-container .item {
   width: 25%;

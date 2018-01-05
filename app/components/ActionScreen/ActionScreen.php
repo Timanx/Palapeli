@@ -87,9 +87,11 @@ class ActionScreen extends BaseControl
 
             $this->lastCheckpointData = $lastCheckpointData = $this->resultsModel->getLastCheckpointData($teamId);
 
-            $this->template->deadOpened = $this->resultsModel->hasTeamOpenedDead($this->teamId, $lastCheckpointData->checkpoint_number);
+            $this->template->deadOpened = $lastCheckpointData && $this->resultsModel->hasTeamOpenedDead($this->teamId, $lastCheckpointData->checkpoint_number);
 
-            $this->template->deadSolution = $this->ciphersModel->getDeadSolution($lastCheckpointData->checkpoint_number);
+            if ($lastCheckpointData) {
+                $this->template->deadSolution = $this->ciphersModel->getDeadSolution($lastCheckpointData->checkpoint_number);
+            }
 
             $this->template->nextCheckpointNumber = $checkpointNumber;
             $this->template->endCode = self::END_CODE;
