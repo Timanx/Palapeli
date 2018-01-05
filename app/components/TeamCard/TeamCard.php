@@ -27,10 +27,13 @@ class TeamCard extends BaseControl
 
         $teamId = $_GET['teamCard-team'] ?? NULL;
 
+        $this->teamsModel->setYear($this->year);
+
         $this->yearsModel->setYear($this->year);
         $this->template->selectedYear = $this->year;
         $this->template->checkpointCount = $this->yearsModel->getCheckpointCount();
         $this->template->teamName = $this->teamsModel->getTeamName($teamId);
+        $this->template->isTeamFinalized = $this->teamsModel->isTeamFinalized($teamId);
         $this->template->teamId = $teamId;
 
         $this->template->render();
@@ -127,6 +130,23 @@ class TeamCard extends BaseControl
     public function teamSelected(UI\Form $form, array $values)
     {
         $this->redirect('this', ['team' => $values['teams']]);
+    }
+
+    public function createComponentFinalizeTeam()
+    {
+        $form = new UI\Form;
+
+        $form->addSubmit('finalize', 'FINALIZOVAT TÝM');
+        $form->addHidden('team_id', $_GET['teamCard-team'] ?? null);
+        $form->onSuccess[] = [$this, 'teamFinalized'];
+
+        return $form;
+    }
+
+    public function teamFinalized(UI\Form $form, array $values)
+    {
+        $this->teamsModel->setYear($this->year);
+        $this->teamsModel->finalizeTeam($values['team_id']);
     }
 
 }

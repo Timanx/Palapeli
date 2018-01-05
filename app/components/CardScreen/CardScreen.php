@@ -74,6 +74,9 @@ class CardScreen extends BaseControl
     {
         $this->resultsModel->setYear($this->year);
         $this->yearsModel->setYear($this->year);
+        $this->teamsModel->setYear($this->year);
+
+        $isTeamFinalized = $this->teamsModel->isTeamFinalized($this->teamId);
 
         $results = $this->resultsModel->getTeamResults($this->teamId);
         $yearData = $this->yearsModel->getYearData();
@@ -86,7 +89,7 @@ class CardScreen extends BaseControl
 
             $exit = $checkpoint->addText('exitTime', ($i == 0 ? 'Odchod ze startu:' : ($i == $yearData->checkpoint_count - 1 ? 'Vyřešení cílového hesla:' : 'Odchod z ' . $i . '. stanoviště:')))->setType('time');
 
-            if (!isset($results[$i])) {
+            if (!isset($results[$i]) || $isTeamFinalized) {
                 $exit->setDisabled();
             }
 

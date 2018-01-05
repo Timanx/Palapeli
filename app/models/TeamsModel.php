@@ -383,4 +383,22 @@ class TeamsModel
         ', $teamId, $this->year)->fetchField('end_time') !== null);
     }
 
+    public function isTeamFinalized($teamId): bool
+    {
+        return (bool) $this->database->query('
+            SELECT finalized
+            FROM teamsyear
+            WHERE team_id = ? AND year = ?
+        ', $teamId, $this->year)->fetchField();
+    }
+
+    public function finalizeTeam($teamId)
+    {
+        $this->database->query('
+            UPDATE teamsyear
+            SET finalized = 1
+            WHERE team_id = ? AND year = ?    
+        ', $teamId, $this->year);
+    }
+
 }
