@@ -140,7 +140,7 @@ class TeamPresenter extends BasePresenter
             if(!$registered) {
                 $teamData = $this->teamsModel->getMostRecentTeamYearData($teamId);
 
-                if (isset($teamData)) {
+                if ($teamData) {
                     $this->teamsModel->registerTeam($teamId, $teamData->member1, $teamData->member2, $teamData->member3, $teamData->member4);
                 } else {
                     $this->teamsModel->registerTeam($teamId);

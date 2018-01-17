@@ -33,20 +33,16 @@
 					{/if}
 				</div>
 				<div class="exit-time-input-form">
-					{form exitTimeInput}
-						{input exitTime}{input send}{if !isset($lastCheckpointData->exit_time)}{form exitTimeNow}{input send}{/form}{/if}
-					{/form}
+					{form exitTimeInput}{input exitTime}{input send}{/form}{if !isset($lastCheckpointData->exit_time)}{form exitTimeNow}{input send}{/form}{/if}
+
 				</div>
 			</div>
 
 			<div n:if="$nextCheckpointNumber > 1 && $nextCheckpointNumber < $checkpointCount && !$deadOpened" class="open-dead-form button" onclick="toggleDeadScreen()">
 				TOTÁLKA K ŠIFŘE {$lastCheckpointData->checkpoint_number}
 			</div>
-			{if $deadOpened}
-				<div class="flash info">Řešení šifry {$lastCheckpointData->checkpoint_number}: {$deadSolution}</div>
-			{/if}
 			<br/>
-			<div class="open-end-form button" onclick="toggleEndScreen()">
+			<div n:if="$nextCheckpointNumber > 0" class="open-end-form button" onclick="toggleEndScreen()">
 				UKONČIT HRU
 			</div>
 		</div>

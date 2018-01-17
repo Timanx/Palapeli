@@ -98,4 +98,14 @@ class CiphersModel
 
         return mb_strtoupper($code) === mb_strtoupper($requiredCode);
     }
+
+    public function getCheckpointCloseTimes()
+    {
+        return $this->database->query('
+            SELECT checkpoint_number, TIME_FORMAT(checkpoint_close_time, \'%H:%i\') as checkpoint_close_time
+            FROM ciphers
+            WHERE year = ?
+        ',
+            $this->year)->fetchAssoc('checkpoint_number');
+    }
 }

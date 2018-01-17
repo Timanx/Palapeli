@@ -37,6 +37,7 @@ class CardScreen extends BaseControl
         $this->yearsModel = $yearsModel;
         $this->teamsModel = $teamsModel;
         $this->logModel = $logModel;
+        $this->ciphersModel = $ciphersModel;
         $this->session = $session;
     }
 
@@ -47,8 +48,11 @@ class CardScreen extends BaseControl
         $this->teamsModel->setYear($this->year);
         $this->resultsModel->setYear($this->year);
         $this->yearsModel->setYear($this->year);
+        $this->ciphersModel->setYear($this->year);
 
         $checkpointNumber = $this->resultsModel->getLastCheckpointNumber($this->teamId);
+
+        $this->template->checkpointCloseTimes = $this->ciphersModel->getCheckpointCloseTimes();
 
         if ($this->teamsModel->hasTeamEnded($this->teamId)) {
             $this->template->teamEnded = true;
@@ -81,11 +85,15 @@ class CardScreen extends BaseControl
         $results = $this->resultsModel->getTeamResults($this->teamId);
         $yearData = $this->yearsModel->getYearData();
 
+
         $form = new UI\Form;
 
         for ($i = 0; $i < $yearData->checkpoint_count; $i++) {
+
+            $label = ($i == 0 ? 'Začátek hry:' : ($i == $yearData->checkpoint_count - 1 ? 'Příchod do cíle:' : 'Příchod na ' . $i . '. stanoviště:'));
+
             $checkpoint = $form->addContainer('checkpoint' . $i);
-            $checkpoint->addText('entryTime', ($i == 0 ? 'Začátek hry:' : ($i == $yearData->checkpoint_count - 1 ? 'Příchod do cíle:' : 'Příchod na ' . $i . '. stanoviště:')))->setType('time')->setDisabled()->setDefaultValue(((isset($results[$i]) && isset($results[$i]['entry_time'])) ? $results[$i]['entry_time'] : \App\Presenters\BasePresenter::EMPTY_TIME_VALUE));
+            $checkpoint->addText('entryTime', $label)->setType('time')->setDisabled()->setDefaultValue(((isset($results[$i]) && isset($results[$i]['entry_time'])) ? $results[$i]['entry_time'] : \App\Presenters\BasePresenter::EMPTY_TIME_VALUE));
 
             $exit = $checkpoint->addText('exitTime', ($i == 0 ? 'Odchod ze startu:' : ($i == $yearData->checkpoint_count - 1 ? 'Vyřešení cílového hesla:' : 'Odchod z ' . $i . '. stanoviště:')))->setType('time');
 

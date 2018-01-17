@@ -206,7 +206,7 @@ class TeamsModel
         )->fetch();
     }
 
-    public function registerTeam($teamId, $member1 = NULL, $member2 = NULL, $member3 = NULL, $member4 = NULL)
+    public function registerTeam($teamId, $member1 = '', $member2 = '', $member3 = '', $member4 = '')
     {
         $this->database->query('
             INSERT
