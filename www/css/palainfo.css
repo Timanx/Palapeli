@@ -192,10 +192,10 @@ body {
   height: 0px !important;
 }
 .wrapper {
-  min-height: 0% !important;
+  min-height: 0 !important;
   margin-bottom: 0px !important;
 }
-.webinfo-container {
+.palainfo-container {
   padding-bottom: 80px;
   padding-top: 30px;
 }

@@ -137,12 +137,12 @@ class ActionScreen extends BaseControl
             } elseif ($this->yearsModel->getCheckpointCount() == $checkpointNumber + 1) {
                 $this->flashMessage(sprintf('Dorazili jste do cíle jako %s. K dokončení hry je nutné vyřešit cílové heslo a zadat ho do systému.', $this->resultsModel->geTeamsArrivedCount($checkpointNumber)), 'success');
             } elseif ($checkpointNumber == 0) {
-                $this->flashMessage(sprintf('Vítejte na startu Palapeli. Heslo startovní šifry jste zadali jako %s.', $this->resultsModel->geTeamsArrivedCount($checkpointNumber)), 'success');
+                $this->flashMessage(sprintf('Vítejte na startu Palapeli. Kód startovní šifry jste zadali jako %s.', $this->resultsModel->geTeamsArrivedCount($checkpointNumber)), 'success');
             } else {
                 $this->flashMessage(sprintf('Dorazili jste na stanoviště %s jako %s.', $checkpointNumber, $this->resultsModel->geTeamsArrivedCount($checkpointNumber)), 'success');
             }
         } else {
-            $this->flashMessage('Nesprávně zadané heslo', 'error');
+            $this->flashMessage('Nesprávně zadaný kód', 'error');
         }
 
 
@@ -241,8 +241,8 @@ class ActionScreen extends BaseControl
             $this->logModel->log(LogModel::LT_OPEN_DEAD, $teamId, $checkpointNumber, $this->year);
             $this->redirect('this');
         } else {
-            $this->flashMessage('Nesprávně zadané heslo', 'error');
-            $this->getPresenter()->redirect('WebInfo:', self::  DEAD_SCREEN);
+            $this->flashMessage('Nesprávně zadaný kód', 'error');
+            $this->getPresenter()->redirect('PalaInfo:', self::  DEAD_SCREEN);
         }
     }
 
@@ -262,8 +262,8 @@ class ActionScreen extends BaseControl
             $this->logModel->log(LogModel::LT_END_GAME, $teamId, null, $this->year);
             $this->redirect('this');
         } else {
-            $this->flashMessage('Nesprávně zadané heslo', 'error');
-            $this->getPresenter()->redirect('WebInfo:', self::END_SCREEN);
+            $this->flashMessage('Nesprávně zadaný kód', 'error');
+            $this->getPresenter()->redirect('PalaInfo:', self::END_SCREEN);
         }
 
     }

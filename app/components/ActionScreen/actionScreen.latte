@@ -8,11 +8,11 @@
 		<div class="actions-container" id="actions-container" style="display: block;">
 			<div class="checkpoint-heading">
 				{if $nextCheckpointNumber == 0}
-					HESLO STARTOVNÍ ŠIFRY
+					KÓD STARTOVNÍ ŠIFRY
 				{elseif $nextCheckpointNumber == $checkpointCount - 1}
-					HESLO CÍLOVÉHO STANOVIŠTĚ
+					KÓD CÍLOVÉHO STANOVIŠTĚ
 				{else}
-					HESLO STANOVIŠTĚ {$nextCheckpointNumber}
+					KÓD STANOVIŠTĚ {$nextCheckpointNumber}
 				{/if}
 			</div>
 
@@ -52,7 +52,7 @@
 			</div>
 			<div class="consequences">
 				Touto akcí zjistíte polohu následujícího stanoviště. Šifry přeskočené totální nápovědou se vám však
-				nezapočítávají do výsledků. Pokud totální nápovědu opravdu chcete, zadejte znovu heslo aktuální šifry:
+				nezapočítávají do výsledků. Pokud totální nápovědu opravdu chcete, zadejte znovu kód aktuální šifry:
 			</div>
 
 			<div class="code-input-form">
@@ -71,7 +71,7 @@
 			<div class="consequences">
 				Touto akcí ukončíte hru. Nebudete moci zadávat hesla dalších stanovišť ani otevírat totální nápovědy.
 				Zobrazí se vám poloha cíle a místo a čas konání afterparty. Chcete-li skutečně ukončit hru, zadejte do
-				následujícího pole heslo {$endCode}:
+				následujícího pole kód {$endCode}:
 			</div>
 
 			<div class="code-input-form">

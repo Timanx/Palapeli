@@ -20,7 +20,7 @@
 	<link href="{$basePath}/css/homepage.css?v={$version}" rel="stylesheet" type="text/css" />
 	<link href="{$basePath}/css/responsive.css?v={$version}" rel="stylesheet" type="text/css" />
 	<link href="{$basePath}/css/menu.css?v={$version}" rel="stylesheet" type="text/css" />
-	<link href="{$basePath}/css/webinfo.css?v={$version}" rel="stylesheet" type="text/css" />
+	<link href="{$basePath}/css/palainfo.css?v={$version}" rel="stylesheet" type="text/css" />
 	<link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:200,200i,300,300i,400,400i,600,600i,700,700i,900,900i&subset=latin-ext" rel="stylesheet">
 
 	<style type="text/css">
@@ -106,26 +106,26 @@
 <body>
 
 <div class="wrapper" id="wrapper">
-	<div class="menu-container" id="webinfo-menu">
-		<a href="{plink WebInfo:}" class="item{ifCurrent WebInfo:} selected{/ifCurrent}" id="item1">
+	<div class="menu-container" id="palainfo-menu">
+		<a href="{plink PalaInfo:}" class="item{ifCurrent PalaInfo:} selected{/ifCurrent}" id="item1">
 			{*include ../../../components/SVG/webinfoIcons/actions.svg*}
 			<div class="text">AKCE</div>
 		</a><!--
-		--><a href="{plink WebInfo:card}"class="item{ifCurrent WebInfo:card} selected{/ifCurrent}" id="item2">
+		--><a href="{plink PalaInfo:card}"class="item{ifCurrent PalaInfo:card} selected{/ifCurrent}" id="item2">
 			{*include ../../../components/SVG/webinfoIcons/team.svg*}
 			<div class="text">KARTA</div>
 		</a><!--
 
-		--><a href="{plink WebInfo:checkpoint}" class="item{ifCurrent WebInfo:checkpoint} selected{/ifCurrent}" id="item3">
+		--><a href="{plink PalaInfo:checkpoint}" class="item{ifCurrent PalaInfo:checkpoint} selected{/ifCurrent}" id="item3">
 			{*include ../../../components/SVG/webinfoIcons/list.svg*}
 			<div class="text">PŘÍCHODY</div>
 		</a><!--
-		--><a href="{plink WebInfo:info}" class="item{ifCurrent WebInfo:info} selected{/ifCurrent}" id="item4">
+		--><a href="{plink PalaInfo:info}" class="item{ifCurrent PalaInfo:info} selected{/ifCurrent}" id="item4">
 			{*include ../../../components/SVG/webinfoIcons/info.svg*}
 			<div class="text">INFO</div>
 		</a>
 	</div>
-	<div class="webinfo-container">
+	<div class="palainfo-container">
 
 		{block content}
 				{if !isset($teamId)}
@@ -133,7 +133,7 @@
 						Pro přístup do webinfa musíte být přihlášeni. Můžete se vrátit například <a href="{plink Team:}">na přihlašovací stránku</a>.
 					</div>
 				{else}
-					{block webinfoContent}
+					{block palainfoContent}
 					{/block}
 				{/if}
 		{/block}

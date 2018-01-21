@@ -5,7 +5,7 @@ namespace App\Presenters;
 use App\Models\YearsModel;
 use Nette;
 
-class WebInfoPresenter extends BasePresenter
+class PalaInfoPresenter extends BasePresenter
 {
     /** @var YearsModel $yearsModel */
     private $yearsModel;
