@@ -132,6 +132,10 @@
 					<div class="flash info">
 						Pro přístup do webinfa musíte být přihlášeni. Můžete se vrátit například <a href="{plink Team:}">na přihlašovací stránku</a>.
 					</div>
+				{elseif !$hasGameStarted}
+					<div class="flash info">
+						Palainfo bude zpřístupněné až po začátku hry. Můžete se vrátit například <a href="{plink Homepage:}">na úvodní stránku</a>.
+					</div>
 				{else}
 					{block palainfoContent}
 					{/block}

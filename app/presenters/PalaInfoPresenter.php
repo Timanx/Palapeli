@@ -41,6 +41,8 @@ class PalaInfoPresenter extends BasePresenter
         /** @var \ActionScreen $component */
         $component = $this->getComponent('actionScreen');
         $component->template->defaultScreen = $defaultScreen;
+        $this->yearsModel->setYear($this->selectedYear);
+        $this->template->hasGameStarted = $this->yearsModel->hasGameStarted();
     }
 
 
@@ -50,16 +52,22 @@ class PalaInfoPresenter extends BasePresenter
 
         /** @var \InfoScreen $component */
         $component = $this->getComponent('infoScreen');
+        $this->yearsModel->setYear($this->selectedYear);
+        $this->template->hasGameStarted = $this->yearsModel->hasGameStarted();
     }
 
     public function renderCheckpoint()
     {
         parent::render();
+        $this->yearsModel->setYear($this->selectedYear);
+        $this->template->hasGameStarted = $this->yearsModel->hasGameStarted();
     }
 
     public function renderCard()
     {
         parent::render();
+        $this->yearsModel->setYear($this->selectedYear);
+        $this->template->hasGameStarted = $this->yearsModel->hasGameStarted();
     }
 
 

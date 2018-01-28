@@ -135,7 +135,7 @@ class ActionScreen extends BaseControl
                 $this->teamsModel->teamEnded($teamId);
                 $this->flashMessage(sprintf('Gratulujeme k dokončení Palapeli! Hru jste dokončili jako %s., výsledky se započítanými totálkami budou vyhlášeny po skončení hry.', $this->resultsModel->geTeamsArrivedCount($checkpointNumber)), 'success');
             } elseif ($this->yearsModel->getCheckpointCount() == $checkpointNumber + 1) {
-                $this->flashMessage(sprintf('Dorazili jste do cíle jako %s. K dokončení hry je nutné vyřešit cílové heslo a zadat ho do systému.', $this->resultsModel->geTeamsArrivedCount($checkpointNumber)), 'success');
+                $this->flashMessage(sprintf('Dorazili jste do cíle jako %s.', $this->resultsModel->geTeamsArrivedCount($checkpointNumber)), 'success');
             } elseif ($checkpointNumber == 0) {
                 $this->flashMessage(sprintf('Vítejte na startu Palapeli. Kód startovní šifry jste zadali jako %s.', $this->resultsModel->geTeamsArrivedCount($checkpointNumber)), 'success');
             } else {

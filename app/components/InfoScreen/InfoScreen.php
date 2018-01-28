@@ -1,4 +1,5 @@
 <?php
+
 use App\Models\ResultsModel;
 use App\Models\TeamsModel;
 use App\Models\YearsModel;
@@ -12,16 +13,19 @@ class InfoScreen extends BaseControl
     private $logModel;
     /** @var CiphersModel */
     private $ciphersModel;
+    /** @var YearsModel */
+    private $yearsModel;
 
 
     public function __construct(
         LogModel $logModel,
-        CiphersModel $ciphersModel
-    )
-    {
+        CiphersModel $ciphersModel,
+        YearsModel $yearsModel
+    ) {
         parent::__construct();
         $this->logModel = $logModel;
         $this->ciphersModel = $ciphersModel;
+        $this->yearsModel = $yearsModel;
     }
 
     public function render()
@@ -31,6 +35,7 @@ class InfoScreen extends BaseControl
 
         $this->logModel->setYear($this->year);
         $this->ciphersModel->setYear($this->year);
+        $this->yearsModel->setYear($this->year);
 
         $data = $this->logModel->getLogsForTeam($this->teamId);
 
@@ -50,9 +55,20 @@ class InfoScreen extends BaseControl
                         $solution = $this->ciphersModel->getDeadSolution($row->checkpoint_number);
 
                         $message .= sprintf('Otevřeli jste totálku na stanovišti&nbsp;%s. Znění: %s', $row->checkpoint_number, $solution);
-                            break;
+                        break;
                     case LogModel::LT_ENTER_CHECKPOINT:
-                        $message .= sprintf('Přišli jste na stanoviště číslo&nbsp;%s.', $row->checkpoint_number);
+                        $checkpointCount = $this->yearsModel->getCheckpointCount();
+
+                        if ($row->checkpoint_number == 0) {
+                            $message .= sprintf('Zadali jste kód startovní šifry.');
+                        } elseif ($row->checkpoint_number == $checkpointCount - 1) {
+                            $message .= sprintf('Přišli jste do cíle.');
+                        } elseif ($row->checkpoint_number == $checkpointCount) {
+                            $message .= sprintf('Dokončili jste hru! Gratulujeme!');
+                        } else {
+                            $message .= sprintf('Přišli jste na stanoviště číslo&nbsp;%s.', $row->checkpoint_number);
+                        }
+
                         $type = 'success';
                         break;
                     case LogModel::LT_GAME_START:
