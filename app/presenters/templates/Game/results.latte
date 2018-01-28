@@ -11,9 +11,6 @@
 		{elseif !$resultsPublic}
 			<div class="flash info">Výsledky {$selectedYear}. ročníku ještě nejsou zvěřejněny, pracujeme na jejich doplnění.</div>
 		{else}
-			{if !$resultsFinal}
-				<div class="flash info">Výsledky ještě nejsou finální, protože nám chybí data od velkého počtu týmů. Prosíme týmy, které nám neodevzdaly kartu týmů a totálky, ať je naskenované pošlou na mail organizatori@palapeli.cz.</div>
-			{/if}
 			<div title="Kliknutím zobrazíte princip počítání výsledků." id="resultsHint" class="resultsHint" onclick="document.getElementById('resultsInfo').style.display = 'block';this.style.display='none'">Jak byly výsledky spočítány?</div>
 			<div title="Kliknutím text zavřete." id="resultsInfo" style="display: none;" class="resultsInfo" onclick="document.getElementById('resultsHint').style.display = 'block';this.style.display='none'">
 				Pořadí týmů je vytvořeno podle následujících kritérií:
@@ -23,7 +20,6 @@
 					<li>Nejvyšší navštívené stanoviště bez ohledu na počet totálek <em>(sloupec <span class="largeScreen">Totálky</span><span class="responsive">T</span>).</em></li>
 					<li>Čas příchodu na nejvyšší navštívené stanoviště <em>(sloupec Čas).</em></li>
 				</ol>
-				Pokud tým neodevzdal kartu týmu a kartu s totálkami, nemáme o jeho průchodu trasy dost informací na to, abychom ho zařadili do výsledků, a tak se nachází až na chvostu tabulky. Pokud je váš tým mezi nimi, prosíme vás o urychlené zaslání karet týmu a totálek.
 			</div>
 			<table class="resultsTable">
 				{var $i = 1}

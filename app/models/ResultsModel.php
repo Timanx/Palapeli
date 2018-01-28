@@ -64,15 +64,6 @@ class ResultsModel {
         ', $this->year);
     }
 
-    public function getResultsFinal()
-    {
-        return $this->database->query('
-            SELECT results_final
-            FROM years
-            WHERE year = ?
-        ', $this->year)->fetchField();
-    }
-
     public function getStatsData()
     {
         return $this->database->query('

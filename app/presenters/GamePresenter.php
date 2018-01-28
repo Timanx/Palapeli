@@ -112,7 +112,6 @@ class GamePresenter extends BasePresenter
 
         $this->template->data = $data =$this->resultsModel->getTeamStandings();
         $this->template->resultsPublic = $this->resultsModel->getResultsPublic();
-        $this->template->resultsFinal = $this->resultsModel->getResultsFinal();
         $this->template->hasGameStarted = $this->yearsModel->hasGameStarted();
         $this->template->hasGameEnded = $this->yearsModel->hasGameEnded();
     }
@@ -184,7 +183,6 @@ class GamePresenter extends BasePresenter
         $this->template->teams = $this->resultsModel->getTeamStandings();
         $this->template->results = $this->resultsModel->getCompleteResults();
         $this->template->resultsPublic = $this->resultsModel->getResultsPublic();
-        $this->template->resultsFinal = $this->resultsModel->getResultsFinal();
         $this->template->hasGameStarted = $this->yearsModel->hasGameStarted();
         $this->template->hasGameEnded = $this->yearsModel->hasGameEnded();
     }
