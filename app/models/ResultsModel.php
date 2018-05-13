@@ -89,7 +89,7 @@ class ResultsModel {
         return $this->database->query('
             SELECT COUNT(id) AS teams_filled FROM (
 
-            SELECT teams.id, (CASE WHEN (MAX(results.exit_time) IS NOT NULL AND MAX(results.exit_time) != \'00:00\' || EXISTS (SELECT 1 FROM results r WHERE r.year = teamsyear.year AND r.team_id = teams.id AND r.used_hint IS NOT NULL)) THEN 1 ELSE 0 END) AS team_filled
+            SELECT teams.id, (CASE WHEN (MAX(results.exit_time) IS NOT NULL AND MAX(results.exit_time) != \'00:00\' OR EXISTS (SELECT 1 FROM results r WHERE r.year = teamsyear.year AND r.team_id = teams.id AND r.used_hint IS NOT NULL)) THEN 1 ELSE 0 END) AS team_filled
             FROM teams
               LEFT JOIN teamsyear ON teams.id = teamsyear.team_id
               LEFT JOIN results ON results.year = ? AND teams.id = results.team_id AND results.checkpoint_number = ?
