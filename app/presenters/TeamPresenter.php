@@ -153,6 +153,8 @@ class TeamPresenter extends BasePresenter
                     $this->flashMessage('Tým ' . $this->session->getSection('team')->teamName . ' byl úspěšně zaregistrován do aktuálního ročníku.', 'success');
                 }
 
+                $this->flashMessage('Registruješ tým lidí a tím nám dáváš jejich jméno, příjmení, telefony a e-maily, tak jim to prosím alespoň řekni. My za to slíbíme, že je nezneužijeme jinak, než v souvislosti se hrou. Data od nás tahají šifrovačky.cz a statek.seslost.cz. Existuje GDPR, tam najdeš, co po nás můžeš chtít. Když se vám něco nebude líbit, tak se ozvěte orgům, Dark to s vámi vyřídí.', 'info');
+
                 $this->redirect('Team:edit');
             } else {
                 $this->flashMessage('Do ' . $this->yearsModel->getCurrentYearNumber() . '. ročníku už jste zaregistrováni.', 'info');
