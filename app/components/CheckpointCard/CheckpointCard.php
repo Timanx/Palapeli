@@ -25,11 +25,13 @@ class CheckpointCard extends BaseControl
         $this->teamsModel = $teamsModel;
     }
 
-    public function setCheckpointNumber($number) {
+    public function setCheckpointNumber($number)
+    {
         $this->checkpointNumber = $number;
     }
 
-    public function setOrderByPrevious($value) {
+    public function setOrderByPrevious($value)
+    {
         $this->orderByPrevious = $value;
     }
 
@@ -147,7 +149,9 @@ class CheckpointCard extends BaseControl
                 $team['entryTime'] = NULL;
             }
 
-            $this->resultsModel->insertResultsRow($team['teamId'], $checkpoint, $team['entryTime']);
+            if ($team['entryTime']) {
+                $this->resultsModel->insertResultsRow($team['teamId'], $checkpoint, $team['entryTime']);
+            }
 
             if ($checkpoint == $checkpointCount) {
                 $this->resultsModel->insertResultsRow($team['teamId'], $checkpoint, NULL, $team['entryTime']);
