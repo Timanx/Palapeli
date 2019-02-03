@@ -21,6 +21,7 @@
 	<link href="{$basePath}/css/responsive.css?v={$version}" rel="stylesheet" type="text/css" />
 	<link href="{$basePath}/css/menu.css?v={$version}" rel="stylesheet" type="text/css" />
 	<link href="{$basePath}/css/palainfo.css?v={$version}" rel="stylesheet" type="text/css" />
+	<link rel="manifest" href="/manifest.json">
 	<link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:200,200i,300,300i,400,400i,600,600i,700,700i,900,900i&subset=latin-ext" rel="stylesheet">
 
 	<style type="text/css">
@@ -97,6 +98,17 @@
 
         ga('create', 'UA-34194465-1', 'auto');
         ga('send', 'pageview');
+
+
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/service-worker.js')
+                .then(function(registration) {
+                    console.log('Registration successful, scope is:', registration.scope);
+                })
+                .catch(function(error) {
+                    console.log('Service worker registration failed, error:', error);
+                });
+        }
 
 	</script>
 

@@ -122,7 +122,9 @@ class CardScreen extends BaseControl
             if ($number != 'teamId') {
                 $number = substr($number, 10);
 
-                if ($checkpoint['exitTime'] != '' &&
+                if (
+                    array_key_exists('exitTime', $checkpoint) &&
+                    $checkpoint['exitTime'] != '' &&
                     $checkpoint['exitTime'] != \App\Presenters\BasePresenter::EMPTY_TIME_VALUE
 
 
@@ -135,7 +137,7 @@ class CardScreen extends BaseControl
                 }
 
                 //Handle finish
-                if ($number == count($values) - 1 && $checkpoint['exitTime'] != '' && $checkpoint['exitTime'] != \App\Presenters\BasePresenter::EMPTY_TIME_VALUE) {
+                if ($number == count($values) - 1 && array_key_exists('exitTime', $checkpoint) && $checkpoint['exitTime'] != '' && $checkpoint['exitTime'] != \App\Presenters\BasePresenter::EMPTY_TIME_VALUE) {
 
                     $this->resultsModel->insertResultsRow($teamId, ((int)$number + 1), $checkpoint['exitTime'], $checkpoint['exitTime']);
                 }

@@ -63,25 +63,31 @@ class ActionScreen extends BaseControl
 
         $checkpointNumber = $this->resultsModel->getFirstEmptyCheckpoint($teamId);
 
+        if ($checkpointNumber === null) {
+            $checkpointNumber = 0;
+        }
 
-        if ($this->teamsModel->hasTeamEnded($teamId)) {
+
+        $data = $this->yearsModel->getEndgameData();
+        if ($this->teamsModel->hasTeamEnded($teamId) || $checkpointNumber > $data->checkpoint_count) {
+
+
+            $this->template->checkpointCount = $data->checkpoint_count;
+            $this->template->nextCheckpointNumber = $checkpointNumber;
             $this->template->teamEnded = true;
-
-
-            $data = $this->yearsModel->getEndgameData();
             if ($checkpointNumber > $data->checkpoint_count) {
                 $this->flashMessage('Hru jste úspěšně dokončili! Gratulujeme.', 'success');
             } else {
                 $this->flashMessage('Již jste ukončili hru a ve hře tak nemůžete pokračovat.');
-                $this->flashMessage(sprintf('Pozice cíle: %s (otevřen od %s)', $data->finish_location, $data->finish_open_time), 'info');
+                $this->flashMessage(sprintf('Přijďte se podívat do cíle: %s (otevřen od %s)', $data->finish_location, $data->finish_open_time), 'info');
             }
             if ($data->afterparty_location !== null) {
-                $this->flashMessage(sprintf('Místo konání afterparty: %s (od %s)', $data->afterparty_location, $data->afterparty_time), 'info');
+                $this->flashMessage(sprintf('Rádi vás uvidíme i na afterparty: %s (od %s)', $data->afterparty_location, $data->afterparty_time), 'info');
             }
         } else {
 
 
-            $this->template->checkpointCount = $this->yearsModel->getCheckpointCount();
+            $this->template->checkpointCount = $data->checkpoint_count;
             $this->template->teamEnded = false;
 
 
