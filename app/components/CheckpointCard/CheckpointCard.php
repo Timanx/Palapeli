@@ -151,10 +151,10 @@ class CheckpointCard extends BaseControl
 
             if ($team['entryTime']) {
                 $this->resultsModel->insertResultsRow($team['teamId'], $checkpoint, $team['entryTime']);
-            }
 
-            if ($checkpoint == $checkpointCount) {
-                $this->resultsModel->insertResultsRow($team['teamId'], $checkpoint, NULL, $team['entryTime']);
+                if ($checkpoint == $checkpointCount) {
+                    $this->resultsModel->insertResultsRow($team['teamId'], $checkpoint, NULL, $team['entryTime']);
+                }
             }
         }
 
