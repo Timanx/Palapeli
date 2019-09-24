@@ -139,16 +139,6 @@ class AdministrationPresenter extends BasePresenter
         $this->template->emails = $this->teamsModel->getUnpaidTeamsData();
     }
 
-    public function renderNoDataMail()
-    {
-        parent::render();
-        $this->prepareHeading('E-maily týmů bez zapsaných výsledků');
-
-        $this->teamsModel->setYear($this->selectedYear);
-
-        $this->template->emails = $this->teamsModel->getUnfilledTeamsData();
-    }
-
     public function renderTeamMail()
     {
         parent::render();

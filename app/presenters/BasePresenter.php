@@ -67,9 +67,11 @@ class BasePresenter extends Nette\Application\UI\Presenter
             $this->template->teamNameUpper = Nette\Utils\Strings::upper($this->session->getSection('team')->teamName);
         }
 
+        $this->template->isTeamInCurrentYear = false;
         if($this->session->hasSection('team') && !empty($this->session->getSection('team')->teamId)) {
             $this->template->teamId = $this->session->getSection('team')->teamId;
             $this->teamId = $this->session->getSection('team')->teamId;
+            $this->template->isTeamInCurrentYear = (bool) $this->yearsModel->isTeamInCurrentYear($this->teamId);
         }
 
         if($this->session->hasSection('team') && !empty($this->session->getSection('team')->teamId) && $this->session->getSection('team')->teamId == self::ORG_TEAM_ID) {

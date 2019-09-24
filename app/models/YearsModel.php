@@ -176,4 +176,19 @@ class YearsModel
         ', $this->year
         )->fetch();
     }
+
+    public function isTeamInCurrentYear($teamId)
+    {
+        return $this->database->query('
+            SELECT 1
+            FROM 
+              years
+              JOIN teamsyear t on years.year = t.year
+            WHERE
+              years.is_current AND
+              t.team_id = ?
+            ',
+            $teamId
+        )->fetch();
+    }
 }

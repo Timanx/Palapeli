@@ -25,7 +25,7 @@
 						<th colspan="4" class="header">
 							{if $i == 0}Start{elseif $i == $checkpointCount - 1}Cíl{else}{$i}. stanoviště{/if}
 							<span>
-								{if $checkpointCloseTimes[$i]['checkpoint_close_time'] !== null}
+								{if isset($checkpointCloseTimes[$i]['checkpoint_close_time'])}
 									(Zavírá v {$checkpointCloseTimes[$i]['checkpoint_close_time']|noescape})
 								{else}
 									(Otevřeno do konce hry)
