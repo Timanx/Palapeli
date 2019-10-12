@@ -69,11 +69,10 @@ class ActionScreen extends BaseControl
 
 
         $data = $this->yearsModel->getEndgameData();
+
+        $this->template->checkpointCount = $data->checkpoint_count;
+        $this->template->nextCheckpointNumber = $checkpointNumber;
         if ($this->teamsModel->hasTeamEnded($teamId) || $checkpointNumber > $data->checkpoint_count) {
-
-
-            $this->template->checkpointCount = $data->checkpoint_count;
-            $this->template->nextCheckpointNumber = $checkpointNumber;
             $this->template->teamEnded = true;
             if ($checkpointNumber > $data->checkpoint_count) {
                 $this->flashMessage('Hru jste úspěšně dokončili! Gratulujeme.', 'success');
@@ -84,10 +83,14 @@ class ActionScreen extends BaseControl
             if ($data->afterparty_location !== null) {
                 $this->flashMessage(sprintf('Rádi vás uvidíme i na afterparty: %s (od %s)', $data->afterparty_location, $data->afterparty_time), 'info');
             }
+        } elseif ($this->yearsModel->hasGameEnded()) {
+
+            $this->template->teamEnded = true;
+            $this->flashMessage(sprintf('Hra již skončila, děkujeme za účast. Již nelze zadávat příchody na stanoviště, můžete pouze upravit odchody ze stanovišť na záložce KARTA. Přijďte se za námi podívat do cíle: %s', $data->finish_location), 'info');
+            if ($data->afterparty_location !== null) {
+                $this->flashMessage(sprintf('Rádi vás uvidíme i na afterparty: %s (od %s)', $data->afterparty_location, $data->afterparty_time), 'info');
+            }
         } else {
-
-
-            $this->template->checkpointCount = $data->checkpoint_count;
             $this->template->teamEnded = false;
 
 
@@ -99,7 +102,6 @@ class ActionScreen extends BaseControl
                 $this->template->deadSolution = $this->ciphersModel->getDeadSolution($lastCheckpointData->checkpoint_number);
             }
 
-            $this->template->nextCheckpointNumber = $checkpointNumber;
             $this->template->endCode = self::END_CODE;
 
 
@@ -129,10 +131,11 @@ class ActionScreen extends BaseControl
         $teamId = $this->session->getSection('team')->teamId ?? NULL;
         $checkpointNumber = $this->resultsModel->getFirstEmptyCheckpoint($teamId);
 
-
         $codeCorrect = $this->ciphersModel->checkCode($form->values['code'], $checkpointNumber);
 
-        if ($codeCorrect) {
+        if ($this->yearsModel->hasGameEnded()) {
+            $this->flashMessage('Bohužel jste kód nestihli zadat před koncem hry.', 'error');
+        } elseif ($codeCorrect) {
             $now = new \Nette\Utils\DateTime();
             $this->resultsModel->insertResultsRow($teamId, $checkpointNumber, $now);
             $this->logModel->log(LogModel::LT_ENTER_CHECKPOINT, $teamId, $checkpointNumber, $this->year);
