@@ -2,6 +2,7 @@
 namespace App\Presenters;
 
 use App\Models\YearsModel;
+use Endroid\QrCode\QrCode;
 use Nette;
 use Nette\Application\UI;
 use Nette\Mail\Message;
@@ -101,6 +102,20 @@ class TeamPresenter extends BasePresenter
                 $teamLimit = $this->yearsModel->getTeamLimit();
                 $this->template->isSubstitute = $teamLimit && $this->teamsModel->getTeamRegistrationOrder($this->teamId) >= $teamLimit;
                 $this->template->paid = $this->teamsModel->getTeamPaymentStatus($this->teamId);
+
+                $yearData = $this->yearsModel->getYearData();
+                $variableSymbol = $this->selectedCalendarYear . $this->teamId;
+
+                list($accountNumber,$bankCode) = explode('/', $yearData->entry_fee_account);
+
+                $QRString = 'SPD*1.0*ACC:CZ18' . $bankCode . '000000' . $accountNumber . '*AM:' .  $yearData->entry_fee . '*CC:CZK*X-VS:' . $variableSymbol . '*MSG:Palapeli ' . $this->selectedCalendarYear .  ' ' . $this->teamsModel->getTeamName($this->teamId) . '*';
+
+                $QRCode = new QrCode($QRString);
+                $QRCode->setSize(150);
+                $this->template->QRCode = $a = $QRCode->writeDataUri();
+                $this->template->variableSymbol = $variableSymbol;
+
+
             } else {
                 $this->template->paid = self::SHOULD_NOT_PAY;
             }

@@ -7,6 +7,8 @@ $baseDir = dirname($vendorDir);
 
 return array(
     '7745382c92b7799bf1294b1f43023ba2' => $vendorDir . '/tracy/tracy/src/shortcuts.php',
+    '320cde22f66dd4f5d3fd621d3e88b98f' => $vendorDir . '/symfony/polyfill-ctype/bootstrap.php',
     'e7a6fd2e7a869bb207158e9416bdd9b0' => $vendorDir . '/nette/application/src/compatibility.php',
     'a1d067aa2e53d6b47171c03cfc0ea5be' => $vendorDir . '/nette/safe-stream/src/loader.php',
+    'a9ed0d27b5a698798a89181429f162c5' => $vendorDir . '/khanamiryan/qrcode-detector-decoder/lib/Common/customFunctions.php',
 );
