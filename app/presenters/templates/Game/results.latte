@@ -15,9 +15,9 @@
 			<div title="Kliknutím text zavřete." id="resultsInfo" style="display: none;" class="resultsInfo" onclick="document.getElementById('resultsHint').style.display = 'block';this.style.display='none'">
 				Pořadí týmů je vytvořeno podle následujících kritérií:
 				<ol>
-					<li>Nejvyšší navštívené stanoviště (příchod do cíle a vyluštění cílového hesla se berou jako
-					dvě samostatná stanoviště) mínus počet totálek <em>(sloupec <span class="largeScreen">Výsledek</span><span class="responsive">V</span>).</em></li>
-					<li>Nejvyšší navštívené stanoviště bez ohledu na počet totálek <em>(sloupec <span class="largeScreen">Totálky</span><span class="responsive">T</span>).</em></li>
+					<li>Nejvyšší navštívené stanoviště{if $hasFinishCipher} (příchod do cíle a vyluštění cílového hesla se berou jako
+					dvě samostatná stanoviště){/if} mínus počet totálek <em>(sloupec <span class="largeScreen">Výsledek</span><span class="responsive">V</span>).</em></li>
+					<li>Nejvyšší navštívené stanoviště bez ohledu na počet totálek <em>(sloupec <span class="largeScreen">Stanoviště</span><span class="responsive">S</span>).</em></li>
 					<li>Čas příchodu na nejvyšší navštívené stanoviště <em>(sloupec Čas).</em></li>
 				</ol>
 			</div>

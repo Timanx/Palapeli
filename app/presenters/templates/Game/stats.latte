@@ -46,7 +46,7 @@
 					{var $nHeight = ($cipherData[$i]['no-data'] / $teamsTotalCount) * $height}
 
 					<text text-anchor="middle" x="{$x + $width/2	|noescape}%" y="{$height + $topOffset - 10}">
-						{if $i == 0}S{elseif $i == $checkpointCount - 1}C{else}{$i}{/if}
+						{if $i == 0}S{elseif $hasFinishCipher && $i == $checkpointCount - 1}C{else}{$i}{/if}
 					</text>
 
 					<rect

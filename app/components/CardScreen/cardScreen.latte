@@ -38,7 +38,9 @@
 							{input entryTime}
 						</td>
 						<td class="left spacing">
-							{input exitTime}
+							{if $hasFinishCipher || $i != $checkpointCount - 1}
+								{input exitTime}
+							{/if}
 						</td>
 						<td class="right">
 							{if $i != 0 && $i != $checkpointCount - 1}

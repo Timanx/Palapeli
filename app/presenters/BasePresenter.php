@@ -89,6 +89,8 @@ class BasePresenter extends Nette\Application\UI\Presenter
         $this->template->currentCalendarYear = $currentYearData->calendar_year;
         $this->template->isSelectedYearCurrent = ($this->selectedYear == $currentYearData->year);
         $this->template->showTesterNotification = $currentYearData->show_tester_notification;
+        $this->template->hasFinishCipher = $this->yearsModel->hasFinishCipher();
+        $this->template->hintForStartExists = $this->yearsModel->hintForStartExists();
     }
 
     public function getYearData() {

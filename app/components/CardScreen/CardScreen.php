@@ -70,6 +70,7 @@ class CardScreen extends BaseControl
 
         $this->template->checkpointCount = $this->yearsModel->getCheckpointCount();
         $this->template->current = $this->teamId;
+        $this->template->hasFinishCipher = $this->yearsModel->hasFinishCipher();
 
         $this->template->render();
     }
@@ -90,7 +91,18 @@ class CardScreen extends BaseControl
 
         for ($i = 0; $i < $yearData->checkpoint_count; $i++) {
 
-            $label = ($i == 0 ? 'Začátek hry:' : ($i == $yearData->checkpoint_count - 1 ? 'Příchod do cíle:' : 'Příchod na ' . $i . '. stanoviště:'));
+            $label = (
+                $i == 0 ?
+                    'Začátek hry:' :
+                    (
+                        (
+                            $i == $yearData->checkpoint_count - 1 &&
+                            $yearData->has_finish_cipher
+                        ) ?
+                            'Příchod do cíle:' :
+                            'Příchod na ' . $i . '. stanoviště:'
+                    )
+            );
 
             $checkpoint = $form->addContainer('checkpoint' . $i);
             $checkpoint->addText('entryTime', $label)->setType('time')->setDisabled()->setDefaultValue(((isset($results[$i]) && isset($results[$i]['entry_time'])) ? $results[$i]['entry_time'] : \App\Presenters\BasePresenter::EMPTY_TIME_VALUE));

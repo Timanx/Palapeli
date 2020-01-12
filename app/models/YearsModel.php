@@ -33,6 +33,26 @@ class YearsModel
         )->fetchField();
     }
 
+    public function hasFinishCipher()
+    {
+        return $this->database->query('
+            SELECT has_finish_cipher
+            FROM years
+            WHERE year = ?',
+            $this->year
+        )->fetchField();
+    }
+
+    public function hintForStartExists()
+    {
+        return $this->database->query('
+            SELECT hint_for_start_exists
+            FROM years
+            WHERE year = ?',
+            $this->year
+        )->fetchField();
+    }
+
     public function getYearData()
     {
         return $this->database->query('
@@ -170,7 +190,7 @@ class YearsModel
     public function getEndgameData()
     {
         return $this->database->query('
-            SELECT afterparty_location, COALESCE(TIME_FORMAT(afterparty_time, \'%H:%i\'), \'(dozvíte se v cíli)\') AS afterparty_time, finish_location, COALESCE(TIME_FORMAT(finish_open_time, \'%H:%i\'), \'09:00\') AS finish_open_time, checkpoint_count
+            SELECT afterparty_location, COALESCE(TIME_FORMAT(afterparty_time, \'%H:%i\'), \'(dozvíte se v cíli)\') AS afterparty_time, finish_location, COALESCE(TIME_FORMAT(finish_open_time, \'%H:%i\'), \'09:00\') AS finish_open_time, checkpoint_count, has_finish_cipher
             FROM years
             WHERE year = ?
         ', $this->year

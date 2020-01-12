@@ -1,5 +1,5 @@
 <div n:foreach="$flashes as $flash" n:class="flash, $flash->type">{$flash->message}</div>
-{if $nextCheckpointNumber == $checkpointCount}
+{if $hasFinishCipher && $nextCheckpointNumber == $checkpointCount}
 	<div class="flash info">K dokončení hry vám zbývá vyřešit cílové heslo a nahlásit ho přítomným organizátorům.</div>
 {/if}
 <div class="action-screen-container screen-container">
@@ -27,7 +27,7 @@
 				<div class="checkpoint-heading">
 					{if $nextCheckpointNumber == 1}
 						ODCHOD ZE STARTU
-					{elseif $nextCheckpointNumber == $checkpointCount}
+					{elseif $hasFinishCipher && $nextCheckpointNumber == $checkpointCount}
 						VYŘEŠENÍ CÍLOVÉHO HESLA
 					{else}
 						ODCHOD ZE STANOVIŠTĚ {$lastCheckpointData->checkpoint_number}

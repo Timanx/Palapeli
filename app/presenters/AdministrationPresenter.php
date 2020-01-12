@@ -244,6 +244,7 @@ class AdministrationPresenter extends BasePresenter
         $form->addTextArea('cipher_description', 'Popis zadání')->setDefaultValue(isset($data->cipher_description) ? $data->cipher_description : null);
         $form->addTextArea('solution_description', 'Popis řešení')->setDefaultValue(isset($data->solution_description) ? $data->solution_description : null);
         $form->addText('solution', 'Řešení', null, 1023)->setDefaultValue(isset($data->solution) ? $data->solution : null);
+        $form->addText('code', 'Kód do Palainfa', null, 255)->setDefaultValue(isset($data->code) ? $data->code : null);
         $form->addUpload('cipher_image', 'Obrázek šifry');
         $form->addUpload('solution_image', 'Obrázek řešení');
         $form->addUpload('pdf_file', 'PDF soubor se šifrou');
@@ -278,7 +279,7 @@ class AdministrationPresenter extends BasePresenter
 
         $options = [];
         for ($i = 0; $i < $checkpointCount; $i++) {
-            $options[$i] = ($i == $checkpointCount - 1 ? 'Cíl' : ($i == 0 ? 'Start' : $i . '. stanoviště'));
+            $options[$i] = (($i == $checkpointCount - 1 && $this->yearsModel->hasFinishCipher()) ? 'Cíl' : ($i == 0 ? 'Start' : $i . '. stanoviště'));
         }
         array_unshift($options, 'Vyberte stanoviště');
 
@@ -326,7 +327,7 @@ class AdministrationPresenter extends BasePresenter
         $solution_image_id = $this->uploadFile($values['solution_image'], $target_dir, preg_replace($pattern, 'sol_' . $replacement, $values['solution_image']->getName()));
         $pdf_file_id = $this->uploadFile($values['pdf_file'], $target_dir, preg_replace($pattern, 'pdf_' . $replacement, $values['pdf_file']->getName()));
 
-        $this->ciphersModel->upsertCipher($checkpoint, $values['name'], $values['cipher_description'], $values['solution_description'], $values['solution']);
+        $this->ciphersModel->upsertCipher($checkpoint, $values['name'], $values['cipher_description'], $values['solution_description'], $values['solution'], $values['code']);
 
         if ($values['solution_image']->getError() == UPLOAD_ERR_OK) {
             $this->ciphersModel->updateSolutionImage($solution_image_id);

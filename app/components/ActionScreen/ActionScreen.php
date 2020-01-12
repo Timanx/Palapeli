@@ -72,9 +72,13 @@ class ActionScreen extends BaseControl
 
         $this->template->checkpointCount = $data->checkpoint_count;
         $this->template->nextCheckpointNumber = $checkpointNumber;
-        if ($this->teamsModel->hasTeamEnded($teamId) || $checkpointNumber > $data->checkpoint_count) {
+        $this->template->hasFinishCipher = $data->has_finish_cipher;
+
+        $isLastCheckpoint = $checkpointNumber > ($data->has_finish_cipher ? $data->checkpoint_count : $data->checkpoint_count - 1);
+
+        if ($this->teamsModel->hasTeamEnded($teamId) || $isLastCheckpoint) {
             $this->template->teamEnded = true;
-            if ($checkpointNumber > $data->checkpoint_count) {
+            if ($isLastCheckpoint) {
                 $this->flashMessage('Hru jste úspěšně dokončili! Gratulujeme.', 'success');
             } else {
                 $this->flashMessage('Již jste ukončili hru a ve hře tak nemůžete pokračovat.');

@@ -97,10 +97,10 @@
 	<div class="ruleContainer">
 		<h3 id="finish">CÍL</h3>
 		<p>
-			Cíl je v teple a v dosahu zóny 101 IDS JMK. Pro úspěšné dosažení cíle musí alespoň jeden člen týmu organizátorům odevzdat závěrečné heslo. Pořadí týmů bude vytvořeno podle následujících kritérií:
+			Cíl je v teple a v dosahu zóny 101 IDS JMK. {if $hasFinishCipher}Pro úspěšné dosažení cíle musí alespoň jeden člen týmu organizátorům odevzdat závěrečné heslo.{else}Pro úspěšné dokončení hry musí do cíle dojít alespoň jeden člen týmu. Stačí dojít do cíle, <strong>není nutno řešit žádný cílový úkol</strong>.{/if} Pořadí týmů bude vytvořeno podle následujících kritérií:
 			<ol>
-			<li>Nejvyšší navštívené stanoviště (příchod do cíle a vyluštění cílového hesla se berou jako
-			dvě samostatná stanoviště) <strong>mínus počet totálek</strong> <em>(Pokud by tedy na hře bylo 10 stanovišť bez startu a cíle, může tato hodnota být až 12).</em></li>
+			<li>Nejvyšší navštívené stanoviště{if $hasFinishCipher} (příchod do cíle a vyluštění cílového hesla se berou jako
+			dvě samostatná stanoviště){/if} <strong>mínus počet totálek</strong> <em>(Pokud by tedy na hře bylo 10 stanovišť bez startu a cíle, může tato hodnota být až {if $hasFinishCipher}12{else}11{/if}).</em></li>
 			<li>Nejvyšší navštívené stanoviště bez ohledu na počet totálek.</li>
 			<li>Čas příchodu na nejvyšší navštívené stanoviště.</li>
 			</ol>
