@@ -28,7 +28,7 @@
 							<div class="flash success">Neočekává se od vás platba startovného.</div>
 						{/if}
 					</div>
-					<div style="margin-top: 8px;">
+					<div style="margin-top: 8px;" n:if="$paid == App\Presenters\BasePresenter::PAY_NOK">
 						Platbu můžete provést pomocí QR kódu:<br>
 						<img src="{$QRCode|nocheck}">
 
