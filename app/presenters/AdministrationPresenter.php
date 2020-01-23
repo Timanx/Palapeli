@@ -279,7 +279,7 @@ class AdministrationPresenter extends BasePresenter
 
         $options = [];
         for ($i = 0; $i < $checkpointCount; $i++) {
-            $options[$i] = (($i == $checkpointCount - 1 && $this->yearsModel->hasFinishCipher()) ? 'Cíl' : ($i == 0 ? 'Start' : $i . '. stanoviště'));
+            $options[$i] = (($i == $checkpointCount - 1 ) ? 'Cíl' : ($i == 0 ? 'Start' : $i . '. stanoviště'));
         }
         array_unshift($options, 'Vyberte stanoviště');
 

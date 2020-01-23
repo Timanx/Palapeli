@@ -6,8 +6,11 @@
 		{control selectOnlyCheckpointForm}
 	</div>
 
+
 	{if isset($checkpoint)}
-			<h2 class="heading">{if $checkpoint == 0}START{elseif $hasFinishCipher && $checkpoint == $checkpointCount - 1}CÍL{else}STANOVIŠTĚ {$checkpoint}{/if}</h2>
+
+		<div class="flash info" n:if="!$hasFinishCipher && $checkpoint == $checkpointCount - 1">{$selectedYear}. ročník nemá cílovou šifru, relevantní je tedy pouze kód do Palainfa.</div>
+			<h2 class="heading">{if $checkpoint == 0}START{elseif $checkpoint == $checkpointCount - 1}CÍL{else}STANOVIŠTĚ {$checkpoint}{/if}</h2>
 		<div class="cipherForm">
 			{control cipherForm}
 		</div>

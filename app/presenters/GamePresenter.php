@@ -72,7 +72,14 @@ class GamePresenter extends BasePresenter
         $this->ciphersModel->setYear($this->selectedYear);
 
         $this->template->hasGameEnded = $this->yearsModel->hasGameEnded();
-        $this->template->checkpointCount = $this->yearsModel->getCheckpointCount();
+
+        $checkpointCount = $this->yearsModel->getCheckpointCount();
+
+        if (!$this->yearsModel->hasFinishCipher()) {
+            $checkpointCount--;
+        }
+
+        $this->template->checkpointCount = $checkpointCount;
         $this->template->cipherData = $this->ciphersModel->getCipher($checkpoint);
         $this->template->fastestSolution = $this->resultsModel->getFastestSolution($checkpoint);
         $this->template->teamsTotal = $teamsCount = $this->teamsModel->getTeamsCount();
