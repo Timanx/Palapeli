@@ -64,6 +64,29 @@ class ResultsModel {
         ', $this->year);
     }
 
+
+    public function removeTrailingHints()
+    {
+        $this->database->query('
+            UPDATE results 
+            SET used_hint = 0
+            WHERE 
+              year = ? AND
+              NOT EXISTS (
+                SELECT 1 
+                FROM (
+                  SELECT * 
+                  FROM results AS next_checkpoint
+                  ) tmp
+                WHERE 
+                  tmp.team_id = results.team_id AND
+                  tmp.year = results.year AND 
+                  tmp.checkpoint_number = (results.checkpoint_number + 1)
+              )
+        ', $this->year);
+
+    }
+
     public function getStatsData()
     {
         return $this->database->query('

@@ -141,7 +141,7 @@ class ActionScreen extends BaseControl
             $this->flashMessage('Bohužel jste kód nestihli zadat před koncem hry.', 'error');
         } elseif ($codeCorrect) {
             $now = new \Nette\Utils\DateTime();
-            $this->resultsModel->insertResultsRow($teamId, $checkpointNumber, $now);
+            $this->resultsModel->insertResultsRow($teamId, $checkpointNumber, $now, null, false);
             $this->logModel->log(LogModel::LT_ENTER_CHECKPOINT, $teamId, $checkpointNumber, $this->year);
 
             if ($this->yearsModel->getCheckpointCount() == $checkpointNumber) {

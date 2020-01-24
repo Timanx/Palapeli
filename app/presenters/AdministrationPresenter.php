@@ -412,6 +412,35 @@ class AdministrationPresenter extends BasePresenter
         $this->redirect('this');
     }
 
+    public function createComponentRemoveTrailingHints()
+    {
+
+        $this->getYearData();
+
+        $form = new UI\Form;
+        $form->addSubmit('send', 'ODSTRANIT TOTÁLKY TÝMŮ, KTERÉ NEDOŠLY NA DALŠÍ STANOVIŠTĚ');
+
+
+        $form->onSuccess[] = [$this, 'removeTrailingHints'];
+        return $form;
+    }
+
+    public function removeTrailingHints()
+    {
+        $this->getYearData();
+
+        $this->resultsModel->setYear($this->selectedYear);
+        $this->yearsModel->setYear($this->selectedYear);
+
+        if (!$this->yearsModel->hasGameEnded()) {
+            $this->flashMessage('Hra ještě neskončila, tato akce by znehodnotila výsledky.', 'error');
+        } else {
+            $this->resultsModel->removeTrailingHints();
+            $this->flashMessage('Totálky byly úspěšně odstraněny', 'success');
+        }
+        $this->redirect('this');
+    }
+
     public function renderReports()
     {
         parent::render();
