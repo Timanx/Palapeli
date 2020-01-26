@@ -175,8 +175,12 @@ class GamePresenter extends BasePresenter
         }
 
         $this->template->cipherData = $cipherData;
-        $this->template->teamsTotalCount = $this->teamsModel->getTeamsCount();;
-        $this->template->checkpointCount = $this->yearsModel->getCheckpointCount();;
+        $this->template->teamsTotalCount = $this->teamsModel->getTeamsCount();
+        $this->template->checkpointCount = (
+            $this->yearsModel->hasFinishCipher() ?
+                $this->yearsModel->getCheckpointCount() :
+                $this->yearsModel->getCheckpointCount() - 1
+        );
     }
 
     public function renderScorecard()

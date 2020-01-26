@@ -76,13 +76,31 @@
 					{var $maxCheckpoint = key($results[$id])}
 					{/if}
 					{for $j = 0; $j < $totalCheckpoints; $j++}
-						{capture $titleIn}{if $j == 0}start{elseif $hasFinishCipher && $j == $totalCheckpoints - 1}příchod do cíle{else}příchod na stanoviště {$j}{/if}{if isset($results[$id][$j]) && isset($results[$id][$j]['entry_time'])} v {$results[$id][$j]['entry_time']}{else} (nezadaný čas){/if}{/capture}
+						{capture $titleIn}{if $j == 0}start{elseif $j == $totalCheckpoints - 1}příchod do cíle{else}příchod na stanoviště {$j}{/if}{if isset($results[$id][$j]) && isset($results[$id][$j]['entry_time'])} v {$results[$id][$j]['entry_time']}{else} (nezadaný čas){/if}{/capture}
 						{capture $titleOut}{if isset($results[$id][$j]) && $results[$id][$j]['used_hint'] == 1}totálka na stanovišti {$j}{elseif $j == 0}odchod ze startu{elseif $j == $totalCheckpoints - 1}vyřešení cílového hesla{else}odchod ze stanoviště {$j}{/if}{if isset($results[$id][$j]) && isset($results[$id][$j]['exit_time'])} v {$results[$id][$j]['exit_time']}{else} (nezadaný čas){/if}{/capture}
 
-						<td onclick="displayTooltip('<strong>{$team['name']|noescape}</strong><br />{$titleIn|noescape}')" class="cI" {if $maxCheckpoint >= $j || $maxCheckpoint == $totalCheckpoints - 1}title="{$team['name']|noescape}: {$titleIn|striptags|noescape}"{/if} style="background-color:{if isset($results[$id][$j]) && $maxCheckpoint == $j && ($j != $totalCheckpoints - 1 || !isset($results[$id][$j]['exit_time']))}{\App\Presenters\BasePresenter::RED_TINT|noescape}{elseif isset($results[$id][$j])}{$results[$id][$j]['background_color']|noescape}{elseif $maxCheckpoint >=  $j && !isset($maxEntry['used_hint'])}{\App\Presenters\BasePresenter::BLUE_TINT|noescape}{/if};">
+						<td
+							onclick="displayTooltip('<strong>{$team['name']|noescape}</strong><br />{$titleIn|noescape}')"
+							class="cI"
+							{if $maxCheckpoint >= $j || $maxCheckpoint == $totalCheckpoints - 1}
+								title="{$team['name']|noescape}: {$titleIn|striptags|noescape}"
+							{/if}
+							style="
+								background-color:
+									{if isset($results[$id][$j]) && $maxCheckpoint == $j && ($j != $totalCheckpoints - 1 || ($hasFinishCipher &&!isset($results[$id][$j]['exit_time'])))}
+										{\App\Presenters\BasePresenter::RED_TINT|noescape}
+									{elseif isset($results[$id][$j])}
+										{$results[$id][$j]['background_color']|noescape}
+									{elseif $maxCheckpoint >=  $j && !isset($maxEntry['used_hint'])}
+										{\App\Presenters\BasePresenter::BLUE_TINT|noescape}
+									{/if};
+							"
+						>
 							{if isset($results[$id][$j])}{$results[$id][$j]['entry_time']}{/if}
 						</td>
-						<td n:if="$hasFinishCipher || ($maxCheckpoint > $j + 1)" onclick="displayTooltip('<strong>{$team['name']|noescape}</strong><br />{$titleOut|noescape}')"  class="cO" {if $maxCheckpoint > $j || ($maxCheckpoint == $totalCheckpoints - 1 && isset($results[$id][$j]) && isset($results[$id][$j]['exit_game']))}title="{$team['name']|noescape}: {$titleOut|striptags|noescape}"{/if} style="background-color:{if $maxCheckpoint ==  $j && !isset($maxEntry['used_hint'])}initial{elseif isset($results[$id][$j])}{$results[$id][$j]['background_color']|noescape}{elseif $maxCheckpoint >=  $j && !isset($maxEntry['used_hint'])}{\App\Presenters\BasePresenter::BLUE_TINT|noescape}{/if};">
+						<td
+							n:if="$hasFinishCipher || ($j != $totalCheckpoints - 1)"s
+							onclick="displayTooltip('<strong>{$team['name']|noescape}</strong><br />{$titleOut|noescape}')"  class="cO" {if $maxCheckpoint > $j || ($maxCheckpoint == $totalCheckpoints - 1 && isset($results[$id][$j]) && isset($results[$id][$j]['exit_game']))}title="{$team['name']|noescape}: {$titleOut|striptags|noescape}"{/if} style="background-color:{if $maxCheckpoint ==  $j && !isset($maxEntry['used_hint'])}initial{elseif isset($results[$id][$j])}{$results[$id][$j]['background_color']|noescape}{elseif $maxCheckpoint >=  $j && !isset($maxEntry['used_hint'])}{\App\Presenters\BasePresenter::BLUE_TINT|noescape}{/if};">
 							{if isset($results[$id][$j])}{$results[$id][$j]['exit_time']}{/if}
 						</td>
 					{/for}

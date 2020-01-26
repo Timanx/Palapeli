@@ -90,9 +90,29 @@ class ResultsModel {
     public function getStatsData()
     {
         return $this->database->query('
-            SELECT team_id, used_hint, entry_time, used_hint IS NOT NULL AS filled, checkpoint_number, EXISTS(SELECT 1 FROM results r WHERE r.team_id = results.team_id AND r.year = results.year AND r.checkpoint_number > results.checkpoint_number) AS continued
-            FROM results
-            WHERE year = ?
+            SELECT 
+                team_id, 
+                used_hint, 
+                entry_time, 
+                used_hint IS NOT NULL AS filled, 
+                checkpoint_number, 
+                EXISTS(
+                    SELECT 1 
+                    FROM results r
+                    WHERE 
+                        r.team_id = results.team_id AND
+                        r.year = results.year AND
+                        r.checkpoint_number > results.checkpoint_number
+                ) AS continued
+            FROM
+                results
+                JOIN years ON years.year = results.year
+            WHERE 
+                results.year = ? AND
+                (
+                    years.has_finish_cipher OR 
+                    results.checkpoint_number < years.checkpoint_count - 1
+                )
         ', $this->year)->fetchAll();
     }
 
