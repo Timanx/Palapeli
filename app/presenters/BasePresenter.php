@@ -91,6 +91,7 @@ class BasePresenter extends Nette\Application\UI\Presenter
         $this->template->showTesterNotification = $currentYearData->show_tester_notification;
         $this->template->hasFinishCipher = $this->yearsModel->hasFinishCipher();
         $this->template->hintForStartExists = $this->yearsModel->hintForStartExists();
+        $this->template->archiveData = $this->yearsModel->getArchiveSwitchData();
     }
 
     public function getYearData() {

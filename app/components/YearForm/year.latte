@@ -1,0 +1,10 @@
+<div n:foreach="$flashes as $flash" n:class="flash, $flash->type">{$flash->message}</div>
+{if !$createNew}
+<div class="information">Vybraný ročník: {$selectedYear}.</div>
+<div style="text-align: center;">
+<a href="{plink Administration:year, createNew => true}" class="button-simulation">ZALOŽIT NOVÝ ROČNÍK</a>
+</div>
+{else}
+<div class="information">Zakládáte nový ročník.</div>
+{/if}
+{control yearForm}

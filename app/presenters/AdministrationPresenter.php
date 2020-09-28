@@ -15,6 +15,7 @@ use Nette\Application\UI;
 use Nette\Http\FileUpload;
 use InfoScreen;
 use UpdatesForm;
+use YearForm;
 
 
 class AdministrationPresenter extends BasePresenter
@@ -36,6 +37,8 @@ class AdministrationPresenter extends BasePresenter
     private $discussionControlFactory;
     /** @var  \IUpdatesFormFactory */
     private $updatesFormFactory;
+    /** @var  \IYearFormFactory */
+    private $yearFormFactory;
     /** @var  \ITeamCardFactory */
     private $teamCardFactory;
     /** @var  \ICheckpointCardFactory */
@@ -46,6 +49,7 @@ class AdministrationPresenter extends BasePresenter
     public function __construct(
         \IDiscussionControlFactory $discussionControlFactory,
         \IUpdatesFormFactory $updatesFormFactory,
+        \IYearFormFactory $yearFormFactory,
         \ITeamCardFactory $teamCardFactory,
         \ICheckpointCardFactory $checkpointCardFactory,
         \ITeamMessageFactory $teamMessageFactory,
@@ -59,6 +63,7 @@ class AdministrationPresenter extends BasePresenter
     {
         $this->discussionControlFactory = $discussionControlFactory;
         $this->updatesFormFactory = $updatesFormFactory;
+        $this->yearFormFactory = $yearFormFactory;
         $this->teamCardFactory = $teamCardFactory;
         $this->checkpointCardFactory = $checkpointCardFactory;
         $this->teamMessageFactory = $teamMessageFactory;
@@ -165,6 +170,19 @@ class AdministrationPresenter extends BasePresenter
         $this->prepareHeading('Odeslat zprávu týmům');
     }
 
+    public function renderYear($createNew = false)
+    {
+        parent::render();
+        $this->prepareHeading('Správa ročníků');
+
+        $component = $this->getComponent('yearForm');
+        assert($component instanceof YearForm);
+        $component->setYear($this->selectedYear);
+        if ($createNew) {
+            $component->createNew();
+        }
+    }
+
     protected function createComponentDiscussion()
     {
         /** @var DiscussionControl $control */
@@ -196,6 +214,12 @@ class AdministrationPresenter extends BasePresenter
         /** @var UpdatesForm $control */
         $control = $this->updatesFormFactory->create();
         $control->setYear($this->selectedYear);
+        return $control;
+    }
+    protected function createComponentYearForm()
+    {
+        /** @var YearForm $control */
+        $control = $this->yearFormFactory->create();
         return $control;
     }
 

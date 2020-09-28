@@ -23,6 +23,21 @@ class YearsModel
         $this->year = $year;
     }
 
+    public function getArchiveSwitchData()
+    {
+        return $this->database->query(
+            '
+                SELECT
+                    year,
+                    calendar_year,
+                    is_current
+                FROM years
+                ORDER BY year
+            '
+        )->fetchAssoc('year');
+
+    }
+
     public function getCheckpointCount()
     {
         return $this->database->query('
@@ -210,5 +225,82 @@ class YearsModel
             ',
             $teamId
         )->fetch();
+    }
+
+    public function addYear(array $values): void
+    {
+        if ($values['is_current']) {
+            $this->removeCurrentFlag();
+        }
+
+        $this->database->query('
+            INSERT INTO years(year, calendar_year, date, game_start, game_end, word_numbering, registration_start, registration_end, checkpoint_count, entry_fee, entry_fee_account, entry_fee_deadline, entry_fee_return_deadline, last_info_time, team_limit, results_public, show_tester_notification, is_current, has_finish_cipher, hint_for_start_exists, afterparty_location, afterparty_time, finish_location, finish_open_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) 
+            ',
+            $values['year'],
+            $values['calendar_year'],
+            $values['date'],
+            $values['game_start'],
+            $values['game_end'],
+            $values['word_numbering'],
+            $values['registration_start'],
+            $values['registration_end'],
+            $values['checkpoint_count'],
+            $values['entry_fee'],
+            $values['entry_fee_account'],
+            $values['entry_fee_deadline'],
+            $values['entry_fee_return_deadline'],
+            $values['last_info_time'],
+            $values['team_limit'],
+            $values['results_public'],
+            $values['show_tester_notification'],
+            $values['is_current'],
+            $values['has_finish_cipher'],
+            $values['hint_for_start_exists'],
+            $values['afterparty_location'],
+            $values['afterparty_time'],
+            $values['finish_location'],
+            $values['finish_open_time']
+        );
+    }
+
+    public function editYear(array $values): void
+    {
+        if ($values['is_current']) {
+            $this->removeCurrentFlag();
+        }
+
+        $this->database->query('
+            UPDATE years
+            SET calendar_year = ?, date = ?, game_start = ?, game_end = ?, word_numbering = ?, registration_start = ?, registration_end = ?, checkpoint_count = ?, entry_fee = ?, entry_fee_account = ?, entry_fee_deadline = ?, entry_fee_return_deadline = ?, last_info_time = ?, team_limit = ?, results_public = ?, show_tester_notification = ?, is_current = ?, has_finish_cipher = ?, hint_for_start_exists = ?, afterparty_location = ?, afterparty_time = ?, finish_location = ?, finish_open_time = ?
+            ',
+            $values['calendar_year'],
+            $values['date'],
+            $values['game_start'],
+            $values['game_end'],
+            $values['word_numbering'],
+            $values['registration_start'],
+            $values['registration_end'],
+            $values['checkpoint_count'],
+            $values['entry_fee'],
+            $values['entry_fee_account'],
+            $values['entry_fee_deadline'],
+            $values['entry_fee_return_deadline'],
+            $values['last_info_time'],
+            $values['team_limit'],
+            $values['results_public'],
+            $values['show_tester_notification'],
+            $values['is_current'],
+            $values['has_finish_cipher'],
+            $values['hint_for_start_exists'],
+            $values['afterparty_location'],
+            $values['afterparty_time'],
+            $values['finish_location'],
+            $values['finish_open_time']
+        );
+    }
+
+    private function removeCurrentFlag()
+    {
+        $this->database->query('UPDATE years SET is_current = 0');
     }
 }

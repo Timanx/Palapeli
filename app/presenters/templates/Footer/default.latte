@@ -29,7 +29,13 @@
 </script>
 
 <div>
-	<div class="contact">
+	<div class="archive">
+		<p class="archiveHeader">ROČNÍK</p>
+		{foreach $archiveData as $row}
+		<a class="archiveLink{if $selectedYear == $row['year']} selected{/if}" href="{plink Archive: $row['year'], $row['calendar_year'], $presenter->getAction(true)}">{$row['year']}</a>
+		{/foreach}
+	</div>{*
+	*}<div class="contact">
 		<p class="archiveHeader">KONTAKT</p>
 		<a href="{plink Discussion:}" title="Diskuse">
 			<div class="svgContainer" style="margin-right:30px;">
@@ -44,26 +50,6 @@
 				{include ../../../components/SVG/facebook.svg, dim => '50px'}
 			</div>
 		</a>
-	</div>
-	<div class="archive">
-		<p class="archiveHeader">ARCHIV</p>
-		<a class="archiveLink{if $selectedYear == 1} selected{/if}" href="{plink Archive: 1, 2012, $presenter->getAction(true)}">1</a>
-
-		<a class="archiveLink{if $selectedYear == 2} selected{/if}" href="{plink Archive: 2, 2013, $presenter->getAction(true)}">2</a>
-
-		<a class="archiveLink{if $selectedYear == 3} selected{/if}" href="{plink Archive: 3, 2014, $presenter->getAction(true)}">3</a>
-
-		<a class="archiveLink{if $selectedYear == 4} selected{/if}" href="{plink Archive: 4, 2015, $presenter->getAction(true)}">4</a>
-
-		<a class="archiveLink{if $selectedYear == 5} selected{/if}" href="{plink Archive: 5, 2016, $presenter->getAction(true)}">5</a>
-
-		<a class="archiveLink{if $selectedYear == 6} selected{/if}" href="{plink Archive: 6, 2017, $presenter->getAction(true)}">6</a>
-
-		<a class="archiveLink{if $selectedYear == 7} selected{/if}" href="{plink Archive: 7, 2018, $presenter->getAction(true)}">7</a>
-
-		<a class="archiveLink{if $selectedYear == 8} selected{/if}" href="{plink Archive: 8, 2019, $presenter->getAction(true)}">8</a>
-
-		<a class="archiveLink{if $selectedYear == $currentYear} selected{/if}" href="{plink Archive: $currentYear, $currentCalendarYear, $presenter->getAction(true)}">9</a>
 	</div>
 </div>
 <div id="mailForm" style="display: none;margin-top: 30px;">

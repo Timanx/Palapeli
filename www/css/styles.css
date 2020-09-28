@@ -69,8 +69,8 @@ ul {
     display: inline-block;
     margin-left: 40px;
     margin-right: 40px;
-    width: 263px;
     vertical-align: top;
+    width: calc(50% - 80px);
 }
 .archiveLink {
     width: 26px;
@@ -328,7 +328,7 @@ ul.error a {
     display: none;
 }
 
-input[type="submit"] {
+input[type="submit"], .button-simulation {
     padding: 7px;
     background-color: #005BD0;
     color: white;
@@ -354,7 +354,7 @@ input[type="button"] {
     font-size: 10pt;
 }
 
-input[type="submit"]:hover, input[type="button"]:hover {
+input[type="submit"]:hover, input[type="button"]:hover, .button-simulation:hover {
     background-color: #327BD9 !important;
     color: white !important;
 }
