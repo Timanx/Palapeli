@@ -113,8 +113,8 @@ class YearForm extends BaseControl
     {
         $isNew = $values['is_new'];
 
-        $values['date'] = substr($values['game_start'],0, 4);
-        $values['calendar_year'] = substr($values['game_start'],0, 10);
+        $values['calendar_year'] = substr($values['game_start'],0, 4);
+        $values['date'] = substr($values['game_start'],0, 10);
 
             if ($isNew) {
                 $this->yearsModel->addYear($values);
