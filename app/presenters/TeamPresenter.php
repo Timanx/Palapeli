@@ -214,6 +214,7 @@ class TeamPresenter extends BasePresenter
         $form->addText('phone2', 'Záložní telefon:')->setRequired(false)->addRule(UI\Form::MAX_LENGTH, 'Záložní telefon může mít maximálně 20 znaků', 20);
         $form->addText('email1', '*E-mail na 1. člena:')->setRequired('Zadejte prosím e-mail.')->addRule(UI\Form::EMAIL, 'E-mail není ve správném tvaru.')->addRule(UI\Form::MAX_LENGTH, 'E-mail prvního člena může mít maximálně 255 znaků', 255);
         $form->addText('email2', 'Záložní e-mail:')->setRequired(false)->addRule(UI\Form::EMAIL, 'Záložní-mail není ve správném tvaru.')->addRule(UI\Form::MAX_LENGTH, 'E-mail druhého člena může mít maximálně 255 znaků', 255);
+        $form->addText('captcha', 'Počet dílků puzzlíku na logu Palapeli:');
         $form->addSubmit('login', 'REGISTROVAT');
         $form->addHidden('year', $this->selectedYear);
         $form->onSuccess[] = [$this, 'registrationFormSucceeded'];
@@ -226,6 +227,11 @@ class TeamPresenter extends BasePresenter
         $this->yearsModel->setYear($values['year']);
 
         $takenNames = $this->teamsModel->getTakenNames();
+
+        if ($values['captcha'] != 4) {
+            $form->addError(Nette\Utils\Html::el('div', ['class' => 'flash info'])->setHtml('Nesprávně vyplněná kontrolní otázka.'));
+            return;
+        }
 
         if (in_array($values['name'], $takenNames)) {
             $form->addError(Nette\Utils\Html::el('div', ['class' => 'flash info'])->setHtml('Tým s tímto jménem již existuje. Pokud se jedná o Váš tým, můžete se do aktuálního ročníku přihlásit v sekci <a href="/team">Přihlášení</a>. Pokud si nepamatujete heslo ani e-mail, na který byste si nechali vygenerovat nové heslo, kontaktujte prosím organizátory na e-mailu organizatori@palapeli.cz. Pokud se nejedná o Váš tým, použijte prosím jiné jméno týmu.'));
