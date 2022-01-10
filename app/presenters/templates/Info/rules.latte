@@ -2,6 +2,10 @@
 	{include ../Extras/testerNotification.latte}
 <div class="rules">
 
+    <div class="flash info">
+        Abychom se mohli našemu svědomí i vládním nařízením podívat do očí, letošní Palapeli proběhne následujícím způsobem: Nebude hromadný start, nebude oheň, nebude organizovaný cíl. Místo toho bude hra probíhat od soboty 22. ledna 8:00 do neděle 23. ledna 20:00. Začít můžete kdykoli, čas vaší hry se bude počítat od zadání prvního hesla do zadání hesla cílového stanoviště. Výsledné pořadí bude zveřejněno pravděpodobně v neděli večer, pravidla pro vyhodnocení zůstávají stejná, kromě výše zmíněného rozdílu s časem. Zároveň s tím jsme se rozhodli zrušit startovné. Hra bude počtem šifer, délkou trasy a celkovou náročností podobná předchozím ročníkům.
+    </div>
+
 	<div class="ruleContainer">
 		<h3 id="summary">SHRNUTÍ</h3>
 		<table style="margin-bottom: 40px">
@@ -10,7 +14,7 @@
 					Kdy:
 				</td>
 				<td>
-					{$yearData->date|date: 'j. n. Y'|noescape} od {$yearData->game_start|date: 'H:i'|noescape} do {$yearData->game_end|date: 'H:i'|noescape}
+					 od {$yearData->date|date: 'j. n. Y'|noescape} {$yearData->game_start|date: 'H:i'|noescape} do {$yearData->game_start|date: 'j. n. Y'|noescape} {$yearData->game_end|date: 'H:i'|noescape}
 				</td>
 			</tr>
 			<tr>
