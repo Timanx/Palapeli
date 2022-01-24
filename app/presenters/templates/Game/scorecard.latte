@@ -2,9 +2,9 @@
 {include ../Extras/yearArrows.latte, positionTop => 100}
 	{if !$hasGameStarted}
 		<div class="flash info">{$selectedYear}. ročník ještě neproběhl a výsledky tedy ještě nejsou k dispozici.</div>
-	{elseif !$hasGameEnded}
+	{elseif !$hasGameEnded && !$orgLogged}
 		<div class="flash info">{$selectedYear}. ročník ještě neskončil a výsledky tedy ještě nejsou k dispozici.</div>
-	{elseif !$resultsPublic}
+	{elseif !$resultsPublic && !$orgLogged}
 		<div class="flash info">Výsledky {$selectedYear}. ročníku ještě nejsou zvěřejněny, pracujeme na jejich doplnění.</div>
 	{else}
 		<script>
@@ -54,8 +54,14 @@
 					<th class="col2" title="Název týmu">
 						Tým
 					</th>
+					<th class="col3" title="Čas startu" n:if="$selectedYear==10" style="width: 78px;display: block;">
+						Start
+					</th>
 					{for $j = 0; $j < $totalCheckpoints; $j++}
-						<th class="colI" title="{if $j == 0}Start{elseif $j == $totalCheckpoints - 1}Příchod do cíle{else}Příchod na stanoviště {$j}{/if}">
+						<th
+                                class="colI" title="{if $j == 0}Start{elseif $j == $totalCheckpoints - 1}Příchod do cíle{else}Příchod na stanoviště {$j}{/if}"
+                            n:if="($selectedYear != 10 || $j != 0)"
+                        >
 							{if $j == 0}S{elseif $j == $totalCheckpoints - 1}C{else}{$j}{/if}i
 						</th>
 						<th n:if="$j < $totalCheckpoints - 1 || $hasFinishCipher" class="colO" title="{if $j == 0}Odchod ze startu{elseif $j == $totalCheckpoints - 1}Vyřešení cílového hesla{else}Odchod ze stanoviště {$j}{/if}">
@@ -71,6 +77,10 @@
 					<td class="team col2">
 						{$team['name']|noescape}
 					</td>
+
+                    <td class="col3" n:if="$selectedYear==10">
+                        {$team['start_datetime']|noescape}
+                    </td>
 					{if isset($results[$id])}
 					{var $maxEntry = end($results[$id])}
 					{var $maxCheckpoint = key($results[$id])}
@@ -99,7 +109,7 @@
 							{if isset($results[$id][$j])}{$results[$id][$j]['entry_time']}{/if}
 						</td>
 						<td
-							n:if="$hasFinishCipher || ($j != $totalCheckpoints - 1)"
+							n:if="($hasFinishCipher || ($j != $totalCheckpoints - 1)) && ($selectedYear != 10 || $j != 0)"
 							onclick="displayTooltip('<strong>{$team['name']|noescape}</strong><br />{$titleOut|noescape}')"  class="cO" {if $maxCheckpoint > $j || ($maxCheckpoint == $totalCheckpoints - 1 && isset($results[$id][$j]) && isset($results[$id][$j]['exit_game']))}title="{$team['name']|noescape}: {$titleOut|striptags|noescape}"{/if} style="background-color:{if $maxCheckpoint ==  $j && !isset($maxEntry['used_hint'])}initial{elseif isset($results[$id][$j])}{$results[$id][$j]['background_color']|noescape}{elseif $maxCheckpoint >=  $j && !isset($maxEntry['used_hint'])}{\App\Presenters\BasePresenter::BLUE_TINT|noescape}{/if};">
 							{if isset($results[$id][$j])}{$results[$id][$j]['exit_time']}{/if}
 						</td>

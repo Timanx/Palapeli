@@ -1,0 +1,43 @@
+{layout '@layout.latte'}
+
+{block administrationBlock}
+<table class="teamTable">
+    <tr>
+        <th>
+            Stanoviště
+        </th>
+        <th>
+            Tým
+        </th>
+        <th>
+            Příchod
+        </th>
+        <th>
+            Odchod
+        </th>
+        <th>
+            Ukončena hra předčasně
+        </th>
+    </tr>
+    {foreach $data as $row}
+    <tr>
+
+        <td>
+            {$row->checkpoint_number}
+        </td>
+        <td>
+            {$row->name}
+        </td>
+        <td>
+            {$row->entry_datetime}
+        </td>
+        <td>
+            {$row->exit_datetime}
+        </td>
+        <td>
+            {if $row->ended}ANO{/if}
+        </td>
+    </tr>
+    {/foreach}
+</table>
+{/block}

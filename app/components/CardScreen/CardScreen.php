@@ -53,6 +53,7 @@ class CardScreen extends BaseControl
         $checkpointNumber = $this->resultsModel->getLastCheckpointNumber($this->teamId);
 
         $this->template->checkpointCloseTimes = $this->ciphersModel->getCheckpointCloseTimes();
+        $this->template->specifications = $this->ciphersModel->getSpecifications();
 
         if ($this->teamsModel->hasTeamEnded($this->teamId)) {
             $this->template->teamEnded = true;
@@ -109,9 +110,9 @@ class CardScreen extends BaseControl
 
             $exit = $checkpoint->addText('exitTime', ($i == 0 ? 'Odchod ze startu:' : ($i == $yearData->checkpoint_count - 1 ? 'Vyřešení cílového hesla:' : 'Odchod z ' . $i . '. stanoviště:')))->setType('time');
 
-            if (!isset($results[$i]) || $isTeamFinalized) {
+            //if (!isset($results[$i]) || $isTeamFinalized) {
                 $exit->setDisabled();
-            }
+            //}
 
             $exit->setDefaultValue((isset($results[$i]) && isset($results[$i]['exit_time']) ? $results[$i]['exit_time'] : \App\Presenters\BasePresenter::EMPTY_TIME_VALUE));;
             if ($i != $yearData->checkpoint_count - 1) {
@@ -120,7 +121,7 @@ class CardScreen extends BaseControl
         }
 
         $form->addHidden('teamId', $this->teamId);
-        $form->addSubmit('send', 'ODESLAT KARTU TÝMU');
+        //$form->addSubmit('send', 'ODESLAT KARTU TÝMU');
         $form->onSuccess[] = [$this, 'teamCardFormSucceeded'];
         return $form;
     }

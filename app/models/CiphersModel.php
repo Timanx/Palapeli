@@ -41,12 +41,12 @@ class CiphersModel
         ', $this->year, $checkpoint)->fetch();
     }
 
-    public function upsertCipher($checkpoint, $name, $cipherDescription, $solutionDescription, $solution, $code)
+    public function upsertCipher($checkpoint, $name, $cipherDescription, $solutionDescription, $solution, $code, $specification)
     {
         $this->database->query('
-            INSERT INTO ciphers (year, checkpoint_number, name, cipher_description,  solution_description, solution, code) VALUES
-            (?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE name = ?, cipher_description = ?, solution_description = ?, solution = ?, code = ?
-        ', $this->year, $checkpoint, $name, $cipherDescription, $solutionDescription, $solution, $code, $name, $cipherDescription, $solutionDescription, $solution, $code
+            INSERT INTO ciphers (year, checkpoint_number, name, cipher_description,  solution_description, solution, code, specification) VALUES
+            (?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE name = ?, cipher_description = ?, solution_description = ?, solution = ?, code = ?, specification = ? 
+        ', $this->year, $checkpoint, $name, $cipherDescription, $solutionDescription, $solution, $code, $specification, $name, $cipherDescription, $solutionDescription, $solution, $code, $specification
         );
     }
 
@@ -107,5 +107,15 @@ class CiphersModel
             WHERE year = ?
         ',
             $this->year)->fetchAssoc('checkpoint_number');
+    }
+
+    public function getSpecifications()
+    {
+        return $this->database->query('
+            SELECT checkpoint_number, specification
+            FROM ciphers
+            WHERE year = ?
+        ',
+            $this->year)->fetchPairs('checkpoint_number', 'specification');
     }
 }

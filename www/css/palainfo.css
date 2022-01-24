@@ -89,6 +89,14 @@ body {
 .action-screen-container .exit-time-forms-container .exit-time-input-form form {
   display: inline-block;
 }
+.action-screen-container .exit-time-forms-container .exit-time-input-form select {
+  display: inline-block;
+  height: 44px;
+  vertical-align: top;
+  text-align: right;
+  font-size: 18pt;
+  margin: 0 25px 0 0;
+}
 .action-screen-container .exit-time-forms-container .exit-time-input-form input[type="time"] {
   display: inline-block;
   height: 40px;
@@ -97,6 +105,7 @@ body {
   vertical-align: top;
   text-align: right;
   font-size: 18pt;
+  margin-bottom: 16px;
 }
 .action-screen-container .exit-time-forms-container .exit-time-input-form input[type="submit"] {
   display: inline-block;
@@ -108,8 +117,8 @@ body {
   background-repeat: no-repeat;
 }
 .action-screen-container .exit-time-forms-container .exit-time-input-form input[type="submit"].now {
-  margin-left: 30px;
   background-image: none;
+  margin: 0px 25px;
 }
 .action-screen-container .button {
   background-color: #005BD0;

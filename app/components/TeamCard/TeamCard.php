@@ -68,6 +68,9 @@ class TeamCard extends BaseControl
 
     public function teamCardFormSucceeded(UI\Form $form, array $values)
     {
+        $this->flashMessage('Zadávání znemožněno', 'error');
+        $this->redirect('this');
+
         $this->resultsModel->setYear($this->year);
 
         $teamId = $values['teamId'];

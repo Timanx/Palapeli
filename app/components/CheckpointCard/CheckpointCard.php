@@ -137,6 +137,9 @@ class CheckpointCard extends BaseControl
 
     public function checkpointCardFormSucceeded(UI\Form $form, array $values)
     {
+        $this->flashMessage('Zadávání znemožněno', 'error');
+        $this->redirect('this');
+
         $checkpoint = $_GET['checkpoint'];
 
         $this->yearsModel->setYear($this->year);

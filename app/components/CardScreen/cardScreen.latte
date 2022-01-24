@@ -33,6 +33,11 @@
 							</span>
 						</th>
 					</tr>
+					<tr n:ifset="$specifications[$i]">
+						<td colspan="4" style="font-style: italic;">
+                            Upřesnítko: {$specifications[$i]}
+						</td>
+					</tr>
 					<tr>
 						<td class="left">
 							{input entryTime}
@@ -50,11 +55,11 @@
 					</tr>
 				{/formContainer}
 			{/for}
-			<tr>
+			{*<tr>
 				<td colspan="4">
 					{input send}
 				</td>
-			</tr>
+			</tr>*}
 		</table>
 	{/form}
 

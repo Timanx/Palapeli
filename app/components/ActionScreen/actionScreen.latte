@@ -2,6 +2,9 @@
 {if $hasFinishCipher && $nextCheckpointNumber == $checkpointCount}
 	<div class="flash info">K dokončení hry vám zbývá vyřešit cílové heslo a nahlásit ho přítomným organizátorům.</div>
 {/if}
+{if $year = 10 && $nextCheckpointNumber == 1}
+<div class="flash info">První šifra se nachází v Lelekovicích u pumptracku, v dutině křoví asi 10 metrů jižně od dřevěné sochy. Upřesnítka k dalším šifrám naleznete v záložce Karta.</div>
+{/if}
 <div class="action-screen-container screen-container">
 
 	{if !$teamEnded && ($nextCheckpointNumber != $checkpointCount)}
@@ -34,7 +37,7 @@
 					{/if}
 				</div>
 				<div class="exit-time-input-form">
-					{form exitTimeInput}{input exitTime}{input send}{/form}{if !isset($lastCheckpointData->exit_time)}{form exitTimeNow}{input send}{/form}{/if}
+					{form exitTimeInput}{input day}{input exitTime}{input send}{/form}{if !isset($lastCheckpointData->exit_time)}{form exitTimeNow}{input send}{/form}{/if}
 
 				</div>
 			</div>

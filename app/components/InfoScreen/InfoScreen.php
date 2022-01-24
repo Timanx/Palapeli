@@ -61,6 +61,9 @@ class InfoScreen extends BaseControl
 
                         if ($row->checkpoint_number == 0) {
                             $message .= sprintf('Zadali jste kód startovní šifry.');
+                            if ($this->year == 10) {
+                                $message .= sprintf('První šifra se nachází v Lelekovicích u pumptracku, v dutině křoví asi 10 metrů jižně od dřevěné sochy. Upřesnítka k dalším šifrám naleznete v záložce Karta.');
+                            }
                         } elseif ($row->checkpoint_number == $checkpointCount - 1) {
                             $message .= sprintf('Přišli jste do cíle.');
                         } elseif ($row->checkpoint_number == $checkpointCount) {

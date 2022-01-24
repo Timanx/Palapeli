@@ -140,7 +140,7 @@ class ActionScreen extends BaseControl
         if ($this->yearsModel->hasGameEnded()) {
             $this->flashMessage('Bohužel jste kód nestihli zadat před koncem hry.', 'error');
         } elseif ($codeCorrect) {
-            $now = new \Nette\Utils\DateTime();
+            $now = new \Nette\Utils\DateTime('now', new DateTimeZone('Europe/Prague'));
             $this->resultsModel->insertResultsRow($teamId, $checkpointNumber, $now, null, false);
             $this->logModel->log(LogModel::LT_ENTER_CHECKPOINT, $teamId, $checkpointNumber, $this->year);
 
@@ -166,6 +166,28 @@ class ActionScreen extends BaseControl
     public function createComponentExitTimeInput($name, $time = null)
     {
         $form = new UI\Form;
+
+        $now = new DateTime('now', new DateTimeZone('Europe/Prague'));
+        $now->format('N');
+
+        $input = $form->addSelect(
+            'day',
+            '',
+            [
+                6 => 'Sobota',
+                7 => 'Neděle',
+            ]
+        );
+        $input->required = true;
+
+        $day = $now->format('N');
+
+        $default =
+            !empty($this->lastCheckpointData->exit_date_fmt) ?
+                ($this->lastCheckpointData->exit_date_fmt == '6' ? 6 : 7) :
+                ($day > 5 ? $day : 6);
+
+        $input->setDefaultValue($default);
         $form->addText('exitTime', '')->setType('time')->setDefaultValue((!empty($this->lastCheckpointData->exit_time_fmt) ? $this->lastCheckpointData->exit_time_fmt : \App\Presenters\BasePresenter::EMPTY_TIME_VALUE));
         $form->addSubmit('send', '');
         $form->onSuccess[] = [$this, 'exitTimeInputSucceeded'];
@@ -180,8 +202,16 @@ class ActionScreen extends BaseControl
         $teamId = $this->session->getSection('team')->teamId ?? NULL;
         $checkpointNumber = $this->resultsModel->getLastCheckpointData($teamId)->checkpoint_number;
 
+        $time = new DateTime($form->values['exitTime'], new DateTimeZone('Europe/Prague'));
 
-        $this->resultsModel->insertResultsRow($teamId, $checkpointNumber, null, $form->values['exitTime']);
+        if ($form->values['day'] == 6) {
+            $time->setDate('2022', '01', '22');
+        } else {
+            $time->setDate('2022', '01', '23');
+        }
+
+
+        $this->resultsModel->insertResultsRow($teamId, $checkpointNumber, null, $time);
         $this->flashMessage('Odchod ze stanoviště byl nastaven na ' . $form->values['exitTime'], 'success');
 
 
@@ -201,7 +231,7 @@ class ActionScreen extends BaseControl
         $this->ciphersModel->setYear($this->year);
         $this->resultsModel->setYear($this->year);
 
-        $now = new \Nette\Utils\DateTime();
+        $now = new \Nette\Utils\DateTime('now', new DateTimeZone('Europe/Prague'));
 
         $teamId = $this->session->getSection('team')->teamId ?? NULL;
         $checkpointNumber = $this->resultsModel->getLastCheckpointData($teamId)->checkpoint_number;
@@ -248,7 +278,7 @@ class ActionScreen extends BaseControl
 
         if ($codeCorrect) {
             $deadSolution = $this->ciphersModel->getDeadSolution($checkpointNumber);
-            $now = new \Nette\Utils\DateTime();
+            $now = new \Nette\Utils\DateTime('now', new DateTimeZone('Europe/Prague'));
             $this->resultsModel->insertResultsRow($teamId, $checkpointNumber, null, $now, true);
             $this->flashMessage(sprintf('Řešením šifry číslo %s je: %s', $checkpointNumber, $deadSolution), 'info');
             $this->logModel->log(LogModel::LT_OPEN_DEAD, $teamId, $checkpointNumber, $this->year);

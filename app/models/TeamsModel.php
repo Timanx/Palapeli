@@ -321,7 +321,7 @@ class TeamsModel
     {
         return $this->database->query('
             SELECT * FROM (
-                SELECT CASE WHEN teams.email2 IS NULL OR teams.email2 = \'\' THEN email1 ELSE CONCAT(email1, \', \', email2) END AS email, (MAX(results.exit_time) IS NOT NULL AND MAX(results.exit_time) != \'00:00\' || EXISTS (SELECT 1 FROM results r WHERE r.year = teamsyear.year AND r.team_id = teams.id AND r.used_hint IS NOT NULL)) AS team_filled
+                SELECT CASE WHEN teams.email2 IS NULL OR teams.email2 = \'\' THEN email1 ELSE CONCAT(email1, \', \', email2) END AS email, (MAX(results.exit_datetime) IS NOT NULL AND MAX(results.exit_datetime) != \'00:00\' || EXISTS (SELECT 1 FROM results r WHERE r.year = teamsyear.year AND r.team_id = teams.id AND r.used_hint IS NOT NULL)) AS team_filled
                 FROM teams
                 LEFT JOIN teamsyear ON teams.id = teamsyear.team_id
                 LEFT JOIN results ON results.year = ? AND teams.id = results.team_id
