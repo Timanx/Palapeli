@@ -206,7 +206,7 @@ class GamePresenter extends BasePresenter
 
         $control->setTeamId($this->session->getSection('team')->teamId);
         $control->setTeamName($this->session->getSection('team')->teamName);
-        $control->setThread(\DiscussionControl::CIPHER_THREAD_PREFIX . '_' . $this->getParameter('year') . '_' . $this->getParameter('checkpoint'));
+        $control->setThread(\DiscussionControl::CIPHER_THREAD_PREFIX . '_' . $this->getParameter('year') . '_' . $this->getParameter('checkpoint') ?: '');
 
         return $control;
     }
