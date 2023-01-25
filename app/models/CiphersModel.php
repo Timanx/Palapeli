@@ -41,12 +41,12 @@ class CiphersModel
         ', $this->year, $checkpoint)->fetch();
     }
 
-    public function upsertCipher($checkpoint, $name, $cipherDescription, $solutionDescription, $solution, $code, $specification)
+    public function upsertCipher($checkpoint, $name, $cipherDescription, $solutionDescription, $solution, $code, $specification, $closeTime)
     {
         $this->database->query('
-            INSERT INTO ciphers (year, checkpoint_number, name, cipher_description,  solution_description, solution, code, specification) VALUES
-            (?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE name = ?, cipher_description = ?, solution_description = ?, solution = ?, code = ?, specification = ? 
-        ', $this->year, $checkpoint, $name, $cipherDescription, $solutionDescription, $solution, $code, $specification, $name, $cipherDescription, $solutionDescription, $solution, $code, $specification
+            INSERT INTO ciphers (year, checkpoint_number, name, cipher_description,  solution_description, solution, code, specification, checkpoint_close_time) VALUES
+            (?, ?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE name = ?, cipher_description = ?, solution_description = ?, solution = ?, code = ?, specification = ?, checkpoint_close_time = ? 
+        ', $this->year, $checkpoint, $name, $cipherDescription, $solutionDescription, $solution, $code, $specification, $closeTime, $name, $cipherDescription, $solutionDescription, $solution, $code, $specification, $closeTime
         );
     }
 

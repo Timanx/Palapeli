@@ -279,6 +279,12 @@ class AdministrationPresenter extends BasePresenter
         $form->addText('solution', 'Řešení', null, 1023)->setDefaultValue(isset($data->solution) ? $data->solution : null);
         $form->addText('code', 'Kód do Palainfa', null, 255)->setDefaultValue(isset($data->code) ? $data->code : null);
         $form->addText('specification', 'Upřesnítko', null, 255)->setDefaultValue(isset($data->specification) ? $data->specification : null);
+        $form->addText(
+            'checkpoint_close_time',
+            'Zavření stanoviště',
+            null,
+            5
+        )->setDefaultValue(isset($data->checkpoint_close_time) ? sprintf('%s:%s', $data->checkpoint_close_time->h,$data->checkpoint_close_time->i) : null);
         $form->addUpload('cipher_image', 'Obrázek šifry');
         $form->addUpload('solution_image', 'Obrázek řešení');
         $form->addUpload('pdf_file', 'PDF soubor se šifrou');
@@ -361,7 +367,7 @@ class AdministrationPresenter extends BasePresenter
         $solution_image_id = $this->uploadFile($values['solution_image'], $target_dir, preg_replace($pattern, 'sol_' . $replacement, $values['solution_image']->getName()));
         $pdf_file_id = $this->uploadFile($values['pdf_file'], $target_dir, preg_replace($pattern, 'pdf_' . $replacement, $values['pdf_file']->getName()));
 
-        $this->ciphersModel->upsertCipher($checkpoint, $values['name'], $values['cipher_description'], $values['solution_description'], $values['solution'], $values['code'], $values['specification']);
+        $this->ciphersModel->upsertCipher($checkpoint, $values['name'], $values['cipher_description'], $values['solution_description'], $values['solution'], $values['code'], $values['specification'], $values['checkpoint_close_time']);
 
         if ($values['solution_image']->getError() == UPLOAD_ERR_OK) {
             $this->ciphersModel->updateSolutionImage($solution_image_id);
