@@ -285,6 +285,7 @@ class AdministrationPresenter extends BasePresenter
             null,
             5
         )->setDefaultValue(isset($data->checkpoint_close_time) ? sprintf('%s:%s', $data->checkpoint_close_time->h,$data->checkpoint_close_time->i) : null);
+        $form->addCheckbox('has_password_solution', 'Řešením je heslo')->setDefaultValue(isset($data->has_password_solution) ? $data->has_password_solution : false);
         $form->addUpload('cipher_image', 'Obrázek šifry');
         $form->addUpload('solution_image', 'Obrázek řešení');
         $form->addUpload('pdf_file', 'PDF soubor se šifrou');
@@ -367,7 +368,7 @@ class AdministrationPresenter extends BasePresenter
         $solution_image_id = $this->uploadFile($values['solution_image'], $target_dir, preg_replace($pattern, 'sol_' . $replacement, $values['solution_image']->getName()));
         $pdf_file_id = $this->uploadFile($values['pdf_file'], $target_dir, preg_replace($pattern, 'pdf_' . $replacement, $values['pdf_file']->getName()));
 
-        $this->ciphersModel->upsertCipher($checkpoint, $values['name'], $values['cipher_description'], $values['solution_description'], $values['solution'], $values['code'], $values['specification'], $values['checkpoint_close_time']);
+        $this->ciphersModel->upsertCipher($checkpoint, $values['name'], $values['cipher_description'], $values['solution_description'], $values['solution'], $values['code'], $values['specification'], $values['checkpoint_close_time'], $values['has_password_solution']);
 
         if ($values['solution_image']->getError() == UPLOAD_ERR_OK) {
             $this->ciphersModel->updateSolutionImage($solution_image_id);

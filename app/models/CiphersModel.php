@@ -41,12 +41,12 @@ class CiphersModel
         ', $this->year, $checkpoint)->fetch();
     }
 
-    public function upsertCipher($checkpoint, $name, $cipherDescription, $solutionDescription, $solution, $code, $specification, $closeTime)
+    public function upsertCipher($checkpoint, $name, $cipherDescription, $solutionDescription, $solution, $code, $specification, $closeTime, $hasPasswordSolution)
     {
         $this->database->query('
             INSERT INTO ciphers (year, checkpoint_number, name, cipher_description,  solution_description, solution, code, specification, checkpoint_close_time) VALUES
-            (?, ?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE name = ?, cipher_description = ?, solution_description = ?, solution = ?, code = ?, specification = ?, checkpoint_close_time = ? 
-        ', $this->year, $checkpoint, $name, $cipherDescription, $solutionDescription, $solution, $code, $specification, $closeTime, $name, $cipherDescription, $solutionDescription, $solution, $code, $specification, $closeTime
+            (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE name = ?, cipher_description = ?, solution_description = ?, solution = ?, code = ?, specification = ?, checkpoint_close_time = ?, has_password_solution = ?  
+        ', $this->year, $checkpoint, $name, $cipherDescription, $solutionDescription, $solution, $code, $specification, $closeTime, $name, $cipherDescription, $solutionDescription, $solution, $code, $specification, $closeTime, $hasPasswordSolution
         );
     }
 
@@ -99,6 +99,17 @@ class CiphersModel
         return mb_strtoupper($code) === mb_strtoupper($requiredCode);
     }
 
+    public function checkSolution($solution, $checkpointNumber)
+    {
+        $requiredSolution = $this->database->query('
+            SELECT solution
+            FROM ciphers
+            WHERE year = ? AND checkpoint_number = ?
+        ', $this->year, $checkpointNumber)->fetchField('solution');
+
+        return mb_strtoupper($solution) === mb_strtoupper($requiredSolution);
+    }
+
     public function getCheckpointCloseTimes()
     {
         return $this->database->query('
@@ -117,5 +128,15 @@ class CiphersModel
             WHERE year = ?
         ',
             $this->year)->fetchPairs('checkpoint_number', 'specification');
+    }
+
+    public function hasCheckpointPasswordSolution($checkpointNumber)
+    {
+        return $this->database->query('
+           SELECT has_password_solution
+           FROM ciphers
+           WHERE year = ? AND checkpoint_number = ?
+        ', $this->year, $checkpointNumber
+        )->fetchField('has_password_solution');
     }
 }

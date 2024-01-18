@@ -72,6 +72,11 @@ class ActionScreen extends BaseControl
 
         $this->template->checkpointCount = $data->checkpoint_count;
         $this->template->nextCheckpointNumber = $checkpointNumber;
+        $this->template->hasPasswordSolution = (
+            $checkpointNumber == 0 ?
+                false :
+                $this->ciphersModel->hasCheckpointPasswordSolution($checkpointNumber - 1)
+        );
         $this->template->hasFinishCipher = $data->has_finish_cipher;
 
         $isLastCheckpoint = $checkpointNumber > ($data->has_finish_cipher ? $data->checkpoint_count : $data->checkpoint_count - 1);
@@ -135,27 +140,51 @@ class ActionScreen extends BaseControl
         $teamId = $this->session->getSection('team')->teamId ?? NULL;
         $checkpointNumber = $this->resultsModel->getFirstEmptyCheckpoint($teamId);
 
-        $codeCorrect = $this->ciphersModel->checkCode($form->values['code'], $checkpointNumber);
+        $hasPasswordSolution = (
+            $checkpointNumber == 0 ? false : $this->ciphersModel->hasCheckpointPasswordSolution($checkpointNumber - 1)
+        );
 
-        if ($this->yearsModel->hasGameEnded()) {
-            $this->flashMessage('Bohužel jste kód nestihli zadat před koncem hry.', 'error');
-        } elseif ($codeCorrect) {
-            $now = new \Nette\Utils\DateTime('now', new DateTimeZone('Europe/Prague'));
-            $this->resultsModel->insertResultsRow($teamId, $checkpointNumber, $now, null, false);
-            $this->logModel->log(LogModel::LT_ENTER_CHECKPOINT, $teamId, $checkpointNumber, $this->year);
+        if ($hasPasswordSolution) {
+            $passwordCorrect = $this->ciphersModel->checkCode($form->values['code'], $checkpointNumber - 1);
 
-            if ($this->yearsModel->getCheckpointCount() == $checkpointNumber) {
-                $this->teamsModel->teamEnded($teamId);
-                $this->flashMessage(sprintf('Gratulujeme k dokončení Palapeli! Hru jste dokončili jako %s., výsledky se započítanými totálkami budou vyhlášeny po skončení hry.', $this->resultsModel->geTeamsArrivedCount($checkpointNumber)), 'success');
-            } elseif ($this->yearsModel->getCheckpointCount() == $checkpointNumber + 1) {
-                $this->flashMessage(sprintf('Dorazili jste do cíle jako %s.', $this->resultsModel->geTeamsArrivedCount($checkpointNumber)), 'success');
-            } elseif ($checkpointNumber == 0) {
-                $this->flashMessage(sprintf('Vítejte na startu Palapeli. Kód startovní šifry jste zadali jako %s.', $this->resultsModel->geTeamsArrivedCount($checkpointNumber)), 'success');
+            if (!$passwordCorrect) {
+                $this->flashMessage('Řešení není správně.', 'error');
             } else {
-                $this->flashMessage(sprintf('Dorazili jste na stanoviště %s jako %s.', $checkpointNumber, $this->resultsModel->geTeamsArrivedCount($checkpointNumber)), 'success');
+
+                $time = new DateTime($form->values['exitTime'], new DateTimeZone('Europe/Prague'));
+
+                $this->resultsModel->insertResultsRow($teamId, $checkpointNumber, null, $time);
+                $this->flashMessage(
+                    sprintf(
+                        'Správně! Umístění dalšího stanoviště: %s',
+                        $this->ciphersModel->getDeadSolution($checkpointNumber - 1)),
+                    'success'
+                );
             }
         } else {
-            $this->flashMessage('Nesprávně zadaný kód', 'error');
+
+            $codeCorrect = $this->ciphersModel->checkCode($form->values['code'], $checkpointNumber);
+
+            if ($this->yearsModel->hasGameEnded()) {
+                $this->flashMessage('Bohužel jste kód nestihli zadat před koncem hry.', 'error');
+            } elseif ($codeCorrect) {
+                $now = new \Nette\Utils\DateTime('now', new DateTimeZone('Europe/Prague'));
+                $this->resultsModel->insertResultsRow($teamId, $checkpointNumber, $now, null, false);
+                $this->logModel->log(LogModel::LT_ENTER_CHECKPOINT, $teamId, $checkpointNumber, $this->year);
+
+                if ($this->yearsModel->getCheckpointCount() == $checkpointNumber) {
+                    $this->teamsModel->teamEnded($teamId);
+                    $this->flashMessage(sprintf('Gratulujeme k dokončení Palapeli! Hru jste dokončili jako %s., výsledky se započítanými totálkami budou vyhlášeny po skončení hry.', $this->resultsModel->geTeamsArrivedCount($checkpointNumber)), 'success');
+                } elseif ($this->yearsModel->getCheckpointCount() == $checkpointNumber + 1) {
+                    $this->flashMessage(sprintf('Dorazili jste do cíle jako %s.', $this->resultsModel->geTeamsArrivedCount($checkpointNumber)), 'success');
+                } elseif ($checkpointNumber == 0) {
+                    $this->flashMessage(sprintf('Vítejte na startu Palapeli. Kód startovní šifry jste zadali jako %s.', $this->resultsModel->geTeamsArrivedCount($checkpointNumber)), 'success');
+                } else {
+                    $this->flashMessage(sprintf('Dorazili jste na stanoviště %s jako %s.', $checkpointNumber, $this->resultsModel->geTeamsArrivedCount($checkpointNumber)), 'success');
+                }
+            } else {
+                $this->flashMessage('Nesprávně zadaný kód', 'error');
+            }
         }
 
 
@@ -203,13 +232,6 @@ class ActionScreen extends BaseControl
         $checkpointNumber = $this->resultsModel->getLastCheckpointData($teamId)->checkpoint_number;
 
         $time = new DateTime($form->values['exitTime'], new DateTimeZone('Europe/Prague'));
-
-        if ($form->values['day'] == 6) {
-            $time->setDate('2022', '01', '22');
-        } else {
-            $time->setDate('2022', '01', '23');
-        }
-
 
         $this->resultsModel->insertResultsRow($teamId, $checkpointNumber, null, $time);
         $this->flashMessage('Odchod ze stanoviště byl nastaven na ' . $form->values['exitTime'], 'success');

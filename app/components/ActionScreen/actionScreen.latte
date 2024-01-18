@@ -8,6 +8,8 @@
 
 		<div class="actions-container" id="actions-container" style="display: block;">
 			<div class="checkpoint-heading">
+				{if $hasPasswordSolution}
+					ŘEŠENÍ ŠIFRY
 				{if $nextCheckpointNumber == 0}
 					KÓD STARTOVNÍ ŠIFRY
 				{elseif $nextCheckpointNumber == $checkpointCount - 1}
@@ -23,7 +25,7 @@
 				{/form}
 			</div>
 
-			<div n:if="$nextCheckpointNumber > 0" class="exit-time-forms-container">
+			<div n:if="$nextCheckpointNumber > 0 && !$hasPasswordSolution" class="exit-time-forms-container">
 				<div class="checkpoint-heading">
 					{if $nextCheckpointNumber == 1}
 						ODCHOD ZE STARTU
