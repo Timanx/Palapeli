@@ -41,12 +41,13 @@ class CiphersModel
         ', $this->year, $checkpoint)->fetch();
     }
 
-    public function upsertCipher($checkpoint, $name, $cipherDescription, $solutionDescription, $solution, $code, $specification, $closeTime, $hasPasswordSolution)
+    public function upsertCipher($checkpoint, $name, $cipherDescription, $solutionDescription, $solution, $deadSolution, $code, $specification, $closeTime, $hasPasswordSolution)
     {
         $this->database->query('
-            INSERT INTO ciphers (year, checkpoint_number, name, cipher_description,  solution_description, solution, code, specification, checkpoint_close_time) VALUES
-            (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE name = ?, cipher_description = ?, solution_description = ?, solution = ?, code = ?, specification = ?, checkpoint_close_time = ?, has_password_solution = ?  
-        ', $this->year, $checkpoint, $name, $cipherDescription, $solutionDescription, $solution, $code, $specification, $closeTime, $name, $cipherDescription, $solutionDescription, $solution, $code, $specification, $closeTime, $hasPasswordSolution
+            INSERT INTO ciphers (year, checkpoint_number, name, cipher_description,  solution_description, solution, dead_solution, code, specification, checkpoint_close_time, has_password_solution) VALUES
+            (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE name = ?, cipher_description = ?, solution_description = ?, solution = ?, dead_solution = ?, code = ?, specification = ?, checkpoint_close_time = ?, has_password_solution = ?  
+        ', $this->year, $checkpoint, $name, $cipherDescription, $solutionDescription, $solution, $deadSolution, $code, $specification, $closeTime, $hasPasswordSolution,
+            $name, $cipherDescription, $solutionDescription, $solution, $deadSolution, $code, $specification, $closeTime, $hasPasswordSolution
         );
     }
 

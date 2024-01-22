@@ -288,6 +288,15 @@ class ResultsModel {
         ', $teamId, $this->year)->fetchAssoc('checkpoint_number');
     }
 
+    public function hasTeamLeft($teamId, $checkpointNumber)
+    {
+        return $this->database->query('
+            SELECT results.exit_datetime IS NOT NULL AS has_left
+            FROM results
+            WHERE team_id = ? AND year = ? AND checkpoint_number = ?
+        ', $teamId, $this->year, $checkpointNumber)->fetchField('has_left');
+    }
+
     public function insertResultsRow($teamId, $checkpointNumber, $entryTime = NULL, $exitTime = NULL, $usedHint = NULL)
     {
         $this->database->query('

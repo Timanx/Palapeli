@@ -2,7 +2,7 @@
 			<div id="formValidationError" class="flash info"></div>
 			{if !isset($teamName)}
 				<div class="flash info">Nejste přihlášeni.</div>
-			{elseif $teamId == App\Presenters\BasePresenter::ORG_TEAM_ID}
+			{elseif ($teamId ?? false) == App\Presenters\BasePresenter::ORG_TEAM_ID}
 				<div class="teamForm">
 				{form editForm}
 					<table>

@@ -73,9 +73,8 @@ class ActionScreen extends BaseControl
         $this->template->checkpointCount = $data->checkpoint_count;
         $this->template->nextCheckpointNumber = $checkpointNumber;
         $this->template->hasPasswordSolution = (
-            $checkpointNumber == 0 ?
-                false :
-                $this->ciphersModel->hasCheckpointPasswordSolution($checkpointNumber - 1)
+            !($checkpointNumber == 0) && $this->ciphersModel->hasCheckpointPasswordSolution($checkpointNumber - 1) &&
+            !$this->resultsModel->hasTeamLeft($teamId, $checkpointNumber - 1)
         );
         $this->template->hasFinishCipher = $data->has_finish_cipher;
 
@@ -141,19 +140,22 @@ class ActionScreen extends BaseControl
         $checkpointNumber = $this->resultsModel->getFirstEmptyCheckpoint($teamId);
 
         $hasPasswordSolution = (
-            $checkpointNumber == 0 ? false : $this->ciphersModel->hasCheckpointPasswordSolution($checkpointNumber - 1)
+            !($checkpointNumber == 0) &&
+            $this->ciphersModel->hasCheckpointPasswordSolution($checkpointNumber - 1) &&
+            !$this->resultsModel->hasTeamLeft($teamId, $checkpointNumber - 1)
+
         );
 
         if ($hasPasswordSolution) {
-            $passwordCorrect = $this->ciphersModel->checkCode($form->values['code'], $checkpointNumber - 1);
+            $passwordCorrect = $this->ciphersModel->checkSolution($form->values['code'], $checkpointNumber - 1);
 
             if (!$passwordCorrect) {
                 $this->flashMessage('Řešení není správně.', 'error');
             } else {
 
-                $time = new DateTime($form->values['exitTime'], new DateTimeZone('Europe/Prague'));
+                $time = new DateTime('now', new DateTimeZone('Europe/Prague'));
 
-                $this->resultsModel->insertResultsRow($teamId, $checkpointNumber, null, $time);
+                $this->resultsModel->insertResultsRow($teamId, $checkpointNumber - 1, null, $time);
                 $this->flashMessage(
                     sprintf(
                         'Správně! Umístění dalšího stanoviště: %s',
@@ -196,9 +198,10 @@ class ActionScreen extends BaseControl
     {
         $form = new UI\Form;
 
-        $now = new DateTime('now', new DateTimeZone('Europe/Prague'));
-        $now->format('N');
 
+/*
+ *         $now = new DateTime('now', new DateTimeZone('Europe/Prague'));
+        $now->format('N');
         $input = $form->addSelect(
             'day',
             '',
@@ -216,7 +219,7 @@ class ActionScreen extends BaseControl
                 ($this->lastCheckpointData->exit_date_fmt == '6' ? 6 : 7) :
                 ($day > 5 ? $day : 6);
 
-        $input->setDefaultValue($default);
+        $input->setDefaultValue($default);*/
         $form->addText('exitTime', '')->setType('time')->setDefaultValue((!empty($this->lastCheckpointData->exit_time_fmt) ? $this->lastCheckpointData->exit_time_fmt : \App\Presenters\BasePresenter::EMPTY_TIME_VALUE));
         $form->addSubmit('send', '');
         $form->onSuccess[] = [$this, 'exitTimeInputSucceeded'];

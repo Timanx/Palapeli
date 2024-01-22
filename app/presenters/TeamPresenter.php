@@ -82,6 +82,7 @@ class TeamPresenter extends BasePresenter
         if(isset($this->teamId)) {
             $this->teamsModel->setYear($this->selectedYear);
             $this->template->registered = $this->teamsModel->isTeamRegistered($this->teamId);
+            
         } else {
             $this->template->registered = false;
         }
