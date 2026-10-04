@@ -80,11 +80,11 @@ class CiphersModel
 
     public function getDeadSolution($checkpointNumber = null)
     {
-        return $this->database->query('
-            SELECT COALESCE(dead_solution, solution) AS dead_solution
+        return $this->database->query("
+            SELECT COALESCE(NULLIF(dead_solution, ''), NULLIF(solution, '')) AS dead_solution
             FROM ciphers
             WHERE checkpoint_number = ? AND year = ?
-        ',
+        ",
             $checkpointNumber ?? $this->checkpoint, $this->year
         )->fetchField('dead_solution');
     }
@@ -108,7 +108,7 @@ class CiphersModel
             WHERE year = ? AND checkpoint_number = ?
         ', $this->year, $checkpointNumber)->fetchField('solution');
 
-        return mb_strtoupper($solution) === mb_strtoupper($requiredSolution);
+        return mb_strtoupper(Nette\Utils\Strings::webalize($solution)) === mb_strtoupper($requiredSolution);
     }
 
     public function getCheckpointCloseTimes()

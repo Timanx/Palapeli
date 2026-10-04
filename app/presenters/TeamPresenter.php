@@ -109,7 +109,7 @@ class TeamPresenter extends BasePresenter
 
                 list($accountNumber,$bankCode) = explode('/', $yearData->entry_fee_account);
 
-                $QRString = 'SPD*1.0*ACC:CZ18' . $bankCode . '000000' . $accountNumber . '*AM:' .  $yearData->entry_fee . '*CC:CZK*X-VS:' . $variableSymbol . '*MSG:Palapeli ' . $this->selectedCalendarYear .  ' ' . $this->teamsModel->getTeamName($this->teamId) . '*';
+                $QRString = 'SPD*1.0*ACC:CZ28' . $bankCode . '000000' . $accountNumber . '*AM:' .  $yearData->entry_fee . '*CC:CZK*X-VS:' . $variableSymbol . '*MSG:Palapeli ' . $this->selectedCalendarYear .  ' ' . $this->teamsModel->getTeamName($this->teamId) . '*';
 
                 $QRCode = new QrCode($QRString);
                 $QRCode->setSize(150);
@@ -475,7 +475,7 @@ class TeamPresenter extends BasePresenter
                 ->addReplyTo(self::ORG_MAIL_FORMAT)
                 ->addTo($data->email1)
                 ->setSubject('Palapeli - změna hesla pro tým ' . $values['name'])
-                ->sethTMLBody("Ahoj!<br>Někdo (pravděpodobně vy) požádal na stránkách šifrovací hry Palapeli o změnu hesla týmu " . $values['name'] . ". Bylo vám vygenerováno toto nové heslo: \"" . $newPassword . "\" (bez uvozovek). Pomocí hesla se můžete přihlásit do autentizované sekce <a href='http://palapeli.cz/team'>na stránkách Palapeli</a>.<br><br>Těšíme se na vás na hře,<br>vaši organizátoři.");
+                ->setHtmlBody("Ahoj!<br>Někdo (pravděpodobně vy) požádal na stránkách šifrovací hry Palapeli o změnu hesla týmu " . $values['name'] . ". Bylo vám vygenerováno toto nové heslo: \"" . $newPassword . "\" (bez uvozovek). Pomocí hesla se můžete přihlásit do autentizované sekce <a href='http://palapeli.cz/team'>na stránkách Palapeli</a>.<br><br>Těšíme se na vás na hře,<br>vaši organizátoři.");
             if (strlen($data->email2) > 0) {
                 $mail->addTo($data->email2);
             }

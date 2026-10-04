@@ -515,6 +515,7 @@ class AdministrationPresenter extends BasePresenter
 
         if (!$teamId) {
             $form->addError('Tým se zadaným názvem neexistuje');
+            return;
         }
 
         $this->reportsModel->insertReport($values['year'], $values['link'], $teamId, $values['name'], $values['description']);
