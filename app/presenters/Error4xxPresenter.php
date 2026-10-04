@@ -1,47 +1,31 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Presenters;
 
-use Nette;
+use Nette\Application\Attributes\Requires;
+use Nette\Application\BadRequestException;
 
 
-class Error4xxPresenter extends BasePresenter
+/**
+ * Error page for 4xx errors (forwarded from ErrorPresenter, cannot be accessed directly).
+ */
+#[Requires(forward: true)]
+final class Error4xxPresenter extends BasePresenter
 {
-
-	public function startup()
+	public function renderDefault(BadRequestException $exception): void
 	{
-		parent::startup();
-		if (!$this->getRequest()->isMethod(Nette\Application\Request::FORWARD)) {
-			$this->error();
-		}
-	}
+		$this->prepareHeading(match ($exception->getCode()) {
+			404 => 'Stránka nenalezena',
+			403 => 'Přístup zamítnut',
+			405 => 'Nepodporovaná metoda',
+			410 => 'Nedostupný obsah',
+			default => 'Chyba',
+		});
 
-
-	public function renderDefault(Nette\Application\BadRequestException $exception)
-	{
-        parent::render();
-        $code = $exception->getCode();
-        switch($code) {
-            case 404:
-                $this->prepareHeading('Stránka nenalezena');
-                break;
-            case 403:
-                $this->prepareHeading('Přístup zamítnut');
-                break;
-            case 405:
-                $this->prepareHeading('Nepodporovaná metoda');
-                break;
-            case 410:
-                $this->prepareHeading('Nedostupný obsah');
-                break;
-            default:
-                $this->prepareHeading('Chyba');
-                break;
-        }
-
-		// load template 403.latte or 404.latte or ... 4xx.latte
+		// templates 403.latte, 404.latte, ... with 4xx.latte as the fallback
 		$file = __DIR__ . "/templates/Error/{$exception->getCode()}.latte";
 		$this->template->setFile(is_file($file) ? $file : __DIR__ . '/templates/Error/4xx.latte');
 	}
-
 }

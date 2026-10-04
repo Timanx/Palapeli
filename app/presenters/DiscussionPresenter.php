@@ -1,36 +1,36 @@
 <?php
+
+declare(strict_types=1);
+
 namespace App\Presenters;
 
-use DiscussionControl;
-use Nette\Application\UI;
-use Nette;
+use App\Components\DiscussionControl\DiscussionControl;
+use App\Components\DiscussionControl\DiscussionControlFactory;
 
-class DiscussionPresenter extends BasePresenter
+
+/**
+ * Public discussion.
+ */
+final class DiscussionPresenter extends BasePresenter
 {
-    /** @var  \IDiscussionControlFactory */
-    private $discussionControlFactory;
+	public function __construct(
+		private readonly DiscussionControlFactory $discussionControlFactory,
+	) {
+		parent::__construct();
+	}
 
-    public function __construct(\IDiscussionControlFactory $discussionControlFactory)
-    {
-        parent::__construct();
-        $this->discussionControlFactory = $discussionControlFactory;
-    }
 
-    public function renderDefault()
-    {
-        parent::render();
-        $this->prepareHeading('Diskuse');
-    }
+	public function renderDefault(): void
+	{
+		$this->prepareHeading('Diskuse');
+	}
 
-    protected function createComponentDiscussion() {
 
-        /** @var DiscussionControl $control */
-        $control = $this->discussionControlFactory->create();
-
-        $control->setTeamId($this->session->getSection('team')->teamId);
-        $control->setTeamName($this->session->getSection('team')->teamName);
-        $control->setThread(\DiscussionControl::MAIN_THREAD);
-
-        return $control;
-    }
+	protected function createComponentDiscussion(): DiscussionControl
+	{
+		return $this->discussionControlFactory->create()
+			->setTeamId($this->teamId)
+			->setTeamName($this->teamSession->getTeamName())
+			->setThread(DiscussionControl::MainThread);
+	}
 }

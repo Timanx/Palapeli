@@ -133,7 +133,7 @@
 					--></span><!--
 				-->{if isset($teamName)}<span class="loggedTeam"><!--
 					--><p><!--
-						--><a href="{plink Team:edit}" style="font-weight: 400" title="Detail týmu {$teamName|noescape}">{$teamNameUpper|noescape}</a>
+						--><a href="{plink Team:edit}" style="font-weight: 400" title="Detail týmu {$teamName}">{$teamNameUpper|noescape}</a>
 						</p>
 					</span>
 					{/if}
@@ -146,7 +146,7 @@
 		<div class="menuItemsContainer largeScreen" id="mainMenu">
 			<div class="menuSectionContainer" id="infoContainer">
 				<a href="{plink Info:rules}" id="infoMainLink">
-					<div class="menuItemContainer mainMenuItemContainer" id="infoItemContainer" style="border-color:{App\Presenters\BasePresenter::INFO_COLOR|noescape}" onmouseover="displaySubmenu('info');" onmouseout="hideSubmenus();">
+					<div class="menuItemContainer mainMenuItemContainer" id="infoItemContainer" style="border-color:{App\Utils\Colors::Info|noescape}" onmouseover="displaySubmenu('info');" onmouseout="hideSubmenus();">
 						<p class="menuText">INFO</p>
 					</div>
 				</a>
@@ -154,7 +154,7 @@
 			</div>
 			<div class="menuSectionContainer" id="teamContainer">
 				<a href="{if isset($teamName)}{plink Team:edit}{else}{plink Team:}{/if}" id="teamMainLink">
-					<div class="menuItemContainer mainMenuItemContainer" id="teamItemContainer" style="border-color:{App\Presenters\BasePresenter::TEAM_COLOR|noescape}" onmouseover="displaySubmenu('team');" onmouseout="hideSubmenus();">
+					<div class="menuItemContainer mainMenuItemContainer" id="teamItemContainer" style="border-color:{App\Utils\Colors::Team|noescape}" onmouseover="displaySubmenu('team');" onmouseout="hideSubmenus();">
 						<p class="menuText">TÝM</p>
 					</div>
 				</a>
@@ -166,7 +166,7 @@
 			</div>
 			<div class="menuSectionContainer" id="gameContainer">
 				<a href="{plink Game:}" id="gameMainLink">
-					<div class="menuItemContainer mainMenuItemContainer" id="gameItemContainer" style="border-color:{App\Presenters\BasePresenter::GAME_COLOR|noescape}" onmouseover="displaySubmenu('game');" onmouseout="hideSubmenus();">
+					<div class="menuItemContainer mainMenuItemContainer" id="gameItemContainer" style="border-color:{App\Utils\Colors::Game|noescape}" onmouseover="displaySubmenu('game');" onmouseout="hideSubmenus();">
 						<p class="menuText">HRA</p>
 					</div>
 				</a>
@@ -174,7 +174,7 @@
 			</div>
 			<div class="menuSectionContainer" id="discussionContainer">
 				<a href="{plink Discussion:}" id="discussionMainLink">
-				<div class="menuItemContainer mainMenuItemContainer" id="discussionItemContainer" style="border-color:{App\Presenters\BasePresenter::DISCUSSION_COLOR|noescape}">
+				<div class="menuItemContainer mainMenuItemContainer" id="discussionItemContainer" style="border-color:{App\Utils\Colors::Discussion|noescape}">
 					<p class="menuText">DISKUSE</p>
 				</div>
 				</a>

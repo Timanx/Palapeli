@@ -1,159 +1,177 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Presenters;
 
-use App\Models\ResultsModel;
-use App\Models\TeamsModel;
 use App\Models\YearsModel;
+use App\Session\TeamSession;
+use App\Session\YearSelection;
+use App\Utils\AppConstants;
 use Nette;
-use Nette\Application\UI;
+use Nette\Application\UI\Form;
+use Nette\Bridges\ApplicationLatte\DefaultTemplate;
+use Nette\Mail\Mailer;
 use Nette\Mail\Message;
-use Nette\Mail\SendmailMailer;
+use Nette\Utils\Strings;
 
 
-class BasePresenter extends Nette\Application\UI\Presenter
+/**
+ * Ancestor of all presenters with the common layout (menu, archive year switch, footer with
+ * the contact form).
+ *
+ * The visitor browses one game edition at a time ("selected year", stored in the session);
+ * it defaults to the current edition.
+ *
+ * @property-read DefaultTemplate $template
+ */
+abstract class BasePresenter extends Nette\Application\UI\Presenter
 {
-    const BLUE = '#005BD0';
-    const RED = '#FF0000';
-    const YELLOW = '#FFCA05';
-    const GREEN = '#69B300';
-    const TEAM_COLOR = '#005BD0';
-    const INFO_COLOR = '#FF0000';
-    const DISCUSSION_COLOR = '#FFCA05';
-    const GAME_COLOR = '#69B300';
-    const ADMINISTRATION_COLOR = 'black';
+	/** Selected game edition (year number, e.g. 12) and its calendar year (e.g. 2024). */
+	protected int $selectedYear;
+	protected int $selectedCalendarYear;
 
-    const BLUE_TINT = '#A9CEFF';
-    const RED_TINT = '#FFB1B1';
-    const YELLOW_TINT = '#FFEBA2';
-    const GREEN_TINT = '#D7FF9F';
+	/** Logged-in team, null for anonymous visitors. */
+	protected ?int $teamId = null;
 
-    const ORG_MAIL_FORMAT = 'Palapeli Web <organizatori@palapeli.cz>';
-    const EMPTY_TIME_VALUE = '--:--';
+	protected YearsModel $yearsModel;
+	protected TeamSession $teamSession;
+	protected YearSelection $yearSelection;
+	protected Mailer $mailer;
 
-    const ORG_TEAM_ID = -1;
 
-    const PAY_OK = 1;
-    const PAY_NOK = 0;
-    const PAY_START = 2;
-    const SHOULD_NOT_PAY = 3;
+	public function injectBase(
+		YearsModel $yearsModel,
+		TeamSession $teamSession,
+		YearSelection $yearSelection,
+		Mailer $mailer,
+	): void
+	{
+		$this->yearsModel = $yearsModel;
+		$this->teamSession = $teamSession;
+		$this->yearSelection = $yearSelection;
+		$this->mailer = $mailer;
+	}
 
-    public $selectedYear;
-    public $selectedCalendarYear;
 
-    /** @var YearsModel */
-    private $yearsModel;
+	protected function startup(): void
+	{
+		parent::startup();
+		$this->teamId = $this->teamSession->getTeamId();
+		$this->loadSelectedYear();
+	}
 
-    protected $teamId;
 
-    public function __construct()
-    {
-        parent::__construct();
-    }
+	/**
+	 * Variables used by the layout and shared templates.
+	 */
+	protected function beforeRender(): void
+	{
+		parent::beforeRender();
+		$current = $this->yearsModel->getCurrentYearData();
+		$teamName = $this->teamSession->getTeamName();
+		$template = $this->template;
 
-    public function injectYearsModel(YearsModel $yearsModel)
-    {
-        $this->yearsModel = $yearsModel;
-    }
+		$template->teamName = $teamName;
+		$template->teamNameUpper = $teamName === null ? null : Strings::upper($teamName);
+		$template->teamId = $this->teamId;
+		$template->orgLogged = $this->teamSession->isOrg();
+		$template->isTeamInCurrentYear = $this->teamId !== null && $this->yearsModel->isTeamInCurrentYear($this->teamId);
 
-    public function render()
-    {
-        $this->getYearData();
-        $this->yearsModel->setYear($this->selectedYear);
+		$template->selectedYear = $this->selectedYear;
+		$template->selectedCalendarYear = $this->selectedCalendarYear;
+		$template->currentYear = (int) $current->year;
+		$template->currentCalendarYear = (int) $current->calendar_year;
+		$template->isSelectedYearCurrent = $this->selectedYear === (int) $current->year;
+		$template->showTesterNotification = (bool) $current->show_tester_notification;
+		$template->hasFinishCipher = $this->yearsModel->hasFinishCipher($this->selectedYear);
+		$template->archiveData = $this->yearsModel->getArchiveSwitchData();
+		$template->heading ??= null;
+	}
 
-        $this->template->teamName = null;
-        if($this->session->hasSection('team') && !empty($this->session->getSection('team')->teamName)) {
-            $this->template->teamName = $this->session->getSection('team')->teamName;
-            $this->template->teamNameUpper = Nette\Utils\Strings::upper($this->session->getSection('team')->teamName);
-        }
 
-        $this->template->isTeamInCurrentYear = false;
-        if($this->session->hasSection('team') && !empty($this->session->getSection('team')->teamId)) {
-            $this->template->teamId = $this->session->getSection('team')->teamId;
-            $this->teamId = $this->session->getSection('team')->teamId;
-            $this->template->isTeamInCurrentYear = (bool) $this->yearsModel->isTeamInCurrentYear($this->teamId);
-        }
+	/**
+	 * Sets the page heading (shown upper-cased) and the <title>.
+	 */
+	protected function prepareHeading(string $heading): void
+	{
+		$this->template->heading = Strings::upper($heading);
+		$this->template->title = $heading;
+	}
 
-        if($this->session->hasSection('team') && !empty($this->session->getSection('team')->teamId) && $this->session->getSection('team')->teamId == self::ORG_TEAM_ID) {
-            $this->template->orgLogged = true;
-        } else {
-            $this->template->orgLogged = false;
-        }
 
-        $currentYearData = $this->yearsModel->getCurrentYearData();
+	/**
+	 * Switches the browsed game edition.
+	 */
+	protected function selectYear(int $year, ?int $calendarYear = null): void
+	{
+		$calendarYear ??= $this->yearsModel->getCalendarYear($year) ?? $this->selectedCalendarYear;
+		$this->yearSelection->select($year, $calendarYear);
+		$this->selectedYear = $year;
+		$this->selectedCalendarYear = $calendarYear;
+	}
 
-        $this->template->lastYear = $currentYearData->year - 1;
-        $this->template->selectedYear = $this->selectedYear;
-        $this->template->selectedCalendarYear = $this->selectedCalendarYear;
-        $this->template->currentYear = $currentYearData->year;
-        $this->template->currentCalendarYear = $currentYearData->calendar_year;
-        $this->template->isSelectedYearCurrent = ($this->selectedYear == $currentYearData->year);
-        $this->template->showTesterNotification = $currentYearData->show_tester_notification;
-        $this->template->hasFinishCipher = $this->yearsModel->hasFinishCipher();
-        $this->template->hintForStartExists = $this->yearsModel->hintForStartExists();
-        $this->template->archiveData = $this->yearsModel->getArchiveSwitchData();
-    }
 
-    public function getYearData() {
-        $currentYearData = $this->yearsModel->getCurrentYearData();
+	private function loadSelectedYear(): void
+	{
+		$year = $this->yearSelection->getYear();
+		$calendarYear = $this->yearSelection->getCalendarYear();
 
-        if($this->session->hasSection('selected') && !empty($this->session->getSection('selected')->year)) {
-            $this->selectedYear = $this->session->getSection('selected')->year;
-        } else {
-            $this->session->getSection('selected')->year = $currentYearData->year;
-            $this->selectedYear = $currentYearData->year;
-        }
-        if($this->session->hasSection('selected') && !empty($this->session->getSection('selected')->calendarYear)) {
-            $this->selectedCalendarYear = $this->session->getSection('selected')->calendarYear;
-        } else {
-            $this->session->getSection('selected')->calendarYear = $currentYearData->calendar_year;
-            $this->selectedCalendarYear = $currentYearData->calendar_year;
-        }
-    }
+		if ($year === null || $calendarYear === null) {
+			$current = $this->yearsModel->getCurrentYearData();
+			$year ??= (int) $current->year;
+			$calendarYear ??= (int) $current->calendar_year;
+			$this->yearSelection->select($year, $calendarYear);
+		}
 
-    public function prepareHeading($heading) {
-        $this->template->heading = Nette\Utils\Strings::upper($heading);
-        $this->template->title = $heading;
-    }
+		$this->selectedYear = $year;
+		$this->selectedCalendarYear = $calendarYear;
+	}
 
-    protected function createComponentMailForm()
-    {
-        $form = new UI\Form;
-        $form->addText('sender')->setAttribute('placeholder', 'Váš e-mail')->setRequired(false)->addRule(UI\Form::EMAIL, 'E-mail není ve správném tvaru.');
-        $form->addText('subject')->setAttribute('placeholder', 'Předmět')->setRequired('Zadejte prosím předmět e-mailu.');
-        $form->addTextArea('message')->setAttribute('placeholder', 'Zpráva')->setRequired('Zadejte prosím text zprávy.');
-        $form->addSubmit('cancel', 'ODESLAT E-MAIL');
-        $form->onSuccess[] = [$this, 'mailFormSucceeded'];
-        return $form;
-    }
 
-    public function mailFormSucceeded(UI\Form $form, array $values) {
-        foreach($values as &$value) {
-            $value = strip_tags($value);
-        }
+	/**
+	 * Contact form in the footer of every page.
+	 */
+	protected function createComponentMailForm(): Form
+	{
+		$form = new Form;
+		$form->addText('sender')
+			->setHtmlAttribute('placeholder', 'Váš e-mail')
+			->setRequired(false)
+			->addRule($form::Email, 'E-mail není ve správném tvaru.');
+		$form->addText('subject')
+			->setHtmlAttribute('placeholder', 'Předmět')
+			->setRequired('Zadejte prosím předmět e-mailu.');
+		$form->addTextArea('message')
+			->setHtmlAttribute('placeholder', 'Zpráva')
+			->setRequired('Zadejte prosím text zprávy.');
+		$form->addSubmit('cancel', 'ODESLAT E-MAIL');
+		$form->onSuccess[] = $this->mailFormSucceeded(...);
+		return $form;
+	}
 
-        $mail = new Message;
-        if(strlen($values['sender']) > 0) {
-            $mail->setFrom($values['sender'])
-                ->addReplyTo($values['sender'])
-                ->addTo('organizatori@palapeli.cz')
-                ->setSubject('Zpráva z webu: ' . $values['subject'])
-                ->setBody($values['message'] . '
 
-Zpráva odeslaná z webu.');
-        } else {
-            $mail->setFrom('Palapeli Web <organizatori@palapeli.cz>')
-                ->addTo('organizatori@palapeli.cz')
-                ->setSubject('Zpráva z webu: ' . $values['subject'])
-                ->setBody($values['message'] . '
+	/**
+	 * @param array{sender: string, subject: string, message: string} $values
+	 */
+	private function mailFormSucceeded(Form $form, array $values): void
+	{
+		$values = array_map(strip_tags(...), $values);
 
-Zpráva odeslaná z webu.');
-        }
+		$mail = new Message;
+		if ($values['sender'] !== '') {
+			$mail->setFrom($values['sender'])
+				->addReplyTo($values['sender']);
+		} else {
+			$mail->setFrom(AppConstants::OrgMailFrom);
+		}
 
-        $mailer = new SendmailMailer;
-        $mailer->send($mail);
+		$mail->addTo(AppConstants::OrgEmail)
+			->setSubject('Zpráva z webu: ' . $values['subject'])
+			->setBody($values['message'] . "\n\nZpráva odeslaná z webu.");
+		$this->mailer->send($mail);
 
-        $this->flashMessage('E-mail byl úspěšně odeslán.', 'success');
-        $this->redirect('this');
-    }
+		$this->flashMessage('E-mail byl úspěšně odeslán.', 'success');
+		$this->redirect('this');
+	}
 }

@@ -1,3 +1,5 @@
 *
 !.gitignore
+!common.neon
 !services.neon
+!config.neon.example

@@ -1,25 +1,25 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Presenters;
 
-use App\Models\YearsModel;
-use Nette;
 
-class HomepagePresenter extends BasePresenter
+/**
+ * Landing page with the puzzle shaped navigation.
+ */
+final class HomepagePresenter extends BasePresenter
 {
-    /** @var YearsModel $yearsModel */
-    private $yearsModel;
-    public function __construct(YearsModel $yearsModel)
-    {
-        parent::__construct();
-        $this->yearsModel = $yearsModel;
-    }
+	public function actionDefault(): void
+	{
+		// coming back to the homepage resets the browsed edition to the current one
+		$current = $this->yearsModel->getCurrentYearData();
+		$this->selectYear((int) $current->year, (int) $current->calendar_year);
+	}
 
-    public function renderDefault()
-    {
-        //reset previously selected years
-        $this->session->getSection('selected')->year = $this->yearsModel->getCurrentYearNumber();
-        parent::render();
-        $this->template->hideMenu = true;
-    }
+
+	public function renderDefault(): void
+	{
+		$this->template->hideMenu = true;
+	}
 }

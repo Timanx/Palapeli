@@ -1,34 +1,39 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
-use App\Presenters\BasePresenter;
-use Nette;
+use Nette\Database\Row;
 
-class ReportsModel {
 
-    /** @var Nette\Database\Context */
-    private $database;
+/**
+ * Links to reports ("reportáže") written by teams about the game (table reports).
+ */
+final class ReportsModel extends BaseModel
+{
+	/**
+	 * @return array<int, list<Row>>  year => reports
+	 */
+	public function getReports(): array
+	{
+		return $this->database->query('
+			SELECT reports.year, reports.link, reports.name, reports.description, teams.name AS team
+			FROM reports
+			LEFT JOIN teams ON reports.team_id = teams.id
+			ORDER BY reports.year
+		')->fetchAssoc('year[]');
+	}
 
-    public function __construct(Nette\Database\Context $database)
-    {
-        $this->database = $database;
-    }
 
-    public function getReports()
-    {
-        return $this->database->query('
-            SELECT reports.year, reports.link, reports.name, reports.description, teams.name AS team
-            FROM reports
-            LEFT JOIN teams ON reports.team_id = teams.id
-            ORDER BY reports.year
-        ')->fetchAssoc('year[]');
-    }
-
-    public function insertReport($year, $link, $teamId, $name, $description)
-    {
-        $this->database->query('
-            INSERT INTO reports (year, link, team_id, name, description) VALUES (?, ?, ?, ?, ?)
-        ', $year, $link, $teamId, $name, $description);
-    }
+	public function insertReport(int $year, string $link, int $teamId, ?string $name, ?string $description): void
+	{
+		$this->database->query('INSERT INTO reports ?', [
+			'year' => $year,
+			'link' => $link,
+			'team_id' => $teamId,
+			'name' => $name,
+			'description' => $description,
+		]);
+	}
 }

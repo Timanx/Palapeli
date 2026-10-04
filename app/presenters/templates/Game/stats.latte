@@ -83,29 +83,16 @@
 					</rect>
 				{/if}
 			{/for}
-
-			{var $textX = 35}
-			{var $rectX = 30}
-			<rect  class="legend solved" width="20px" height="20px" y="240" x="{$rectX}%"/>
-			<text text-anchor="left" x="{$textX}%" y="255">
-								Týmy, které šifru vyluštily
-							</text>
-			<rect  class="legend hint" width="20px" height="20px" y="270" x="{$rectX}%" />
-					<text text-anchor="left" x="{$textX}%" y="285">
-										Týmy, které braly nápovědu
-									</text>
-			<rect  class="legend dead" width="20px" height="20px" y="300" x="{$rectX}%" />
-					<text text-anchor="left" x="{$textX}%" y="315">
-										Týmy, které na daném stanovišti skončily
-									</text>
-			<rect  class="legend no-data" width="20px" height="20px" y="330" x="{$rectX}%" />
-					<text text-anchor="left" x="{$textX}%" y="345">
-										Týmy, od kterých chybí data
-									</text>
-
-
 			</svg>
 		</svg>
+
+		{* HTML (not SVG) so that the labels wrap on narrow screens *}
+		<ul class="chartLegend">
+			<li><span class="swatch solved"></span>Týmy, které šifru vyluštily</li>
+			<li><span class="swatch hint"></span>Týmy, které braly nápovědu</li>
+			<li><span class="swatch dead"></span>Týmy, které na daném stanovišti skončily</li>
+			<li><span class="swatch no-data"></span>Týmy, od kterých chybí data</li>
+		</ul>
 	</div>
 
 {/if}

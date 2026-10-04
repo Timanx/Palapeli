@@ -1,29 +1,44 @@
 {
-	"name": "nette/web-project",
-	"description": "Nette: Standard Web Project",
+	"name": "kvik/palapeli",
+	"description": "Web of the Palapeli puzzle hunt (registration, Palainfo, results, archive).",
 	"type": "project",
-	"license": ["MIT", "BSD-3-Clause", "GPL-2.0", "GPL-3.0"],
+	"license": "proprietary",
 	"require": {
-		"php": ">=7.1",
-		"nette/application": "^2.4",
-		"nette/bootstrap": "^2.4.1",
-		"nette/caching": "^2.5",
-		"nette/database": "^2.4",
-		"nette/di": "^2.4",
-		"nette/finder": "^2.4",
-		"nette/forms": "^2.4",
-		"nette/http": "^2.4",
-		"nette/mail": "^2.4",
-		"nette/robot-loader": "^2.4",
-		"nette/safe-stream": "^2.3",
-		"nette/security": "^2.4",
-		"nette/utils": "^2.4",
-		"latte/latte": "^2.4",
-		"tracy/tracy": "^2.4",
-		"endroid/qr-code": "^3.5"
+		"php": ">=8.4",
+		"ext-fileinfo": "*",
+		"ext-gd": "*",
+		"ext-mbstring": "*",
+		"ext-pdo_mysql": "*",
+		"nette/application": "^3.2",
+		"nette/bootstrap": "^3.2",
+		"nette/database": "^3.2",
+		"nette/di": "^3.2",
+		"nette/forms": "^3.2",
+		"nette/http": "^3.3",
+		"nette/mail": "^4.0",
+		"nette/robot-loader": "^4.0",
+		"nette/utils": "^4.0",
+		"latte/latte": "^3.0",
+		"tracy/tracy": "^2.10",
+		"endroid/qr-code": "^6.0"
+	},
+	"autoload": {
+		"classmap": ["app/Bootstrap.php"]
 	},
 	"require-dev": {
-		"nette/tester": "^1.6"
+		"nette/tester": "^2.5",
+		"phpstan/phpstan": "^2.1",
+		"phpstan/phpstan-nette": "^2.0"
+	},
+	"config": {
+		"platform": {
+			"php": "8.4"
+		},
+		"sort-packages": true
+	},
+	"scripts": {
+		"phpstan": "phpstan analyse --memory-limit=1G",
+		"lint:latte": "latte-lint app"
 	},
 	"minimum-stability": "stable"
 }

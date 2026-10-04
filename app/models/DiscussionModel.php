@@ -1,63 +1,74 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
-use App\Presenters\BasePresenter;
-use Nette;
+use Nette\Database\Row;
+use Nette\Utils\DateTime;
 
-class DiscussionModel {
 
-    /** @var Nette\Database\Context */
-    private $database;
+/**
+ * Discussion posts (table discussion). Posts are grouped into threads, see DiscussionControl.
+ */
+final class DiscussionModel extends BaseModel
+{
+	/**
+	 * @return Row[]  newest first
+	 */
+	public function getAll(): array
+	{
+		return $this->database->query('
+			SELECT d.*, COALESCE(teams.name, d.unlogged_team_name) AS team_name
+			FROM discussion d
+			LEFT JOIN teams ON teams.id = d.team_id
+			ORDER BY created DESC
+		')->fetchAll();
+	}
 
-    public function __construct(Nette\Database\Context $database)
-    {
-        $this->database = $database;
-    }
 
-    public function getAll()
-    {
-        return $this->database->query('
-            SELECT d.*, COALESCE(teams.name, d.unlogged_team_name) AS team_name
-            FROM discussion d
-            LEFT JOIN teams ON teams.id = d.team_id
-            ORDER BY created DESC
-        '
-        )->fetchAll();
-    }
+	/**
+	 * @return Row[]  newest first
+	 */
+	public function getAllByThread(string $thread): array
+	{
+		return $this->database->query('
+			SELECT d.*, COALESCE(teams.name, d.unlogged_team_name) AS team_name
+			FROM discussion d
+			LEFT JOIN teams ON teams.id = d.team_id
+			WHERE thread = ?
+			ORDER BY created DESC
+		', $thread)->fetchAll();
+	}
 
-    public function getAllByThread($thread)
-    {
-        return $this->database->query('
-            SELECT d.*, COALESCE(teams.name, d.unlogged_team_name) AS team_name
-            FROM discussion d
-            LEFT JOIN teams ON teams.id = d.team_id
-            WHERE thread = ?
-            ORDER BY created DESC',
-                $thread
-        )->fetchAll();
-    }
 
-    public function getThreads()
-    {
-        return array_keys($this->database->query('SELECT MAX(created) AS created, thread
-            FROM discussion
-            GROUP BY thread
-            ORDER BY created DESC')->fetchAssoc('thread')
-        );
-    }
+	/**
+	 * @return list<string>  names of all threads, the most recently active first
+	 */
+	public function getThreads(): array
+	{
+		return array_values($this->database->query('
+			SELECT thread, MAX(created) AS created
+			FROM discussion
+			GROUP BY thread
+			ORDER BY created DESC
+		')->fetchPairs(null, 'thread'));
+	}
 
-    public function insertPost($message, $author, $teamId, $unloggedTeamName, $thread)
-    {
-        $this->database->query('
-            INSERT INTO discussion (name, team_id, unlogged_team_name, created, message, thread) VALUES (?, ?, ?, ?, ?, ?)
-        ',
-            $author,
-            $teamId,
-            (!isset($teamId) && strlen($unloggedTeamName) > 0 ? $unloggedTeamName : null),
-            date('Y-m-d H:i:s', time()),
-            $message,
-            $thread
-        );
-    }
+
+	/**
+	 * @param ?int $teamId  logged-in team, null for anonymous visitors
+	 * @param string $unloggedTeamName  team name typed by an anonymous visitor (stored only for anonymous posts)
+	 */
+	public function insertPost(string $message, string $author, ?int $teamId, string $unloggedTeamName, string $thread): void
+	{
+		$this->database->query('INSERT INTO discussion ?', [
+			'name' => $author,
+			'team_id' => $teamId,
+			'unlogged_team_name' => $teamId === null && $unloggedTeamName !== '' ? $unloggedTeamName : null,
+			'created' => new DateTime,
+			'message' => $message,
+			'thread' => $thread,
+		]);
+	}
 }

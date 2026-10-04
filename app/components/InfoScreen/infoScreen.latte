@@ -5,7 +5,7 @@
 	</div>
 
 	<div class="messages-container">
-		<div n:foreach="$customFlashes as $flash" n:class="flash, $flash->type">{$flash->message|noescape}</div>
+		<div n:foreach="$messages as $message" n:class="flash, $message->type">{$message->message|noescape}</div>
 	</div>
 
 </div>

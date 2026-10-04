@@ -1,20 +1,34 @@
 services:
-	- IDiscussionControlFactory
-	- ICheckpointCardFactory
-	- ITeamCardFactory
-	- IUpdatesFormFactory
-	- IYearFormFactory
-	- ITeamMessageFactory
-	- IActionScreenFactory
-	- IInfoScreenFactory
-	- ICheckpointScreenFactory
-	- ICardScreenFactory
-	- App\Models\TeamsModel
+	# session helpers
+	- App\Session\TeamSession
+	- App\Session\YearSelection
+
+	# database models
 	- App\Models\CiphersModel
 	- App\Models\DiscussionModel
 	- App\Models\FilesModel
+	- App\Models\LogModel
 	- App\Models\ReportsModel
+	- App\Models\ResultsModel
+	- App\Models\TeamsModel
 	- App\Models\UpdatesModel
 	- App\Models\YearsModel
-	- App\Models\ResultsModel
-	- App\Models\LogModel
+
+	# other services
+	- App\Models\CipherFileStorage(%wwwDir%)
+	- App\Models\PasswordHasher
+	- App\Models\PaymentQrCodeGenerator
+
+	# component factories (implemented by Nette DI)
+	- App\Components\ActionScreen\ActionScreenFactory
+	- App\Components\CardScreen\CardScreenFactory
+	- implement: App\Components\CheckpointCard\CheckpointCardFactory
+	  arguments: [editingEnabled: %cardEditing%]
+	- App\Components\CheckpointScreen\CheckpointScreenFactory
+	- App\Components\DiscussionControl\DiscussionControlFactory
+	- App\Components\InfoScreen\InfoScreenFactory
+	- implement: App\Components\TeamCard\TeamCardFactory
+	  arguments: [editingEnabled: %cardEditing%]
+	- App\Components\TeamMessage\TeamMessageFactory
+	- App\Components\UpdatesForm\UpdatesFormFactory
+	- App\Components\YearForm\YearFormFactory

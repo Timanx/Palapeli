@@ -15,7 +15,7 @@
 
 	<link rel="shortcut icon" href="{$basePath}/favicon.ico" type="image/x-icon">
 
-	{var $version = '1.10'}
+	{var $version = '1.11'}
 	<link href="{$basePath}/css/styles.css?v={$version}" rel="stylesheet" type="text/css" />
 	<link href="{$basePath}/css/homepage.css?v={$version}" rel="stylesheet" type="text/css" />
 	<link href="{$basePath}/css/responsive.css?v={$version}" rel="stylesheet" type="text/css" />
@@ -116,20 +116,23 @@
 
 <body>
 
+	{* color of the current web section; pages outside the sections (e.g. errors) use the default *}
+	{var $color = App\Utils\Colors::Administration}
+	{var $current = null}
 	{if $presenter->isLinkCurrent('Team:*')}
-    	{var $color = App\Presenters\BasePresenter::TEAM_COLOR}
+    	{var $color = App\Utils\Colors::Team}
     	{var $current = 'team'}
     {elseif $presenter->isLinkCurrent('Game:*')}
-    	{var $color = App\Presenters\BasePresenter::GAME_COLOR}
+    	{var $color = App\Utils\Colors::Game}
     	{var $current = 'game'}
     {elseif $presenter->isLinkCurrent('Info:*')}
-    	{var $color = App\Presenters\BasePresenter::INFO_COLOR}
+    	{var $color = App\Utils\Colors::Info}
     	{var $current = 'info'}
     {elseif $presenter->isLinkCurrent('Discussion:*')}
-    	{var $color = App\Presenters\BasePresenter::DISCUSSION_COLOR}
+    	{var $color = App\Utils\Colors::Discussion}
     	{var $current = 'discussion'}
     {elseif $presenter->isLinkCurrent('Administration:*')}
-    	{var $color = App\Presenters\BasePresenter::ADMINISTRATION_COLOR}
+    	{var $color = App\Utils\Colors::Administration}
     	{var $current = 'administration'}
     {/if}
 

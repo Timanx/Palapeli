@@ -1,163 +1,90 @@
 <?php
 
+declare(strict_types=1);
+
+namespace App\Components\CardScreen;
+
+use App\Components\BaseControl;
+use App\Components\EndgameMessages;
+use App\Models\CiphersModel;
 use App\Models\ResultsModel;
 use App\Models\TeamsModel;
 use App\Models\YearsModel;
-use App\Models\LogModel;
-use App\Models\CiphersModel;
-use Nette\Application\UI;
+use App\Utils\AppConstants;
+use Nette\Application\UI\Form;
 
-class CardScreen extends BaseControl
+
+/**
+ * Palainfo "KARTA" screen: read-only team card with arrival/departure times, total hints,
+ * closing times of checkpoints and their specifications ("upřesnítka").
+ */
+final class CardScreen extends BaseControl
 {
-    /** @var ResultsModel */
-    private $resultsModel;
-    /** @var YearsModel */
-    private $yearsModel;
-    /** @var TeamsModel */
-    private $teamsModel;
-    /** @var  LogModel */
-    private $logModel;
-    /** @var CiphersModel */
-    private $ciphersModel;
-    /** @var Nette\Http\Session */
-    private $session;
+	use EndgameMessages;
 
 
-    public function __construct(
-        ResultsModel $resultsModel,
-        YearsModel $yearsModel,
-        TeamsModel $teamsModel,
-        CiphersModel $ciphersModel,
-        LogModel $logModel,
-        \Nette\Http\Session $session
-    )
-    {
-        parent::__construct();
-        $this->resultsModel = $resultsModel;
-        $this->yearsModel = $yearsModel;
-        $this->teamsModel = $teamsModel;
-        $this->logModel = $logModel;
-        $this->ciphersModel = $ciphersModel;
-        $this->session = $session;
-    }
-
-    public function render()
-    {
-        $this->template->setFile(__DIR__ . '/cardScreen.latte');
-
-        $this->teamsModel->setYear($this->year);
-        $this->resultsModel->setYear($this->year);
-        $this->yearsModel->setYear($this->year);
-        $this->ciphersModel->setYear($this->year);
-
-        $checkpointNumber = $this->resultsModel->getLastCheckpointNumber($this->teamId);
-
-        $this->template->checkpointCloseTimes = $this->ciphersModel->getCheckpointCloseTimes();
-        $this->template->specifications = $this->ciphersModel->getSpecifications();
-
-        if ($this->teamsModel->hasTeamEnded($this->teamId)) {
-            $this->template->teamEnded = true;
-            $data = $this->yearsModel->getEndgameData();
-            if ($checkpointNumber > $data->checkpoint_count) {
-                $this->flashMessage('Hru jste úspěšně dokončili! Gratulujeme.', 'success');
-            } else {
-                $this->flashMessage('Již jste ukončili hru a ve hře tak nemůžete pokračovat.');
-                $this->flashMessage(sprintf('Pozice cíle: %s (otevřen od %s)', $data->finish_location, $data->finish_open_time), 'info');
-            }
-            if ($data->afterparty_location !== null) {
-                $this->flashMessage(sprintf('Místo konání afterparty: %s (od %s)', $data->afterparty_location, $data->afterparty_time), 'info');
-            }
-        }
-
-        $this->template->checkpointCount = $this->yearsModel->getCheckpointCount();
-        $this->template->current = $this->teamId;
-        $this->template->hasFinishCipher = $this->yearsModel->hasFinishCipher();
-
-        $this->template->render();
-    }
-
-    public function createComponentTeamCardForm()
-    {
-        $this->resultsModel->setYear($this->year);
-        $this->yearsModel->setYear($this->year);
-        $this->teamsModel->setYear($this->year);
-
-        $isTeamFinalized = $this->teamsModel->isTeamFinalized($this->teamId);
-
-        $results = $this->resultsModel->getTeamResults($this->teamId);
-        $yearData = $this->yearsModel->getYearData();
+	public function __construct(
+		private readonly ResultsModel $resultsModel,
+		private readonly YearsModel $yearsModel,
+		private readonly TeamsModel $teamsModel,
+		private readonly CiphersModel $ciphersModel,
+	) {
+	}
 
 
-        $form = new UI\Form;
+	public function render(): void
+	{
+		$this->flashEndgameMessages($this->requireTeamId());
 
-        for ($i = 0; $i < $yearData->checkpoint_count; $i++) {
-
-            $label = (
-                $i == 0 ?
-                    'Začátek hry:' :
-                    (
-                        (
-                            $i == $yearData->checkpoint_count - 1 &&
-                            $yearData->has_finish_cipher
-                        ) ?
-                            'Příchod do cíle:' :
-                            'Příchod na ' . $i . '. stanoviště:'
-                    )
-            );
-
-            $checkpoint = $form->addContainer('checkpoint' . $i);
-            $checkpoint->addText('entryTime', $label)->setType('time')->setDisabled()->setDefaultValue(((isset($results[$i]) && isset($results[$i]['entry_time'])) ? $results[$i]['entry_time'] : \App\Presenters\BasePresenter::EMPTY_TIME_VALUE));
-
-            $exit = $checkpoint->addText('exitTime', ($i == 0 ? 'Odchod ze startu:' : ($i == $yearData->checkpoint_count - 1 ? 'Vyřešení cílového hesla:' : 'Odchod z ' . $i . '. stanoviště:')))->setType('time');
-
-            //if (!isset($results[$i]) || $isTeamFinalized) {
-                $exit->setDisabled();
-            //}
-
-            $exit->setDefaultValue((isset($results[$i]) && isset($results[$i]['exit_time']) ? $results[$i]['exit_time'] : \App\Presenters\BasePresenter::EMPTY_TIME_VALUE));;
-            if ($i != $yearData->checkpoint_count - 1) {
-                $checkpoint->addCheckbox('usedHint')->setDisabled()->setDefaultValue((isset($results[$i]) && isset($results[$i]['used_hint']) ? $results[$i]['used_hint'] : 0))->setRequired(false);
-            }
-        }
-
-        $form->addHidden('teamId', $this->teamId);
-        //$form->addSubmit('send', 'ODESLAT KARTU TÝMU');
-        $form->onSuccess[] = [$this, 'teamCardFormSucceeded'];
-        return $form;
-    }
-
-    public function teamCardFormSucceeded(UI\Form $form, array $values)
-    {
-        $this->resultsModel->setYear($this->year);
-
-        $teamId = $values['teamId'];
-        foreach ($values as $number => $checkpoint) {
-            if ($number != 'teamId') {
-                $number = substr($number, 10);
-
-                if (
-                    array_key_exists('exitTime', $checkpoint) &&
-                    $checkpoint['exitTime'] != '' &&
-                    $checkpoint['exitTime'] != \App\Presenters\BasePresenter::EMPTY_TIME_VALUE
+		$this->renderTemplate(__DIR__ . '/cardScreen.latte', [
+			'checkpointCloseTimes' => $this->ciphersModel->getCheckpointCloseTimes($this->year),
+			'specifications' => $this->ciphersModel->getSpecifications($this->year),
+			'checkpointCount' => $this->yearsModel->getCheckpointCount($this->year),
+			'hasFinishCipher' => $this->yearsModel->hasFinishCipher($this->year),
+		]);
+	}
 
 
-                ) {
-                    if ($checkpoint['exitTime'] == \App\Presenters\BasePresenter::EMPTY_TIME_VALUE || strlen($checkpoint['exitTime']) == 0) {
-                        $checkpoint['exitTime'] = null;
-                    }
+	/**
+	 * The card is displayed using disabled form inputs, teams cannot change it.
+	 */
+	protected function createComponentTeamCardForm(): Form
+	{
+		$results = $this->resultsModel->getTeamResults($this->requireTeamId(), $this->year);
+		$checkpointCount = $this->yearsModel->getCheckpointCount($this->year);
+		$hasFinishCipher = $this->yearsModel->hasFinishCipher($this->year);
+		$last = $checkpointCount - 1;
 
-                    $this->resultsModel->insertResultsRow($teamId, $number, null, $checkpoint['exitTime'], null);
-                }
+		$form = new Form;
+		for ($i = 0; $i < $checkpointCount; $i++) {
+			$entryLabel = match (true) {
+				$i === 0 => 'Začátek hry:',
+				$i === $last && $hasFinishCipher => 'Příchod do cíle:',
+				default => 'Příchod na ' . $i . '. stanoviště:',
+			};
+			$exitLabel = match (true) {
+				$i === 0 => 'Odchod ze startu:',
+				$i === $last => 'Vyřešení cílového hesla:',
+				default => 'Odchod z ' . $i . '. stanoviště:',
+			};
 
-                //Handle finish
-                if ($number == count($values) - 1 && array_key_exists('exitTime', $checkpoint) && $checkpoint['exitTime'] != '' && $checkpoint['exitTime'] != \App\Presenters\BasePresenter::EMPTY_TIME_VALUE) {
+			$checkpoint = $form->addContainer('checkpoint' . $i);
+			$checkpoint->addText('entryTime', $entryLabel)
+				->setHtmlType('time')
+				->setDisabled()
+				->setDefaultValue($results[$i]['entry_time'] ?? AppConstants::EmptyTimeValue);
+			$checkpoint->addText('exitTime', $exitLabel)
+				->setHtmlType('time')
+				->setDisabled()
+				->setDefaultValue($results[$i]['exit_time'] ?? AppConstants::EmptyTimeValue);
 
-                    $this->resultsModel->insertResultsRow($teamId, ((int)$number + 1), $checkpoint['exitTime'], $checkpoint['exitTime']);
-                }
-            }
-        }
+			if ($i !== $last) {
+				$checkpoint->addCheckbox('usedHint')
+					->setDisabled()
+					->setDefaultValue((bool) ($results[$i]['used_hint'] ?? false));
+			}
+		}
 
-        $this->flashMessage('Údaje z karty týmu byly úspěšně uloženy', 'success');
-        $this->getPresenter()->redirect('this');
-    }
+		return $form;
+	}
 }

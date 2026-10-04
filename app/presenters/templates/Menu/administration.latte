@@ -1,4 +1,4 @@
-<div class="submenuContainer" id="administrationSubmenuContainer" style="display:none;" onmouseover="displaySubmenu('administration', '{App\Presenters\BasePresenter::TEAM_COLOR|noescape}');" onmouseout="hideSubmenus();">
+<div class="submenuContainer" id="administrationSubmenuContainer" style="display:none;" onmouseover="displaySubmenu('administration', '{App\Utils\Colors::Team|noescape}');" onmouseout="hideSubmenus();">
 	<div class="menuItemsContainer teamPadding" style="width:100%;">
 		<a href="{plink Administration:}">
 			<div class="menuItemContainer">
@@ -57,7 +57,7 @@
 		</a>
 		<a href="{plink Administration:results}">
 			<div class="menuItemContainer">
-				<p class="menuText{if $presenter->isLinkCurrent('Administration:teamTable')} selected{/if}">Výsledky</p>
+				<p class="menuText{if $presenter->isLinkCurrent('Administration:results')} selected{/if}">Výsledky</p>
 			</div>
 		</a>
 		<a href="{plink Administration:reports}">

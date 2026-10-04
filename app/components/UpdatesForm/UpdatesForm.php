@@ -1,48 +1,57 @@
 <?php
+
+declare(strict_types=1);
+
+namespace App\Components\UpdatesForm;
+
+use App\Components\BaseControl;
 use App\Models\UpdatesModel;
-use Nette\Application\UI;
+use Nette\Application\UI\Form;
 
-class UpdatesForm extends BaseControl
+
+/**
+ * Administration: adding news ("aktuality") to the Info section.
+ */
+final class UpdatesForm extends BaseControl
 {
-    /** @var UpdatesModel */
-    private $updatesModel;
+	public function __construct(
+		private readonly UpdatesModel $updatesModel,
+	) {
+	}
 
-    public function __construct(UpdatesModel $updatesModel)
-    {
-        parent::__construct();
-        $this->updatesModel = $updatesModel;
-    }
 
-    public function render()
-    {
-        $this->template->setFile(__DIR__ . '/updates.latte');
-        $this->template->render();
-    }
+	public function render(): void
+	{
+		$this->renderTemplate(__DIR__ . '/updates.latte');
+	}
 
-    public function createComponentNewUpdateForm()
-    {
-        $form = new UI\Form;
-        $form->addTextArea('message', 'Text aktuality:', null, 5);
-        $form->addText('date', 'Datum:')
-            ->setType('date')
-            ->setDefaultValue(date('Y-m-d', time()))
-            ->setRequired();
-        $form->addText('year', 'Ročník:')
-            ->setType('number')
-            ->setDefaultValue($this->year)
-            ->addRule(UI\Form::MIN, 'Hodnota ročníku musí být alespoň 1.', 1)
-            ->setRequired();
-        $form->addSubmit('send', 'PŘIDAT AKTUALITU');
-        $form->onSuccess[] = [$this, 'newUpdateFormSucceeded'];
-        return $form;
-    }
 
-    public function newUpdateFormSucceeded(UI\Form $form, array $values)
-    {
-        $this->updatesModel->setYear($values['year']);
-        $this->updatesModel->addUpdate($values['date'], $values['message']);
+	protected function createComponentNewUpdateForm(): Form
+	{
+		$form = new Form;
+		$form->addTextArea('message', 'Text aktuality:', null, 5);
+		$form->addDate('date', 'Datum:')
+			->setFormat('Y-m-d')
+			->setDefaultValue(new \DateTimeImmutable)
+			->setRequired();
+		$form->addInteger('year', 'Ročník:')
+			->setDefaultValue($this->year)
+			->addRule($form::Min, 'Hodnota ročníku musí být alespoň 1.', 1)
+			->setRequired();
+		$form->addSubmit('send', 'PŘIDAT AKTUALITU');
+		$form->onSuccess[] = $this->newUpdateFormSucceeded(...);
+		return $form;
+	}
 
-        $this->flashMessage('Aktualita byla úspěšně vložena.', 'success');
-        $this->presenter->redirect('this');
-    }
+
+	/**
+	 * @param array{message: string, date: string, year: int} $values
+	 */
+	private function newUpdateFormSucceeded(Form $form, array $values): void
+	{
+		$this->updatesModel->addUpdate($values['year'], $values['date'], $values['message']);
+
+		$this->flashMessage('Aktualita byla úspěšně vložena.', 'success');
+		$this->redirect('this');
+	}
 }

@@ -59,9 +59,9 @@
 			<tr>
 				<td class="teamName">{$team->name|noescape}</td>
 				<td class="teamPayment" rowspan="2">
-					{if $team->paid == App\Presenters\BasePresenter::PAY_OK}
+					{if $team->paid == App\Models\PaymentStatus::Paid->value}
 						{$pay_ok|noescape}
-					{elseif $team->paid == App\Presenters\BasePresenter::PAY_NOK}
+					{elseif $team->paid == App\Models\PaymentStatus::Unpaid->value}
 						{$pay_nok|noescape}
 					{else}
 						{$pay_start|noescape}
@@ -84,7 +84,7 @@
 				<tr>
 					<td class="teamName">{$team->name|noescape}</td>
 					<td class="teamRegistered" title="Čas registrace" rowspan="2">
-						{date('j. n. Y, H:i', strtotime($team->registered))|noescape}
+						{$team->registered|date:'j. n. Y, H:i'}
 					</td>
 				</tr>
 				<tr>

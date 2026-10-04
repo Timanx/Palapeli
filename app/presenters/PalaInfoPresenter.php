@@ -1,124 +1,104 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Presenters;
 
-use App\Models\YearsModel;
-use Nette;
+use App\Components\ActionScreen\ActionScreen;
+use App\Components\ActionScreen\ActionScreenFactory;
+use App\Components\CardScreen\CardScreen;
+use App\Components\CardScreen\CardScreenFactory;
+use App\Components\CheckpointScreen\CheckpointScreen;
+use App\Components\CheckpointScreen\CheckpointScreenFactory;
+use App\Components\InfoScreen\InfoScreen;
+use App\Components\InfoScreen\InfoScreenFactory;
 
-class PalaInfoPresenter extends BasePresenter
+
+/**
+ * Palainfo: the in-game web app for teams registered in the current edition
+ * (screens AKCE, KARTA, PŘÍCHODY and INFO). It always works with the current edition,
+ * regardless of the edition selected in the archive.
+ */
+final class PalaInfoPresenter extends BasePresenter
 {
-    /** @var YearsModel $yearsModel */
-    private $yearsModel;
-    /** @var \IActionScreenFactory $actionScreen */
-    private $actionScreen;
-    /** @var \IInfoScreenFactory $infoScreen */
-    private $infoScreen;
-    /** @var \ICheckpointScreenFactory $checkpointScreen */
-    private $checkpointScreen;
-    /** @var  \ICardScreenFactory $cardScreen */
-    private $cardScreen;
-
-    public function __construct(
-        YearsModel $yearsModel,
-        \IActionScreenFactory $actionScreen,
-        \IInfoScreenFactory $infoScreen,
-        \ICheckpointScreenFactory $checkpointScreen,
-        \ICardScreenFactory $cardScreen
-    )
-    {
-        parent::__construct();
-        $this->actionScreen = $actionScreen;
-        $this->yearsModel = $yearsModel;
-        $this->infoScreen = $infoScreen;
-        $this->checkpointScreen = $checkpointScreen;
-        $this->cardScreen = $cardScreen;
-    }
-
-    private function prepareTemplateParams()
-    {
-        $this->template->hasGameStarted = $this->yearsModel->hasGameStarted();
-        $this->template->hasGameEnded = $this->yearsModel->hasGameEnded();
-    }
-
-    public function renderDefault($defaultScreen = null)
-    {
-        parent::render();
-
-        /** @var \ActionScreen $component */
-        $component = $this->getComponent('actionScreen');
-        $component->template->defaultScreen = $defaultScreen;
-        $this->yearsModel->setYear($this->selectedYear);
-        $this->prepareTemplateParams();
-    }
+	private int $currentYear;
 
 
-    public function renderInfo()
-    {
-        parent::render();
-
-        /** @var \InfoScreen $component */
-        $component = $this->getComponent('infoScreen');
-        $this->yearsModel->setYear($this->selectedYear);
-        $this->prepareTemplateParams();
-    }
-
-    public function renderCheckpoint()
-    {
-        parent::render();
-        $this->yearsModel->setYear($this->selectedYear);
-        $this->prepareTemplateParams();
-    }
-
-    public function renderCard()
-    {
-        parent::render();
-        $this->yearsModel->setYear($this->selectedYear);
-        $this->prepareTemplateParams();
-    }
+	public function __construct(
+		private readonly ActionScreenFactory $actionScreenFactory,
+		private readonly InfoScreenFactory $infoScreenFactory,
+		private readonly CheckpointScreenFactory $checkpointScreenFactory,
+		private readonly CardScreenFactory $cardScreenFactory,
+	) {
+		parent::__construct();
+	}
 
 
-    protected function createComponentActionScreen()
-    {
-        /** @var \ActionScreen $control */
-        $control = $this->actionScreen->create();
+	protected function startup(): void
+	{
+		parent::startup();
+		$this->currentYear = $this->yearsModel->getCurrentYearNumber();
 
-        $control->setTeamId($this->session->getSection('team')->teamId);
-        $control->setYear($this->yearsModel->getCurrentYearNumber());
+		// forms of the screens may only be submitted by teams playing the current edition
+		if ($this->getSignal() !== null && !$this->canPlay()) {
+			$this->error('Palainfo je přístupné pouze týmům zaregistrovaným v aktuálním ročníku.', 403);
+		}
+	}
 
-        return $control;
-    }
 
-    protected function createComponentInfoScreen()
-    {
-        /** @var \InfoScreen $control */
-        $control = $this->infoScreen->create();
+	protected function beforeRender(): void
+	{
+		parent::beforeRender();
+		$this->template->hasGameStarted = $this->yearsModel->hasGameStarted($this->currentYear);
+		$this->template->hasGameEnded = $this->yearsModel->hasGameEnded($this->currentYear);
+	}
 
-        $control->setTeamId($this->session->getSection('team')->teamId);
-        $control->setYear($this->yearsModel->getCurrentYearNumber());
 
-        return $control;
-    }
+	/**
+	 * @param ?int $defaultScreen  confirmation screen to open, see ActionScreen::DeadScreen and EndScreen
+	 */
+	public function renderDefault(?int $defaultScreen = null): void
+	{
+		$this->getComponent('actionScreen')->setDefaultScreen($defaultScreen);
+	}
 
-    protected function createComponentCardScreen()
-    {
-        /** @var \CardScreen $control */
-        $control = $this->cardScreen->create();
 
-        $control->setTeamId($this->session->getSection('team')->teamId);
-        $control->setYear($this->yearsModel->getCurrentYearNumber());
+	private function canPlay(): bool
+	{
+		return $this->teamId !== null
+			&& $this->yearsModel->isTeamInCurrentYear($this->teamId)
+			&& $this->yearsModel->hasGameStarted($this->currentYear);
+	}
 
-        return $control;
-    }
 
-    protected function createComponentCheckpointScreen()
-    {
-        /** @var \CheckpointScreen $control */
-        $control = $this->checkpointScreen->create();
+	protected function createComponentActionScreen(): ActionScreen
+	{
+		return $this->actionScreenFactory->create()
+			->setTeamId($this->teamId)
+			->setYear($this->currentYear);
+	}
 
-        $control->setTeamId($this->session->getSection('team')->teamId);
-        $control->setYear($this->yearsModel->getCurrentYearNumber());
 
-        return $control;
-    }
+	protected function createComponentInfoScreen(): InfoScreen
+	{
+		return $this->infoScreenFactory->create()
+			->setTeamId($this->teamId)
+			->setYear($this->currentYear);
+	}
 
+
+	protected function createComponentCardScreen(): CardScreen
+	{
+		return $this->cardScreenFactory->create()
+			->setTeamId($this->teamId)
+			->setYear($this->currentYear);
+	}
+
+
+	protected function createComponentCheckpointScreen(): CheckpointScreen
+	{
+		return $this->checkpointScreenFactory->create()
+			->setTeamId($this->teamId)
+			->setYear($this->currentYear);
+	}
 }

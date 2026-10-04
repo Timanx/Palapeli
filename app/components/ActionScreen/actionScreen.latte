@@ -124,9 +124,9 @@
 
     }
 
-	{if $defaultScreen === ActionScreen::END_SCREEN && !$teamEnded}
+	{if $defaultScreen === App\Components\ActionScreen\ActionScreen::EndScreen && !$teamEnded}
     toggleEndScreen();
-	{elseif $defaultScreen === ActionScreen::DEAD_SCREEN && !$teamEnded}
-    toggleEndScreen();
+	{elseif $defaultScreen === App\Components\ActionScreen\ActionScreen::DeadScreen && !$teamEnded}
+    toggleDeadScreen();
 	{/if}
 </script>

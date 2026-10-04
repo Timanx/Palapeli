@@ -9,26 +9,26 @@
 			{else}
 				<div class="payment-info">
 					<div>
-						{if $paid == App\Presenters\BasePresenter::PAY_OK}
+						{if $paid === App\Models\PaymentStatus::Paid}
 							<span title="Zaplaceno">{include ../../../components/SVG/pay_ok.svg, dim => '200px'}</span>
-						{elseif $paid == App\Presenters\BasePresenter::PAY_NOK}
+						{elseif $paid === App\Models\PaymentStatus::Unpaid}
 							<span title="Nezaplaceno">{include ../../../components/SVG/pay_nok.svg, dim => '200px'}</span>
-						{elseif $paid == App\Presenters\BasePresenter::PAY_START}
+						{elseif $paid === App\Models\PaymentStatus::AtStart}
 							<span title="Platba na startu">{include ../../../components/SVG/pay_start.svg, dim => '200px'}</span>
 						{/if}
 					</div>
 					<div class="payment-info-text">
-						{if $paid == App\Presenters\BasePresenter::PAY_OK}
+						{if $paid === App\Models\PaymentStatus::Paid}
 							Startovné je zaplacené.
-						{elseif $paid == App\Presenters\BasePresenter::PAY_NOK}
+						{elseif $paid === App\Models\PaymentStatus::Unpaid}
 						Startovné ve výši <strong>{$yearData->entry_fee} Kč</strong> zaplaťte prosím do {$yearData->entry_fee_deadline|date: 'j. n. Y'|noescape} na účet <strong>{$yearData->entry_fee_account}</strong>. Ve zprávě prosím uveďte název vašeho týmu, jako variabilní symbol zadejte <strong>{$variableSymbol}</strong>. V případě zrušení účasti na hře do {$yearData->entry_fee_return_deadline|date: 'j. n. Y'|noescape} vám startovné vrátíme.
-						{elseif $paid == App\Presenters\BasePresenter::PAY_NOK}
+						{elseif $paid === App\Models\PaymentStatus::AtStart}
 							Startovné ve výši {$yearData->entry_fee} Kč budete platit na startu.
 						{else}
 							<div class="flash success">Neočekává se od vás platba startovného.</div>
 						{/if}
 					</div>
-					<div style="margin-top: 8px;" n:if="$paid == App\Presenters\BasePresenter::PAY_NOK">
+					<div style="margin-top: 8px;" n:if="$paid === App\Models\PaymentStatus::Unpaid && $QRCode">
 						Platbu můžete provést pomocí QR kódu:<br>
 						<img src="{$QRCode|nocheck}">
 

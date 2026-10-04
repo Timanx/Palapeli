@@ -1,155 +1,186 @@
 <?php
+
+declare(strict_types=1);
+
+namespace App\Components\TeamCard;
+
+use App\Components\BaseControl;
 use App\Models\ResultsModel;
 use App\Models\TeamsModel;
 use App\Models\YearsModel;
-use Nette\Application\UI;
+use App\Utils\AppConstants;
+use Nette\Application\UI\Form;
 
-class TeamCard extends BaseControl
+
+/**
+ * Administration: passage of one team through the game ("karta týmu").
+ * The team is selected by the component parameter "team" (URL parameter teamCard-team).
+ */
+final class TeamCard extends BaseControl
 {
-    /** @var ResultsModel */
-    private $resultsModel;
-    /** @var YearsModel */
-    private $yearsModel;
-    /** @var TeamsModel */
-    private $teamsModel;
-
-    public function __construct(ResultsModel $resultsModel, YearsModel $yearsModel, TeamsModel $teamsModel)
-    {
-        parent::__construct();
-        $this->resultsModel = $resultsModel;
-        $this->yearsModel = $yearsModel;
-        $this->teamsModel = $teamsModel;
-    }
-
-    public function render()
-    {
-        $this->template->setFile(__DIR__ . '/teamCard.latte');
-
-        $teamId = $_GET['teamCard-team'] ?? NULL;
-
-        $this->teamsModel->setYear($this->year);
-
-        $this->yearsModel->setYear($this->year);
-        $this->template->selectedYear = $this->year;
-        $this->template->checkpointCount = $this->yearsModel->getCheckpointCount();
-        $this->template->teamName = $this->teamsModel->getTeamName($teamId);
-        $this->template->isTeamFinalized = $this->teamsModel->isTeamFinalized($teamId);
-        $this->template->teamId = $teamId;
-
-        $this->template->render();
-    }
-
-    public function createComponentTeamCardForm()
-    {
-        $teamId = $_GET['teamCard-team'] ?? NULL;
-        $this->teamId = $teamId;
-        $this->resultsModel->setYear($this->year);
-        $this->yearsModel->setYear($this->year);
-
-        $results = $this->resultsModel->getTeamResults($teamId);
-        $yearData = $this->yearsModel->getYearData();
-
-        $form = new UI\Form;
-
-        for ($i = 0; $i < $yearData->checkpoint_count; $i++) {
-            $checkpoint = $form->addContainer('checkpoint' . $i);
-            $checkpoint->addText('entryTime', ($i == 0 ? 'Začátek hry:' : ($i == $yearData->checkpoint_count - 1 ? 'Příchod do cíle:' : 'Příchod na ' . $i . '. stanoviště:')))->setType('time')->setDefaultValue(((isset($results[$i]) && isset($results[$i]['entry_time'])) ? $results[$i]['entry_time'] : ($i == 0 && isset($yearData->game_start) ? $yearData->game_start->format('H:i') : \App\Presenters\BasePresenter::EMPTY_TIME_VALUE)));
-            $checkpoint->addText('exitTime', ($i == 0 ? 'Odchod ze startu:' : ($i == $yearData->checkpoint_count - 1 ? 'Vyřešení cílového hesla:' : 'Odchod z ' . $i . '. stanoviště:')))->setType('time')->setDefaultValue((isset($results[$i]) && isset($results[$i]['exit_time']) ? $results[$i]['exit_time'] : \App\Presenters\BasePresenter::EMPTY_TIME_VALUE));;
-            if($i != $yearData->checkpoint_count - 1) {
-                $checkpoint->addCheckbox('usedHint')->setDefaultValue((isset($results[$i]) && isset($results[$i]['used_hint']) ? $results[$i]['used_hint'] : 0))->setRequired(false);
-            }
-        }
-
-        $form->addHidden('teamId', $teamId);
-        $form->addSubmit('send', 'ODESLAT KARTU TÝMU');
-        $form->onSuccess[] = [$this, 'teamCardFormSucceeded'];
-        return $form;
-    }
-
-    public function teamCardFormSucceeded(UI\Form $form, array $values)
-    {
-        $this->flashMessage('Zadávání znemožněno', 'error');
-        $this->redirect('this');
-
-        $this->resultsModel->setYear($this->year);
-
-        $teamId = $values['teamId'];
-        foreach($values as $number => $checkpoint) {
-            if($number != 'teamId') {
-                $number = substr($number, 10);
-
-                if (isset($checkpoint['usedHint']) &&
-                    $checkpoint['usedHint']
-                    ||
-                    $checkpoint['exitTime'] != '' &&
-                    $checkpoint['exitTime'] != \App\Presenters\BasePresenter::EMPTY_TIME_VALUE
-                    ||
-                    $checkpoint['entryTime'] != '' &&
-                    $checkpoint['entryTime'] != \App\Presenters\BasePresenter::EMPTY_TIME_VALUE
+	/**
+	 * @param bool $editingEnabled  saving of the card; disabled by default because teams enter their
+	 *                              data themselves in Palainfo (parameter cardEditing in common.neon)
+	 */
+	public function __construct(
+		private readonly bool $editingEnabled,
+		private readonly ResultsModel $resultsModel,
+		private readonly YearsModel $yearsModel,
+		private readonly TeamsModel $teamsModel,
+	) {
+	}
 
 
-                ) {
-                    if ($checkpoint['exitTime'] == \App\Presenters\BasePresenter::EMPTY_TIME_VALUE || strlen($checkpoint['exitTime']) == 0) {
-                        $checkpoint['exitTime'] = NULL;
-                    }
-                    if ($checkpoint['entryTime'] == \App\Presenters\BasePresenter::EMPTY_TIME_VALUE || strlen($checkpoint['entryTime']) == 0) {
-                        $checkpoint['entryTime'] = NULL;
-                    }
+	public function render(): void
+	{
+		$teamId = $this->getSelectedTeamId();
 
-                    $this->resultsModel->insertResultsRow($teamId, $number, $checkpoint['entryTime'], $checkpoint['exitTime'], $checkpoint['usedHint'] ?? NULL);
-                }
+		$this->renderTemplate(__DIR__ . '/teamCard.latte', [
+			'selectedYear' => $this->year,
+			'checkpointCount' => $this->yearsModel->getCheckpointCount($this->year),
+			'teamId' => $teamId,
+			'teamName' => $teamId === null ? null : $this->teamsModel->getTeamName($teamId),
+			'isTeamFinalized' => $teamId !== null && $this->teamsModel->isTeamFinalized($teamId, $this->year),
+		]);
+	}
 
-                //Handle finish
-                if ($number == count($values) - 1 && $checkpoint['exitTime'] != '' && $checkpoint['exitTime'] != \App\Presenters\BasePresenter::EMPTY_TIME_VALUE) {
 
-                    $this->resultsModel->insertResultsRow($teamId, ((int)$number + 1), $checkpoint['exitTime'], $checkpoint['exitTime']);
-                }
-            }
-        }
+	protected function createComponentTeamCardForm(): Form
+	{
+		$teamId = $this->getSelectedTeamId();
+		$results = $teamId === null ? [] : $this->resultsModel->getTeamResults($teamId, $this->year);
+		$yearData = $this->yearsModel->getYearData($this->year);
+		$checkpointCount = (int) $yearData?->checkpoint_count;
+		$last = $checkpointCount - 1;
 
-        $this->flashMessage('Údaje z karty týmu byly úspěšně uloženy', 'success');
-        $this->redirect('this', ['team' => $teamId]);
-    }
+		$form = new Form;
+		for ($i = 0; $i < $checkpointCount; $i++) {
+			$entryLabel = match ($i) {
+				0 => 'Začátek hry:',
+				$last => 'Příchod do cíle:',
+				default => 'Příchod na ' . $i . '. stanoviště:',
+			};
+			$exitLabel = match ($i) {
+				0 => 'Odchod ze startu:',
+				$last => 'Vyřešení cílového hesla:',
+				default => 'Odchod z ' . $i . '. stanoviště:',
+			};
 
-    public function createComponentSelectTeamForm()
-    {
-        //$teamId = (isset($_GET['team']) ? $_GET['team'] : null);
+			// the start time defaults to the official start of the game
+			$defaultEntry = $results[$i]['entry_time']
+				?? ($i === 0 && $yearData->game_start ? $yearData->game_start->format('H:i') : AppConstants::EmptyTimeValue);
 
-        $this->resultsModel->setYear($this->year);
+			$checkpoint = $form->addContainer('checkpoint' . $i);
+			$checkpoint->addText('entryTime', $entryLabel)
+				->setHtmlType('time')
+				->setDefaultValue($defaultEntry);
+			$checkpoint->addText('exitTime', $exitLabel)
+				->setHtmlType('time')
+				->setDefaultValue($results[$i]['exit_time'] ?? AppConstants::EmptyTimeValue);
 
-        $teams = $this->resultsModel->getTeamsWithFilledStatus();
+			if ($i !== $last) {
+				$checkpoint->addCheckbox('usedHint')
+					->setDefaultValue((bool) ($results[$i]['used_hint'] ?? false))
+					->setRequired(false);
+			}
+		}
 
-        $options = ['Nevyplněné týmy' => [], 'Vyplněné týmy' => []];
-        foreach ($teams as $team) {
-            $options[(!$team->team_filled ? 'Nevyplněné týmy' : 'Vyplněné týmy')][$team->id] = $team->name;
-        }
+		$form->addHidden('teamId', $teamId);
+		$form->addSubmit('send', 'ODESLAT KARTU TÝMU');
+		$form->onSuccess[] = $this->teamCardFormSucceeded(...);
+		return $form;
+	}
 
-        $form = new UI\Form;
-        $form->addSelect('teams', null, $options, 1)->setPrompt('Vyberte tým')->setAttribute('onchange', 'this.form.submit()');
-        $form->onSuccess[] = [$this, 'teamSelected'];
-        return $form;
-    }
 
-    public function teamSelected(UI\Form $form, array $values)
-    {
-        $this->redirect('this', ['team' => $values['teams']]);
-    }
+	/**
+	 * @param array<string, mixed> $values
+	 */
+	private function teamCardFormSucceeded(Form $form, array $values): void
+	{
+		if (!$this->editingEnabled) {
+			$this->flashMessage('Zadávání znemožněno', 'error');
+			$this->redirect('this');
+		}
 
-    public function createComponentFinalizeTeam()
-    {
-        $form = new UI\Form;
+		$teamId = (int) $values['teamId'];
+		unset($values['teamId']);
+		$isEmpty = static fn(?string $time): bool => $time === null || $time === '' || $time === AppConstants::EmptyTimeValue;
 
-        $form->addSubmit('finalize', 'FINALIZOVAT TÝM');
-        $form->addHidden('team_id', $_GET['teamCard-team'] ?? null);
-        $form->onSuccess[] = [$this, 'teamFinalized'];
+		foreach ($values as $name => $checkpoint) {
+			$number = (int) substr($name, strlen('checkpoint'));
+			$usedHint = isset($checkpoint['usedHint']) ? (bool) $checkpoint['usedHint'] : null;
 
-        return $form;
-    }
+			if ($usedHint || !$isEmpty($checkpoint['exitTime']) || !$isEmpty($checkpoint['entryTime'])) {
+				$this->resultsModel->insertResultsRow(
+					$teamId,
+					$this->year,
+					$number,
+					$isEmpty($checkpoint['entryTime']) ? '' : $checkpoint['entryTime'],
+					$isEmpty($checkpoint['exitTime']) ? '' : $checkpoint['exitTime'],
+					$usedHint,
+				);
+			}
 
-    public function teamFinalized(UI\Form $form, array $values)
-    {
-        $this->teamsModel->setYear($this->year);
-        $this->teamsModel->finalizeTeam($values['team_id']);
-    }
+			// solving the finish password is stored as an extra checkpoint
+			if ($number === count($values) - 1 && !$isEmpty($checkpoint['exitTime'])) {
+				$this->resultsModel->insertResultsRow($teamId, $this->year, $number + 1, $checkpoint['exitTime'], $checkpoint['exitTime']);
+			}
+		}
 
+		$this->flashMessage('Údaje z karty týmu byly úspěšně uloženy', 'success');
+		$this->redirect('this', ['team' => $teamId]);
+	}
+
+
+	protected function createComponentSelectTeamForm(): Form
+	{
+		$options = ['Nevyplněné týmy' => [], 'Vyplněné týmy' => []];
+		foreach ($this->resultsModel->getTeamsWithFilledStatus($this->year) as $team) {
+			$options[$team->team_filled ? 'Vyplněné týmy' : 'Nevyplněné týmy'][$team->id] = $team->name;
+		}
+
+		$form = new Form;
+		$form->addSelect('teams', null, $options, 1)
+			->setPrompt('Vyberte tým')
+			->setHtmlAttribute('onchange', 'this.form.submit()');
+		$form->onSuccess[] = $this->teamSelected(...);
+		return $form;
+	}
+
+
+	/**
+	 * @param array{teams: ?int} $values
+	 */
+	private function teamSelected(Form $form, array $values): void
+	{
+		$this->redirect('this', ['team' => $values['teams']]);
+	}
+
+
+	protected function createComponentFinalizeTeam(): Form
+	{
+		$form = new Form;
+		$form->addSubmit('finalize', 'FINALIZOVAT TÝM');
+		$form->addHidden('team_id', $this->getSelectedTeamId());
+		$form->onSuccess[] = $this->teamFinalized(...);
+		return $form;
+	}
+
+
+	/**
+	 * @param array{team_id: string} $values
+	 */
+	private function teamFinalized(Form $form, array $values): void
+	{
+		$teamId = (int) $values['team_id'];
+		$this->teamsModel->finalizeTeam($teamId, $this->year);
+		$this->redirect('this', ['team' => $teamId]);
+	}
+
+
+	private function getSelectedTeamId(): ?int
+	{
+		$team = $this->getParameter('team');
+		return $team === null || $team === '' ? null : (int) $team;
+	}
 }

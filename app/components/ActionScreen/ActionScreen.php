@@ -1,360 +1,355 @@
 <?php
 
+declare(strict_types=1);
+
+namespace App\Components\ActionScreen;
+
+use App\Components\BaseControl;
+use App\Models\CiphersModel;
+use App\Models\LogModel;
+use App\Models\LogType;
 use App\Models\ResultsModel;
 use App\Models\TeamsModel;
 use App\Models\YearsModel;
-use App\Models\LogModel;
-use App\Models\CiphersModel;
-use Nette\Application\UI;
+use App\Utils\AppConstants;
+use Nette\Application\UI\Form;
+use Nette\Database\Row;
+use Nette\Utils\DateTime;
 
-class ActionScreen extends BaseControl
+
+/**
+ * Palainfo "AKCE" screen: teams enter checkpoint codes and password solutions, set their
+ * departure times, ask for total hints ("totálka") and can quit the game.
+ */
+final class ActionScreen extends BaseControl
 {
-    /** @var ResultsModel */
-    private $resultsModel;
-    /** @var YearsModel */
-    private $yearsModel;
-    /** @var TeamsModel */
-    private $teamsModel;
-    /** @var  LogModel */
-    private $logModel;
-    /** @var CiphersModel */
-    private $ciphersModel;
-    /** @var Nette\Http\Session */
-    private $session;
-
-    private $lastCheckpointData;
-    private $defaultScreen;
-
-    const END_CODE = 'JEZIMADEMDOM';
-
-    const DEAD_SCREEN = 0;
-    const END_SCREEN = 1;
-
-
-    public function __construct(
-        ResultsModel $resultsModel,
-        YearsModel $yearsModel,
-        TeamsModel $teamsModel,
-        CiphersModel $ciphersModel,
-        LogModel $logModel,
-        \Nette\Http\Session $session
-    )
-    {
-        parent::__construct();
-        $this->resultsModel = $resultsModel;
-        $this->yearsModel = $yearsModel;
-        $this->teamsModel = $teamsModel;
-        $this->ciphersModel = $ciphersModel;
-        $this->logModel = $logModel;
-        $this->session = $session;
-    }
-
-    public function render()
-    {
-        $this->template->setFile(__DIR__ . '/actionScreen.latte');
-
-        $teamId = $this->session->getSection('team')->teamId ?? NULL;
-
-        $this->teamsModel->setYear($this->year);
-        $this->resultsModel->setYear($this->year);
-        $this->ciphersModel->setYear($this->year);
-
-        $this->yearsModel->setYear($this->year);
-
-        $checkpointNumber = $this->resultsModel->getFirstEmptyCheckpoint($teamId);
-
-        if ($checkpointNumber === null) {
-            $checkpointNumber = 0;
-        }
-
-
-        $data = $this->yearsModel->getEndgameData();
-
-        $this->template->checkpointCount = $data->checkpoint_count;
-        $this->template->nextCheckpointNumber = $checkpointNumber;
-        $this->template->hasPasswordSolution = $hasPasswordSolution = (
-            !($checkpointNumber == 0) && $this->ciphersModel->hasCheckpointPasswordSolution($checkpointNumber - 1) &&
-            !$this->resultsModel->hasTeamLeft($teamId, $checkpointNumber - 1)
-        );
-        $this->template->hasFinishCipher = $data->has_finish_cipher;
-
-        $isLastCheckpoint = ($checkpointNumber == 12) && $hasPasswordSolution;
-
-        if ($this->teamsModel->hasTeamEnded($teamId)) {
-            $this->template->teamEnded = true;
-            if ($isLastCheckpoint) {
-                $this->flashMessage('Hru jste úspěšně dokončili! Gratulujeme.', 'success');
-            } else {
-                $this->flashMessage('Již jste ukončili hru a ve hře tak nemůžete pokračovat.');
-                $this->flashMessage(sprintf('Přijďte se podívat do cíle: %s (otevřen od %s)', $data->finish_location, $data->finish_open_time), 'info');
-            }
-            if ($data->afterparty_location) {
-                $this->flashMessage(sprintf('Rádi vás uvidíme i na afterparty: %s (od %s)', $data->afterparty_location, $data->afterparty_time), 'info');
-            }
-        } elseif ($this->yearsModel->hasGameEnded()) {
-
-            $this->template->teamEnded = true;
-            $this->flashMessage(sprintf('Hra již skončila, děkujeme za účast. Již nelze zadávat příchody na stanoviště, můžete pouze upravit odchody ze stanovišť na záložce KARTA. Přijďte se za námi podívat do cíle: %s', $data->finish_location), 'info');
-            if ($data->afterparty_location !== null) {
-                $this->flashMessage(sprintf('Rádi vás uvidíme i na afterparty: %s (od %s)', $data->afterparty_location, $data->afterparty_time), 'info');
-            }
-        } else {
-            $this->template->teamEnded = false;
-
-
-            $this->lastCheckpointData = $lastCheckpointData = $this->resultsModel->getLastCheckpointData($teamId);
-
-            $this->template->deadOpened = $lastCheckpointData && $this->resultsModel->hasTeamOpenedDead($this->teamId, $lastCheckpointData->checkpoint_number);
-
-            if ($lastCheckpointData) {
-                $this->template->deadSolution = $this->ciphersModel->getDeadSolution($lastCheckpointData->checkpoint_number);
-            }
-
-            $this->template->endCode = self::END_CODE;
-
-
-            $this->template->lastCheckpointData = $this->lastCheckpointData;
-        }
-
-        $this->template->render();
-    }
-
-    public function createComponentCodeInput()
-    {
-
-        $form = new UI\Form;
-        $form->addText('code');
-        $form->addSubmit('send', '');
-        $form->onSuccess[] = [$this, 'codeInputSucceeded'];
-        return $form;
-    }
-
-    public function codeInputSucceeded(UI\Form $form)
-    {
-        $this->ciphersModel->setYear($this->year);
-        $this->resultsModel->setYear($this->year);
-        $this->yearsModel->setYear($this->year);
-        $this->teamsModel->setYear($this->year);
-        $this->logModel->setYear($this->year);
-
-        $teamId = $this->session->getSection('team')->teamId ?? NULL;
-        $checkpointNumber = $this->resultsModel->getFirstEmptyCheckpoint($teamId);
-
-        $hasPasswordSolution = (
-            !($checkpointNumber == 0) &&
-            $this->ciphersModel->hasCheckpointPasswordSolution($checkpointNumber - 1) &&
-            !$this->resultsModel->hasTeamLeft($teamId, $checkpointNumber - 1)
-
-        );
-
-        $codeCorrect = false;
-        if ($hasPasswordSolution) {
-            $codeCorrect = $this->ciphersModel->checkSolution($form->values['code'], $checkpointNumber - 1);
-
-            if (!$codeCorrect) {
-                $this->flashMessage('Řešení není správně.', 'error');
-            } else {
-
-                $time = new DateTime('now', new DateTimeZone('Europe/Prague'));
-
-                $this->resultsModel->insertResultsRow($teamId, $checkpointNumber - 1, null, $time);
-                if ($this->yearsModel->getCheckpointCount() !== $checkpointNumber) {
-                    $this->flashMessage(
-                        sprintf(
-                            'Správně! Umístění dalšího stanoviště: %s',
-                            $this->ciphersModel->getDeadSolution($checkpointNumber - 1)),
-                        'success'
-                    );
-                    $this->logModel->log(
-                        LogModel::LT_MESSAGE_FROM_ORG,
-                        $teamId,
-                        $checkpointNumber - 1,
-                        $this->year,
-                        sprintf(
-                            'Umístění stanoviště %s: %s',
-                            $checkpointNumber,
-                            $this->ciphersModel->getDeadSolution($checkpointNumber - 1)
-                        )
-                    );
-                }
-            }
-        } else {
-
-            $codeCorrect = $this->ciphersModel->checkCode($form->values['code'], $checkpointNumber);
-
-            if ($this->yearsModel->hasGameEnded()) {
-                $this->flashMessage('Bohužel jste kód nestihli zadat před koncem hry.', 'error');
-            } elseif ($codeCorrect) {
-                $now = new \Nette\Utils\DateTime('now', new DateTimeZone('Europe/Prague'));
-                $this->resultsModel->insertResultsRow($teamId, $checkpointNumber, $now, null, false);
-                $this->logModel->log(LogModel::LT_ENTER_CHECKPOINT, $teamId, $checkpointNumber, $this->year);
-
-                if ($this->yearsModel->getCheckpointCount() == $checkpointNumber) {
-                    $this->teamsModel->teamEnded($teamId);
-                    $this->flashMessage(sprintf('Gratulujeme k dokončení Palapeli! Hru jste dokončili jako %s., výsledky se započítanými totálkami budou vyhlášeny po skončení hry.', $this->resultsModel->geTeamsArrivedCount($checkpointNumber)), 'success');
-                } elseif ($this->yearsModel->getCheckpointCount() == $checkpointNumber + 1) {
-                    $this->flashMessage(sprintf('Dorazili jste do cíle jako %s.', $this->resultsModel->geTeamsArrivedCount($checkpointNumber)), 'success');
-                } elseif ($checkpointNumber == 0) {
-                    $this->flashMessage(sprintf('Vítejte na startu Palapeli. Kód startovní šifry jste zadali jako %s.', $this->resultsModel->geTeamsArrivedCount($checkpointNumber)), 'success');
-                } else {
-                    $this->flashMessage(sprintf('Dorazili jste na stanoviště %s jako %s.', $checkpointNumber, $this->resultsModel->geTeamsArrivedCount($checkpointNumber)), 'success');
-                }
-            } else {
-                $this->flashMessage('Nesprávně zadaný kód', 'error');
-            }
-        }
-
-        if ($codeCorrect) {
-            if ($this->yearsModel->getCheckpointCount() == $checkpointNumber) {
-                $this->teamsModel->teamEnded($teamId);
-                $this->flashMessage(sprintf('Gratulujeme k dokončení Palapeli! Hru jste dokončili jako %s., výsledky se započítanými totálkami budou vyhlášeny po skončení hry.', $this->resultsModel->geTeamsArrivedCount($checkpointNumber - 1)), 'success');
-            }
-        }
-
-        $this->redirect('this');
-    }
-
-
-    public function createComponentExitTimeInput($name, $time = null)
-    {
-        $form = new UI\Form;
-
-
-/*
- *         $now = new DateTime('now', new DateTimeZone('Europe/Prague'));
-        $now->format('N');
-        $input = $form->addSelect(
-            'day',
-            '',
-            [
-                6 => 'Sobota',
-                7 => 'Neděle',
-            ]
-        );
-        $input->required = true;
-
-        $day = $now->format('N');
-
-        $default =
-            !empty($this->lastCheckpointData->exit_date_fmt) ?
-                ($this->lastCheckpointData->exit_date_fmt == '6' ? 6 : 7) :
-                ($day > 5 ? $day : 6);
-
-        $input->setDefaultValue($default);*/
-        $form->addText('exitTime', '')->setType('time')->setDefaultValue((!empty($this->lastCheckpointData->exit_time_fmt) ? $this->lastCheckpointData->exit_time_fmt : \App\Presenters\BasePresenter::EMPTY_TIME_VALUE));
-        $form->addSubmit('send', '');
-        $form->onSuccess[] = [$this, 'exitTimeInputSucceeded'];
-        return $form;
-    }
-
-    public function exitTimeInputSucceeded(UI\Form $form)
-    {
-        $this->ciphersModel->setYear($this->year);
-        $this->resultsModel->setYear($this->year);
-
-        $teamId = $this->session->getSection('team')->teamId ?? NULL;
-        $checkpointNumber = $this->resultsModel->getLastCheckpointData($teamId)->checkpoint_number;
-
-        $time = new DateTime($form->values['exitTime'], new DateTimeZone('Europe/Prague'));
-
-        $this->resultsModel->insertResultsRow($teamId, $checkpointNumber, null, $time);
-        $this->flashMessage('Odchod ze stanoviště byl nastaven na ' . $form->values['exitTime'], 'success');
-
-
-        $this->redirect('this');
-    }
-
-    public function createComponentExitTimeNow($name, $time = null)
-    {
-        $form = new UI\Form;
-        $form->addSubmit('send', 'TEĎ')->setAttribute('class', 'now');
-        $form->onSuccess[] = [$this, 'exitTimeNowSucceeded'];
-        return $form;
-    }
-
-    public function exitTimeNowSucceeded(UI\Form $form)
-    {
-        $this->ciphersModel->setYear($this->year);
-        $this->resultsModel->setYear($this->year);
-
-        $now = new \Nette\Utils\DateTime('now', new DateTimeZone('Europe/Prague'));
-
-        $teamId = $this->session->getSection('team')->teamId ?? NULL;
-        $checkpointNumber = $this->resultsModel->getLastCheckpointData($teamId)->checkpoint_number;
-
-
-        $this->resultsModel->insertResultsRow($teamId, $checkpointNumber, null, $now);
-        $this->flashMessage('Odchod ze stanoviště byl nastaven na ' . $now->format('H:i'), 'success');
-
-
-        $this->redirect('this');
-    }
-
-    public function createComponentAskForDead()
-    {
-
-        $form = new UI\Form;
-        $form->addText('code');
-        $form->addSubmit('send', '');
-        $form->onSuccess[] = [$this, 'askForDeadSucceeded'];
-        return $form;
-    }
-
-    public function createComponentAskForEnd()
-    {
-
-        $form = new UI\Form;
-        $form->addText('code');
-        $form->addSubmit('send', '');
-        $form->onSuccess[] = [$this, 'askForEndSucceeded'];
-        return $form;
-    }
-
-    public function askForDeadSucceeded(UI\Form $form)
-    {
-        $this->ciphersModel->setYear($this->year);
-        $this->resultsModel->setYear($this->year);
-
-        $teamId = $this->session->getSection('team')->teamId ?? NULL;
-
-
-        $checkpointNumber = $this->resultsModel->getLastCheckpointNumber($teamId);
-
-        $codeCorrect = $this->ciphersModel->checkCode($form->values['code'], $checkpointNumber);
-
-        if ($codeCorrect) {
-            $deadSolution = $this->ciphersModel->getDeadSolution($checkpointNumber);
-            $now = new \Nette\Utils\DateTime('now', new DateTimeZone('Europe/Prague'));
-            $this->resultsModel->insertResultsRow($teamId, $checkpointNumber, null, $now, true);
-            $this->flashMessage(sprintf('Řešením šifry číslo %s je: %s', $checkpointNumber, $deadSolution), 'info');
-            $this->logModel->log(LogModel::LT_OPEN_DEAD, $teamId, $checkpointNumber, $this->year);
-            $this->redirect('this');
-        } else {
-            $this->flashMessage('Nesprávně zadaný kód', 'error');
-            $this->getPresenter()->redirect('PalaInfo:', self::  DEAD_SCREEN);
-        }
-    }
-
-    public function askForEndSucceeded(UI\Form $form)
-    {
-        $this->ciphersModel->setYear($this->year);
-        $this->resultsModel->setYear($this->year);
-        $this->yearsModel->setYear($this->year);
-        $this->teamsModel->setYear($this->year);
-
-        $teamId = $this->session->getSection('team')->teamId ?? NULL;
-
-        $codeCorrect = (mb_strtoupper($form->values['code']) === self::END_CODE);
-
-        if ($codeCorrect) {
-            $this->teamsModel->teamEnded($teamId);
-            $this->logModel->log(LogModel::LT_END_GAME, $teamId, null, $this->year);
-            $this->redirect('this');
-        } else {
-            $this->flashMessage('Nesprávně zadaný kód', 'error');
-            $this->getPresenter()->redirect('PalaInfo:', self::END_SCREEN);
-        }
-
-    }
-
+	/** Code the team has to type to confirm it wants to quit the game. */
+	public const EndCode = 'JEZIMADEMDOM';
+
+	/** Confirmation screens that can be opened right after the page loads. */
+	public const DeadScreen = 0;
+	public const EndScreen = 1;
+
+	private ?int $defaultScreen = null;
+	private ?Row $lastCheckpointData = null;
+
+
+	public function __construct(
+		private readonly ResultsModel $resultsModel,
+		private readonly YearsModel $yearsModel,
+		private readonly TeamsModel $teamsModel,
+		private readonly CiphersModel $ciphersModel,
+		private readonly LogModel $logModel,
+	) {
+	}
+
+
+	/**
+	 * Opens the given confirmation screen (self::DeadScreen or self::EndScreen) after the page loads.
+	 */
+	public function setDefaultScreen(?int $screen): void
+	{
+		$this->defaultScreen = $screen;
+	}
+
+
+	public function render(): void
+	{
+		$teamId = $this->requireTeamId();
+		$nextCheckpoint = $this->resultsModel->getFirstEmptyCheckpoint($teamId, $this->year);
+		$endgame = $this->yearsModel->getEndgameData($this->year);
+		$checkpointCount = (int) $endgame?->checkpoint_count;
+		$hasPasswordSolution = $this->isWaitingForPasswordSolution($nextCheckpoint);
+
+		$params = [
+			'checkpointCount' => $checkpointCount,
+			'nextCheckpointNumber' => $nextCheckpoint,
+			'hasPasswordSolution' => $hasPasswordSolution,
+			'hasFinishCipher' => (bool) $endgame?->has_finish_cipher,
+			'defaultScreen' => $this->defaultScreen,
+			'teamEnded' => true,
+			'deadOpened' => false,
+			'deadSolution' => null,
+			'endCode' => self::EndCode,
+			'lastCheckpointData' => null,
+		];
+
+		if ($this->teamsModel->hasTeamEnded($teamId, $this->year)) {
+			if (self::hasReachedFinish($nextCheckpoint, $checkpointCount)) {
+				$this->flashMessage('Hru jste úspěšně dokončili! Gratulujeme.', 'success');
+			} else {
+				$this->flashMessage('Již jste ukončili hru a ve hře tak nemůžete pokračovat.');
+				$this->flashMessage(sprintf('Přijďte se podívat do cíle: %s (otevřen od %s)', $endgame?->finish_location, $endgame?->finish_open_time), 'info');
+			}
+
+			$this->flashAfterparty($endgame);
+
+		} elseif ($this->yearsModel->hasGameEnded($this->year)) {
+			$this->flashMessage(sprintf('Hra již skončila, děkujeme za účast. Již nelze zadávat příchody na stanoviště, můžete pouze upravit odchody ze stanovišť na záložce KARTA. Přijďte se za námi podívat do cíle: %s', $endgame?->finish_location), 'info');
+			$this->flashAfterparty($endgame);
+
+		} else {
+			$this->lastCheckpointData = $last = $this->resultsModel->getLastCheckpointData($teamId, $this->year);
+			$params['teamEnded'] = false;
+			$params['lastCheckpointData'] = $last;
+			if ($last) {
+				$params['deadOpened'] = $this->resultsModel->hasTeamOpenedDead($teamId, $this->year, (int) $last->checkpoint_number);
+				$params['deadSolution'] = $this->ciphersModel->getDeadSolution($this->year, (int) $last->checkpoint_number);
+			}
+		}
+
+		$this->renderTemplate(__DIR__ . '/actionScreen.latte', $params);
+	}
+
+
+	protected function createComponentCodeInput(): Form
+	{
+		$form = new Form;
+		$form->addText('code');
+		$form->addSubmit('send', '');
+		$form->onSuccess[] = $this->codeInputSucceeded(...);
+		return $form;
+	}
+
+
+	/**
+	 * Handles both checkpoint codes and solutions of password-type ciphers.
+	 * @param array{code: string} $values
+	 */
+	private function codeInputSucceeded(Form $form, array $values): void
+	{
+		$teamId = $this->requireTeamId();
+		$nextCheckpoint = $this->resultsModel->getFirstEmptyCheckpoint($teamId, $this->year);
+
+		if ($this->isWaitingForPasswordSolution($nextCheckpoint)) {
+			$this->handlePasswordSolution($nextCheckpoint - 1, $values['code']);
+		} else {
+			$this->handleCheckpointCode($nextCheckpoint, $values['code']);
+		}
+
+		$this->redirect('this');
+	}
+
+
+	/**
+	 * The team solved a cipher whose solution is a password: the password counts as leaving the
+	 * checkpoint and reveals the location of the next one.
+	 */
+	private function handlePasswordSolution(int $checkpoint, string $solution): void
+	{
+		$teamId = $this->requireTeamId();
+		if (!$this->ciphersModel->checkSolution($this->year, $checkpoint, $solution)) {
+			$this->flashMessage('Řešení není správně.', 'error');
+			return;
+		}
+
+		$this->resultsModel->insertResultsRow($teamId, $this->year, $checkpoint, exitTime: new DateTime);
+		$checkpointCount = $this->yearsModel->getCheckpointCount($this->year);
+
+		if ($checkpoint + 1 === $checkpointCount) {
+			// the finish password
+			$this->teamsModel->teamEnded($teamId, $this->year);
+			$this->flashMessage(sprintf(
+				'Gratulujeme k dokončení Palapeli! Hru jste dokončili jako %s., výsledky se započítanými totálkami budou vyhlášeny po skončení hry.',
+				$this->resultsModel->getTeamsArrivedCount($this->year, $checkpoint),
+			), 'success');
+			return;
+		}
+
+		$nextLocation = $this->ciphersModel->getDeadSolution($this->year, $checkpoint);
+		$this->flashMessage(sprintf('Správně! Umístění dalšího stanoviště: %s', $nextLocation), 'success');
+		$this->logModel->log(
+			LogType::MessageFromOrg,
+			$teamId,
+			$checkpoint,
+			$this->year,
+			sprintf('Umístění stanoviště %s: %s', $checkpoint + 1, $nextLocation),
+		);
+	}
+
+
+	/**
+	 * The team arrived to a checkpoint and entered the code found there.
+	 */
+	private function handleCheckpointCode(int $checkpoint, string $code): void
+	{
+		$teamId = $this->requireTeamId();
+		if ($this->yearsModel->hasGameEnded($this->year)) {
+			$this->flashMessage('Bohužel jste kód nestihli zadat před koncem hry.', 'error');
+			return;
+		}
+
+		if (!$this->ciphersModel->checkCode($this->year, $checkpoint, $code)) {
+			$this->flashMessage('Nesprávně zadaný kód', 'error');
+			return;
+		}
+
+		$this->resultsModel->insertResultsRow($teamId, $this->year, $checkpoint, entryTime: new DateTime, usedHint: false);
+		$this->logModel->log(LogType::EnterCheckpoint, $teamId, $checkpoint, $this->year);
+
+		$checkpointCount = $this->yearsModel->getCheckpointCount($this->year);
+		$order = $this->resultsModel->getTeamsArrivedCount($this->year, $checkpoint);
+
+		if ($checkpoint === $checkpointCount) {
+			$this->teamsModel->teamEnded($teamId, $this->year);
+			$this->flashMessage(sprintf('Gratulujeme k dokončení Palapeli! Hru jste dokončili jako %s., výsledky se započítanými totálkami budou vyhlášeny po skončení hry.', $order), 'success');
+		} elseif ($checkpoint === $checkpointCount - 1) {
+			$this->flashMessage(sprintf('Dorazili jste do cíle jako %s.', $order), 'success');
+		} elseif ($checkpoint === 0) {
+			$this->flashMessage(sprintf('Vítejte na startu Palapeli. Kód startovní šifry jste zadali jako %s.', $order), 'success');
+		} else {
+			$this->flashMessage(sprintf('Dorazili jste na stanoviště %s jako %s.', $checkpoint, $order), 'success');
+		}
+	}
+
+
+	protected function createComponentExitTimeInput(): Form
+	{
+		$form = new Form;
+		$form->addText('exitTime', '')
+			->setHtmlType('time')
+			->setDefaultValue($this->lastCheckpointData?->exit_time_fmt ?: AppConstants::EmptyTimeValue);
+		$form->addSubmit('send', '');
+		$form->onSuccess[] = $this->exitTimeInputSucceeded(...);
+		return $form;
+	}
+
+
+	/**
+	 * @param array{exitTime: string} $values
+	 */
+	private function exitTimeInputSucceeded(Form $form, array $values): void
+	{
+		$teamId = $this->requireTeamId();
+		$checkpoint = $this->resultsModel->getLastCheckpointNumber($teamId, $this->year);
+
+		try {
+			// an empty value means "now", the same as the "TEĎ" button
+			$time = new DateTime($values['exitTime'] ?: 'now');
+		} catch (\Exception) {
+			$this->flashMessage('Nesprávně zadaný čas odchodu.', 'error');
+			$this->redirect('this');
+		}
+
+		if ($checkpoint !== null) {
+			$this->resultsModel->insertResultsRow($teamId, $this->year, $checkpoint, exitTime: $time);
+			$this->flashMessage('Odchod ze stanoviště byl nastaven na ' . $time->format('H:i'), 'success');
+		}
+
+		$this->redirect('this');
+	}
+
+
+	protected function createComponentExitTimeNow(): Form
+	{
+		$form = new Form;
+		$form->addSubmit('send', 'TEĎ')->setHtmlAttribute('class', 'now');
+		$form->onSuccess[] = $this->exitTimeNowSucceeded(...);
+		return $form;
+	}
+
+
+	private function exitTimeNowSucceeded(): void
+	{
+		$teamId = $this->requireTeamId();
+		$checkpoint = $this->resultsModel->getLastCheckpointNumber($teamId, $this->year);
+		$now = new DateTime;
+
+		if ($checkpoint !== null) {
+			$this->resultsModel->insertResultsRow($teamId, $this->year, $checkpoint, exitTime: $now);
+			$this->flashMessage('Odchod ze stanoviště byl nastaven na ' . $now->format('H:i'), 'success');
+		}
+
+		$this->redirect('this');
+	}
+
+
+	protected function createComponentAskForDead(): Form
+	{
+		$form = new Form;
+		$form->addText('code');
+		$form->addSubmit('send', '');
+		$form->onSuccess[] = $this->askForDeadSucceeded(...);
+		return $form;
+	}
+
+
+	/**
+	 * The team asks for the total hint; it has to confirm it by typing the code of the current checkpoint again.
+	 * @param array{code: string} $values
+	 */
+	private function askForDeadSucceeded(Form $form, array $values): void
+	{
+		$teamId = $this->requireTeamId();
+		$checkpoint = $this->resultsModel->getLastCheckpointNumber($teamId, $this->year);
+
+		if ($checkpoint === null || !$this->ciphersModel->checkCode($this->year, $checkpoint, $values['code'])) {
+			$this->flashMessage('Nesprávně zadaný kód', 'error');
+			$this->getPresenter()->redirect('PalaInfo:', self::DeadScreen);
+		}
+
+		$deadSolution = $this->ciphersModel->getDeadSolution($this->year, $checkpoint);
+		$this->resultsModel->insertResultsRow($teamId, $this->year, $checkpoint, exitTime: new DateTime, usedHint: true);
+		$this->flashMessage(sprintf('Řešením šifry číslo %s je: %s', $checkpoint, $deadSolution), 'info');
+		$this->logModel->log(LogType::OpenDead, $teamId, $checkpoint, $this->year);
+		$this->redirect('this');
+	}
+
+
+	protected function createComponentAskForEnd(): Form
+	{
+		$form = new Form;
+		$form->addText('code');
+		$form->addSubmit('send', '');
+		$form->onSuccess[] = $this->askForEndSucceeded(...);
+		return $form;
+	}
+
+
+	/**
+	 * @param array{code: string} $values
+	 */
+	private function askForEndSucceeded(Form $form, array $values): void
+	{
+		$teamId = $this->requireTeamId();
+		if (mb_strtoupper($values['code']) !== self::EndCode) {
+			$this->flashMessage('Nesprávně zadaný kód', 'error');
+			$this->getPresenter()->redirect('PalaInfo:', self::EndScreen);
+		}
+
+		$this->teamsModel->teamEnded($teamId, $this->year);
+		$this->logModel->log(LogType::EndGame, $teamId, null, $this->year);
+		$this->redirect('this');
+	}
+
+
+	/**
+	 * Whether the team stands on a checkpoint whose cipher is solved by entering a password
+	 * and has not entered it yet.
+	 */
+	private function isWaitingForPasswordSolution(int $nextCheckpoint): bool
+	{
+		$teamId = $this->requireTeamId();
+		return $nextCheckpoint !== 0
+			&& $this->ciphersModel->hasCheckpointPasswordSolution($this->year, $nextCheckpoint - 1)
+			&& !$this->resultsModel->hasTeamLeft($teamId, $this->year, $nextCheckpoint - 1);
+	}
+
+
+	/**
+	 * Whether the team got past the last checkpoint (the finish), i.e. it completed the game
+	 * instead of quitting it.
+	 */
+	public static function hasReachedFinish(int $nextCheckpoint, int $checkpointCount): bool
+	{
+		return $checkpointCount > 0 && $nextCheckpoint >= $checkpointCount;
+	}
+
+
+	private function flashAfterparty(?Row $endgame): void
+	{
+		if ($endgame?->afterparty_location) {
+			$this->flashMessage(sprintf('Rádi vás uvidíme i na afterparty: %s (od %s)', $endgame->afterparty_location, $endgame->afterparty_time), 'info');
+		}
+	}
 }

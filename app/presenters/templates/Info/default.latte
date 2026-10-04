@@ -10,7 +10,7 @@
 			<div class="updatesContent">
 				<div class="updatesPostHeader">
 					<span class="updatesPostDate">
-						{date('j.&\nb\sp;n.&\nb\sp;Y', strtotime($post->date))|noescape}
+						{$post->date|date:'j. n. Y'|replace:' ', "\u{a0}"}
 					</span>
 				</div>
 				<div class="updatesPostContent">

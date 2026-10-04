@@ -15,7 +15,7 @@
 
 	<link rel="shortcut icon" href="{$basePath}/favicon.ico" type="image/x-icon">
 
-	{var $version = '1.10'}
+	{var $version = '1.11'}
 	<link href="{$basePath}/css/styles.css?v={$version}" rel="stylesheet" type="text/css" />
 	<link href="{$basePath}/css/homepage.css?v={$version}" rel="stylesheet" type="text/css" />
 	<link href="{$basePath}/css/responsive.css?v={$version}" rel="stylesheet" type="text/css" />
@@ -125,20 +125,20 @@
 
 <div class="wrapper" id="wrapper">
 	<div class="menu-container" id="palainfo-menu">
-		<a href="{plink PalaInfo:}" class="item{ifCurrent PalaInfo:} selected{/ifCurrent}" id="item1">
+		<a href="{plink PalaInfo:}" class="item{if $presenter->isLinkCurrent('PalaInfo:')} selected{/if}" id="item1">
 			{*include ../../../components/SVG/webinfoIcons/actions.svg*}
 			<div class="text">AKCE</div>
 		</a><!--
-		--><a href="{plink PalaInfo:card}"class="item{ifCurrent PalaInfo:card} selected{/ifCurrent}" id="item2">
+		--><a href="{plink PalaInfo:card}" class="item{if $presenter->isLinkCurrent('PalaInfo:card')} selected{/if}" id="item2">
 			{*include ../../../components/SVG/webinfoIcons/team.svg*}
 			<div class="text">KARTA</div>
 		</a><!--
 
-		--><a href="{plink PalaInfo:checkpoint}" class="item{ifCurrent PalaInfo:checkpoint} selected{/ifCurrent}" id="item3">
+		--><a href="{plink PalaInfo:checkpoint}" class="item{if $presenter->isLinkCurrent('PalaInfo:checkpoint')} selected{/if}" id="item3">
 			{*include ../../../components/SVG/webinfoIcons/list.svg*}
 			<div class="text">PŘÍCHODY</div>
 		</a><!--
-		--><a href="{plink PalaInfo:info}" class="item{ifCurrent PalaInfo:info} selected{/ifCurrent}" id="item4">
+		--><a href="{plink PalaInfo:info}" class="item{if $presenter->isLinkCurrent('PalaInfo:info')} selected{/if}" id="item4">
 			{*include ../../../components/SVG/webinfoIcons/info.svg*}
 			<div class="text">INFO</div>
 		</a>

@@ -1,24 +1,25 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App;
 
 use Nette;
 use Nette\Application\Routers\RouteList;
-use Nette\Application\Routers\Route;
 
 
-class RouterFactory
+/**
+ * Application routes. The class name is kept for compatibility with existing
+ * config.neon files that reference App\RouterFactory::createRouter.
+ */
+final class RouterFactory
 {
 	use Nette\StaticClass;
 
-	/**
-	 * @return Nette\Application\IRouter
-	 */
-	public static function createRouter()
+	public static function createRouter(): RouteList
 	{
 		$router = new RouteList;
-		$router[] = new Route('<presenter>/<action>[/<id>]', 'Homepage:default');
+		$router->addRoute('<presenter>/<action>[/<id>]', 'Homepage:default');
 		return $router;
 	}
-
 }

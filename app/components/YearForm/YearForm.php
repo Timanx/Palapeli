@@ -1,134 +1,123 @@
 <?php
-use App\Models\UpdatesModel;
+
+declare(strict_types=1);
+
+namespace App\Components\YearForm;
+
+use App\Components\BaseControl;
 use App\Models\YearsModel;
-use Nette\Application\UI;
+use Nette\Application\UI\Form;
 
-class YearForm extends BaseControl
+
+/**
+ * Administration: editing the selected game edition or creating a new one.
+ */
+final class YearForm extends BaseControl
 {
-    /** @var YearsModel */
-    private $yearsModel;
+	private const DateTimeFormat = 'Y-m-d H:i:s';
+	private const TimeFormat = 'H:i';
 
-    private $createNew = false;
+	private bool $createNew = false;
 
-    public function __construct(YearsModel $yearsModel)
-    {
-        parent::__construct();
-        $this->yearsModel = $yearsModel;
-    }
 
-    public function render()
-    {
-        $this->template->setFile(__DIR__ . '/year.latte');
-        $this->template->selectedYear = $this->year;
-        $this->template->createNew = $this->createNew;
-        $this->template->render();
-    }
+	public function __construct(
+		private readonly YearsModel $yearsModel,
+	) {
+	}
 
-    public function createComponentYearForm()
-    {
-        $form = new UI\Form;
 
-        $form->addHidden('is_new', $this->createNew);
+	/**
+	 * Switches the form to creating a new edition (otherwise the selected one is edited).
+	 */
+	public function setCreateNew(bool $createNew = true): static
+	{
+		$this->createNew = $createNew;
+		return $this;
+	}
 
-        $form->addText('year', 'Ročník:')
-            ->setType('number')
-            ->addRule(UI\Form::MIN, 'Hodnota ročníku musí být alespoň 1.', 1)
-            ->setRequired();
-        $form->addText('game_start', 'Čas začátku:')
-            ->setType('datetime-local');
 
-        $form->addText('game_end', 'Čas konce:')
-            ->setType('datetime-local');
+	public function render(): void
+	{
+		$this->renderTemplate(__DIR__ . '/year.latte', [
+			'selectedYear' => $this->year,
+			'createNew' => $this->createNew,
+		]);
+	}
 
-        $form->addText('word_numbering', 'Ročník slovně (např. „první“):');
 
-        $form->addText('registration_start', 'Začátek registrace:')
-            ->setType('datetime-local');
+	protected function createComponentYearForm(): Form
+	{
+		$form = new Form;
+		$form->addHidden('is_new', $this->createNew ? '1' : '');
 
-        $form->addText('registration_end', 'Konec registrace:')
-            ->setType('datetime-local');
+		$form->addInteger('year', 'Ročník:')
+			->addRule($form::Min, 'Hodnota ročníku musí být alespoň 1.', 1)
+			->setRequired();
+		$form->addDateTime('game_start', 'Čas začátku:')->setFormat(self::DateTimeFormat);
+		$form->addDateTime('game_end', 'Čas konce:')->setFormat(self::DateTimeFormat);
+		$form->addText('word_numbering', 'Ročník slovně (např. „první“):');
+		$form->addDateTime('registration_start', 'Začátek registrace:')->setFormat(self::DateTimeFormat);
+		$form->addDateTime('registration_end', 'Konec registrace:')->setFormat(self::DateTimeFormat);
+		$form->addInteger('checkpoint_count', 'Počet stanovišť:')
+			->setRequired()
+			->addRule($form::Min, 'Počet stanovišť musí být alespoň 0.', 0);
+		$form->addInteger('entry_fee', 'Startovné (v Kč):');
+		$form->addText('entry_fee_account', 'Účet pro platbu startovného:');
+		$form->addDateTime('entry_fee_deadline', 'Deadline zaplacení startovného:')->setFormat(self::DateTimeFormat);
+		$form->addDateTime('entry_fee_return_deadline', 'Vrácení startovného při zrušení účasti do:')->setFormat(self::DateTimeFormat);
+		$form->addDateTime('last_info_time', 'Čas rozeslání posledních informací:')->setFormat(self::DateTimeFormat);
+		$form->addInteger('team_limit', 'Limit počtu týmů:');
 
-        $form->addText('checkpoint_count', 'Počet stanovišť:')
-            ->setType('number')
-            ->setRequired(true)
-            ->addRule(UI\Form::MIN, 'Počet stanovišť musí být alespoň 0.', 0);
+		$form->addCheckbox('results_public', 'Výsledky publikované:');
+		$form->addCheckbox('show_tester_notification', 'Zobrazit notifikaci o hledání testerů:');
+		$form->addCheckbox('is_current', 'Je aktuální:');
+		$form->addCheckbox('has_finish_cipher', 'Má cílovou šifru:');
+		$form->addCheckbox('hint_for_start_exists', 'Má nápovědu na startovní šifru:');
 
-        $form->addText('entry_fee', 'Startovné (v Kč):')
-            ->setType('number');
+		$form->addText('afterparty_location', 'Místo konání afterparty:');
+		$form->addTime('afterparty_time', 'Začátek afterparty:')->setFormat(self::TimeFormat);
+		$form->addText('finish_location', 'Místo cíle:');
+		$form->addTime('finish_open_time', 'Otevření cíle:')->setFormat(self::TimeFormat);
 
-        $form->addText('entry_fee_account', 'Účet pro platbu startovného:');
+		$form->addSubmit('send', 'ULOŽIT ROČNÍK');
 
-        $form->addText('entry_fee_deadline', 'Deadline zaplacení startovného:')
-            ->setType('datetime-local');
+		if (!$this->createNew && ($yearData = $this->yearsModel->getYearData($this->year))) {
+			$defaults = [];
+			foreach ($yearData as $column => $value) {
+				// TIME columns are returned as DateInterval
+				$defaults[$column] = $value instanceof \DateInterval ? $value->format('%H:%I') : $value;
+			}
 
-        $form->addText('entry_fee_return_deadline', 'Vrácení startovného při zrušení účasti do:')
-            ->setType('datetime-local');
+			$form->setDefaults($defaults);
+		}
 
-        $form->addText('last_info_time', 'Čas rozeslání posledních informací:')
-            ->setType('datetime-local');
+		$form->onSuccess[] = $this->saveYear(...);
+		return $form;
+	}
 
-        $form->addText('team_limit', 'Limit počtu týmů:')
-            ->setType('number');
 
-        $form->addCheckbox('results_public', 'Výsledky publikované:');
-        $form->addCheckbox('show_tester_notification', 'Zobrazit notifikaci o hledání testerů:');
-        $form->addCheckbox('is_current', 'Je aktuální:');
-        $form->addCheckbox('has_finish_cipher', 'Má cílovou šifru:');
-        $form->addCheckbox('hint_for_start_exists', 'Má nápovědu na startovní šifru:');
+	/**
+	 * @param array<string, mixed> $values
+	 */
+	private function saveYear(Form $form, array $values): void
+	{
+		$isNew = (bool) $values['is_new'];
+		$gameStart = $values['game_start'];
 
-        $form->addText('afterparty_location', 'Místo konání afterparty:');
-        $form->addText('afterparty_time', 'Začátek afterparty:')->setType('time');
+		$values['calendar_year'] = $gameStart === null ? null : (int) substr($gameStart, 0, 4);
+		$values['date'] = $gameStart === null ? null : substr($gameStart, 0, 10);
+		foreach (['entry_fee_account', 'afterparty_location', 'finish_location'] as $column) {
+			$values[$column] = $values[$column] === '' ? null : $values[$column];
+		}
 
-        $form->addText('finish_location', 'Místo cíle:');
-        $form->addText('finish_open_time', 'Otevření cíle:')->setType('time');
+		if ($isNew) {
+			$this->yearsModel->addYear($values);
+			$this->flashMessage('Ročník byl úspěšně vložen.', 'success');
+		} else {
+			$this->yearsModel->editYear($values);
+			$this->flashMessage('Ročník byl úspěšně upraven.', 'success');
+		}
 
-        $form->addSubmit('send', 'ULOŽIT ROČNÍK');
-
-        if (!$this->createNew) {
-            $this->yearsModel->setYear($this->year);
-            $yearData = $this->yearsModel->getYearData();
-
-            if ($yearData) {
-                $defaultValues = [];
-
-                foreach ($yearData as $key => $value) {
-                    if ($value instanceof \Nette\Utils\DateTime) {
-                        $defaultValues[$key] = $value->format('Y-m-d\TH:i');
-                    } elseif ($value instanceof DateInterval) {
-                        $defaultValues[$key] = $value->format('%H:%I');
-                    } else {
-                        $defaultValues[$key] = $value;
-                    }
-                }
-
-                $form->setDefaults($defaultValues);
-            }
-        }
-
-        $form->onSuccess[] = [$this, 'saveYear'];
-        return $form;
-    }
-
-    public function saveYear(UI\Form $form, array $values)
-    {
-        $isNew = $values['is_new'];
-
-        $values['calendar_year'] = substr($values['game_start'],0, 4);
-        $values['date'] = substr($values['game_start'],0, 10);
-
-            if ($isNew) {
-                $this->yearsModel->addYear($values);
-                $this->flashMessage('Ročník byl úspěšně vložen.', 'success');
-            } else {
-                $this->yearsModel->editYear($values);
-                $this->flashMessage('Ročník byl úspěšně upraven.', 'success');
-            }
-
-        $this->presenter->redirect('this');
-    }
-
-    public function createNew(): void
-    {
-        $this->createNew = true;
-    }
+		$this->getPresenter()->redirect('this');
+	}
 }

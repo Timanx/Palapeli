@@ -861,7 +861,7 @@ img.cipherImage, img.solutionImage {
 
 .svgChart {
     width: calc(100% - 4px);
-    height:380px;
+    height: 260px;
 }
 
 .svgChart .solved {
@@ -887,9 +887,39 @@ img.cipherImage, img.solutionImage {
     stroke-width:4;
 }
 
-.svgChart .legend {
-    width: 20px;
+.chartLegend {
+    display: table;
+    margin: 10px auto 0;
+    padding: 0;
+    list-style: none;
+}
+
+.chartLegend li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 10px 0;
+}
+
+.chartLegend .swatch {
+    flex: 0 0 20px;
     height: 20px;
+}
+
+.chartLegend .solved {
+    background: #69B300;
+}
+
+.chartLegend .hint {
+    background: #FFCA05;
+}
+
+.chartLegend .dead {
+    background: #FF0000;
+}
+
+.chartLegend .no-data {
+    background: #005BD0;
 }
 
 .svgChart .secondaryLine {
