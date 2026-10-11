@@ -39,7 +39,7 @@ Rows are returned as `Nette\Database\Row` (`$row->column` or `$row['column']`); 
 
 - Standings and scorecard: `getTeamStandings`, `getCompleteResults`, `getResultsPublic`,
   `publishResults`, `removeTrailingHints` (special handling of the 10th edition – relative times).
-- Statistics: `getStatsData`, `getFastestSolution`, `getTeamsFilledIds`, `getTeamsArrivedCount`,
+- Statistics: `getStatsData`, `getFastestSolution`, `getFastestPassage`, `getTeamsFilledIds`, `getTeamsArrivedCount`,
   `getTeamsContinuedIds`, `getUsedHintsCount`, `getTeamsWithFilledStatus`.
 - Palainfo: `getFirstEmptyCheckpoint`, `getLastCheckpointNumber`, `getLastCheckpointData`,
   `hasTeamLeft`, `hasTeamOpenedDead`, `getTeamResults`, `getCheckpointEntryTimes`.

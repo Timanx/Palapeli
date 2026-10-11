@@ -207,6 +207,33 @@ final class ResultsModel extends BaseModel
 
 
 	/**
+	 * Fastest passage through a cipher without the total hint: from the arrival to the checkpoint
+	 * to the arrival to the next one, i.e. solving the cipher including the walk to the next checkpoint.
+	 * @return ?Row  row with time (minutes) and name (comma separated team names)
+	 */
+	public function getFastestPassage(int $year, int $checkpoint): ?Row
+	{
+		return $this->database->query("
+			SELECT
+				TIMESTAMPDIFF(SECOND, results.entry_datetime, next.entry_datetime) / 60 AS time,
+				GROUP_CONCAT(teams.name ORDER BY teams.name SEPARATOR ', ') AS name
+			FROM results
+			JOIN results AS next
+				ON next.team_id = results.team_id AND next.year = results.year AND next.checkpoint_number = results.checkpoint_number + 1
+			JOIN teams ON teams.id = results.team_id
+			WHERE
+				results.year = ?
+				AND results.checkpoint_number = ?
+				AND NOT results.used_hint
+				AND next.entry_datetime > results.entry_datetime
+			GROUP BY time
+			ORDER BY time
+			LIMIT 1
+		", $year, $checkpoint)->fetch();
+	}
+
+
+	/**
 	 * IDs of teams that filled in their passage through the checkpoint.
 	 * @return int[]
 	 */

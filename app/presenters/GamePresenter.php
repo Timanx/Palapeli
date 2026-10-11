@@ -84,6 +84,10 @@ final class GamePresenter extends BasePresenter
 		$template->checkpoint = $checkpoint;
 		$template->cipherData = $this->ciphersModel->getCipher($year, $checkpoint);
 		$template->fastestSolution = $this->resultsModel->getFastestSolution($year, $checkpoint);
+		// the next "checkpoint" of the finish cipher is solving the finish password, not a walk
+		$template->fastestPassage = $checkpoint < $this->yearsModel->getCheckpointCount($year) - 1
+			? $this->resultsModel->getFastestPassage($year, $checkpoint)
+			: null;
 		$template->teamsTotal = $teamsCount;
 		$template->teamsFilled = count($teamsFilled);
 		$template->teamsArrived = $teamsArrived;

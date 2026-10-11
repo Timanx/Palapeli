@@ -105,6 +105,7 @@
 							<span class="statName">Skončilo týmů:</span>&nbsp;<span class="statData">{$teamsEnded} z&nbsp;{$teamsArrived} ({$teamsEndedPercentage|number:0}&thinsp;%)</span><br>
 							<span class="statName">Použito totálek:</span>&nbsp;<span class="statData">{$usedHints} z&nbsp;{$teamsFilledContinued} ({$usedHintsPercentage|number:0}&thinsp;%)</span><br>
 							<span class="statName" n:if="$fastestSolution">Nejrychlejší vyluštění:</span>&nbsp;<span class="statData" n:if="$fastestSolution">{$fastestSolution->name}&nbsp;({ceil($fastestSolution->time)}&nbsp;minut)</span><br n:if="$fastestSolution">
+							<span class="statName" n:if="$fastestPassage" title="Od příchodu na stanoviště po příchod na další stanoviště, bez totálky">Nejrychlejší vyluštění včetně přesunu:</span>&nbsp;<span class="statData" n:if="$fastestPassage">{$fastestPassage->name}&nbsp;({ceil($fastestPassage->time)}&nbsp;minut)</span><br n:if="$fastestPassage">
 							{if $missingData > 0}<p class="statsExplanation">Data nejsou úplná, chybí údaje od {$missingData} tým{if $missingData == 1}u{else}ů{/if}.</p>{/if}
 
 						</div>

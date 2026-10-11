@@ -87,7 +87,9 @@ they were published (organizers see the scorecard earlier).
 ## Statistics
 
 - **Cipher page** (Hra → Šifry): number of teams that arrived, ended there, used the hint, and
-  the fastest solution (shortest time between arrival and departure without a hint).
+  the fastest solution (shortest time between arrival and departure without a hint) and the fastest
+  solution including the walk (shortest time between the arrival and the arrival to the next
+  checkpoint without a hint; not shown for the finish).
 - **Stats page**: for each checkpoint how many teams solved the cipher, took the hint, ended
   there, or have no data. A team that reached a later checkpoint is counted as "no data" on
   earlier checkpoints where it has no record.
