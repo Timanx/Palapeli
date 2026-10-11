@@ -108,13 +108,17 @@ final class TeamPresenter extends BasePresenter
 		$template->paid = $this->teamsModel->getTeamPaymentStatus($this->teamId, $year);
 		$template->variableSymbol = $variableSymbol = $this->selectedCalendarYear . $this->teamId;
 
-		if ($yearData?->entry_fee_account) {
-			$template->QRCode = $this->qrCodeGenerator->createDataUri($this->qrCodeGenerator->createPaymentString(
+		$paymentString = $yearData?->entry_fee_account
+			? $this->qrCodeGenerator->createPaymentString(
 				account: $yearData->entry_fee_account,
 				amount: (int) $yearData->entry_fee,
 				variableSymbol: $variableSymbol,
 				message: 'Palapeli ' . $this->selectedCalendarYear . ' ' . $this->teamsModel->getTeamName($this->teamId),
-			));
+			)
+			: null;
+
+		if ($paymentString !== null) {
+			$template->QRCode = $this->qrCodeGenerator->createDataUri($paymentString);
 		}
 	}
 

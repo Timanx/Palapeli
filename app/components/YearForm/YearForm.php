@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Components\YearForm;
 
 use App\Components\BaseControl;
+use App\Models\PaymentQrCodeGenerator;
 use App\Models\YearsModel;
 use Nette\Application\UI\Form;
 
@@ -70,7 +71,9 @@ final class YearForm extends BaseControl
 		$form->addInteger('entry_fee', 'Startovné (v Kč):')
 			->setOption('description', 'Částka na stránce platby a v QR kódu.');
 		$form->addText('entry_fee_account', 'Účet pro platbu startovného:')
-			->setOption('description', 'Ve tvaru číslo/kód banky, např. 123456789/0100 (použije se i pro QR platbu).');
+			->setRequired(false)
+			->addRule($form::Pattern, 'Účet zadejte ve tvaru [předčíslí-]číslo/kód banky, např. 123456789/0100.', PaymentQrCodeGenerator::AccountPattern)
+			->setOption('description', 'Ve tvaru [předčíslí-]číslo/kód banky, např. 123456789/0100 nebo 19-2000145399/0800 (použije se i pro QR platbu).');
 		$form->addDateTime('entry_fee_deadline', 'Deadline zaplacení startovného:')->setFormat(self::DateTimeFormat)
 			->setOption('description', 'Zobrazí se na stránce platby a v pravidlech.');
 		$form->addDateTime('entry_fee_return_deadline', 'Vrácení startovného při zrušení účasti do:')->setFormat(self::DateTimeFormat)
