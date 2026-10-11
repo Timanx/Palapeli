@@ -187,35 +187,28 @@ final class ResultsModel extends BaseModel
 
 
 	/**
-	 * Fastest solution of a cipher without the total hint.
+	 * Fastest solution of a cipher without the total hint: from the arrival to the departure.
+	 * (Date-times must not be subtracted with "-" in MySQL: that subtracts them as numbers like
+	 * 20260124190217, so a solution across a full hour looked slower than it was.)
 	 * @return ?Row  row with time (minutes) and name (comma separated team names)
 	 */
 	public function getFastestSolution(int $year, int $checkpoint): ?Row
 	{
 		return $this->database->query("
 			SELECT
-				TIME_TO_SEC(TIMEDIFF(results.exit_datetime, results.entry_datetime)) / 60 AS time,
-				GROUP_CONCAT(teams.name SEPARATOR ', ') AS name
+				TIMESTAMPDIFF(SECOND, results.entry_datetime, results.exit_datetime) / 60 AS time,
+				GROUP_CONCAT(teams.name ORDER BY teams.name SEPARATOR ', ') AS name
 			FROM results
-			LEFT JOIN teams ON results.team_id = teams.id
+			JOIN teams ON teams.id = results.team_id
 			WHERE
-				results.entry_datetime < results.exit_datetime
-				AND checkpoint_number = ?
-				AND year = ?
-				AND results.exit_datetime IS NOT NULL
+				results.year = ?
+				AND results.checkpoint_number = ?
 				AND NOT results.used_hint
-				AND results.entry_datetime IS NOT NULL
-				AND (results.exit_datetime - results.entry_datetime) = (
-					SELECT MIN(exit_datetime - entry_datetime)
-					FROM results
-					WHERE
-						results.entry_datetime < results.exit_datetime
-						AND checkpoint_number = ?
-						AND year = ?
-						AND NOT used_hint
-				)
+				AND results.exit_datetime > results.entry_datetime
 			GROUP BY time
-		", $checkpoint, $year, $checkpoint, $year)->fetch();
+			ORDER BY time
+			LIMIT 1
+		", $year, $checkpoint)->fetch();
 	}
 
 
