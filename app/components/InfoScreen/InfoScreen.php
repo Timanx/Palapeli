@@ -9,7 +9,6 @@ use App\Models\CiphersModel;
 use App\Models\LogModel;
 use App\Models\LogType;
 use App\Models\YearsModel;
-use App\Utils\AppConstants;
 use Nette\Database\Row;
 
 
@@ -52,8 +51,8 @@ final class InfoScreen extends BaseControl
 			$text = match (LogType::tryFrom((int) $row->type_id)) {
 				LogType::EndGame => 'Ukončili jste hru.',
 				LogType::OpenDead => sprintf(
-					'Otevřeli jste totálku na stanovišti&nbsp;%s. Znění: %s',
-					$checkpoint,
+					'Otevřeli jste totálku %s. Znění: %s',
+					$checkpoint === 0 ? 'na startovní šifru' : 'na stanovišti&nbsp;' . $checkpoint,
 					$checkpoint === null ? '' : $this->ciphersModel->getDeadSolution($this->year, $checkpoint),
 				),
 				LogType::EnterCheckpoint => $this->describeArrival($checkpoint),
@@ -77,18 +76,13 @@ final class InfoScreen extends BaseControl
 	{
 		$checkpointCount = $this->yearsModel->getCheckpointCount($this->year);
 
-		if ($checkpoint === 0) {
-			$text = 'Zadali jste kód startovní šifry.';
-			if ($this->year === AppConstants::IndividualStartYear) {
-				$text .= 'První šifra se nachází v Lelekovicích u pumptracku, v dutině křoví asi 10 metrů jižně od dřevěné sochy. Upřesnítka k dalším šifrám naleznete v záložce Karta.';
-			}
-
-			return $text;
-		}
-
+		// text revealed with the code (ciphers.entry_message) is logged as a separate message
 		return match ($checkpoint) {
-			$checkpointCount - 1 => 'Přišli jste do cíle.',
-			$checkpointCount => 'Dokončili jste hru! Gratulujeme!',
+			0 => 'Zadali jste kód startovní šifry.',
+			$checkpointCount - 1 => $this->yearsModel->hasFinishCipher($this->year)
+				? 'Přišli jste do cíle.'
+				: 'Přišli jste do cíle a dokončili hru! Gratulujeme!',
+			$checkpointCount => 'Vyřešili jste cílové heslo a dokončili hru! Gratulujeme!',
 			default => sprintf('Přišli jste na stanoviště číslo&nbsp;%s.', $checkpoint),
 		};
 	}

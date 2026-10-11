@@ -268,18 +268,32 @@ final class AdministrationPresenter extends BasePresenter
 		$data = $this->ciphersModel->getCipher($this->selectedYear, $checkpoint);
 
 		$form = new Form;
-		$form->addText('name', 'Název šifry', null, 255);
-		$form->addTextArea('cipher_description', 'Popis zadání');
-		$form->addTextArea('solution_description', 'Popis řešení');
-		$form->addText('solution', 'Řešení', null, 1023);
-		$form->addText('dead_solution', 'Řešení v totálce (hlavně pro šifry, jejichž řešením je heslo - toto se zobrazí po zadání správného hesla)', null, 1023);
-		$form->addText('code', 'Kód do Palainfa', null, 255);
-		$form->addText('specification', 'Upřesnítko', null, 255);
-		$form->addTime('checkpoint_close_time', 'Zavření stanoviště')->setFormat('H:i');
-		$form->addCheckbox('has_password_solution', 'Řešením je heslo');
-		$form->addUpload('cipher_image', 'Obrázek šifry');
-		$form->addUpload('solution_image', 'Obrázek řešení');
-		$form->addUpload('pdf_file', 'PDF soubor se šifrou');
+		$form->addText('name', 'Název šifry', null, 255)
+			->setOption('description', 'Zobrazí se v archivu šifer (u startu a cíle se název nezobrazuje).');
+		$form->addTextArea('cipher_description', 'Popis zadání')
+			->setOption('description', 'Text zadání v archivu šifer, lze použít HTML.');
+		$form->addTextArea('solution_description', 'Popis řešení')
+			->setOption('description', 'Postup řešení v archivu šifer, lze použít HTML. (Archiv aktuálního ročníku se veřejně zobrazí až po konci hry.)');
+		$form->addText('solution', 'Řešení', null, 1023)
+			->setOption('description', 'Zobrazí se v archivu šifer. U šifry „Řešením je heslo“ a u cíle ročníku s cílovou šifrou je to zároveň heslo, které týmy zadávají do Palainfa – velikost písmen, diakritika, mezery a interpunkce se nerozlišují, takže lze psát čitelně („Tajné heslo“).');
+		$form->addText('dead_solution', 'Řešení v totálce', null, 1023)
+			->setOption('description', 'Zobrazí se týmu, který si v Palainfu vezme totálku – obvykle poloha dalšího stanoviště. U šifry s heslem se zobrazí i po zadání správného hesla, proto je povinné. Prázdné = zobrazí se „Řešení“.');
+		$form->addText('entry_message', 'Zpráva po zadání kódu', null, 1023)
+			->setOption('description', 'Zobrazí se týmu hned po zadání kódu tohoto stanoviště a zůstane v záložce INFO – např. kde přesně šifru najde, nebo u cíle, že má zadat heslo z poslední šifry.');
+		$form->addText('code', 'Kód do Palainfa', null, 255)
+			->setOption('description', 'Kód umístěný na stanovišti; jeho zadáním tým v Palainfu zapíše příchod. Velikost písmen se nerozlišuje. Bez kódu na stanoviště nelze v Palainfu dojít.');
+		$form->addText('specification', 'Upřesnítko', null, 255)
+			->setOption('description', 'Zobrazí se týmům v Palainfu v záložce KARTA u tohoto stanoviště.');
+		$form->addTime('checkpoint_close_time', 'Zavření stanoviště')->setFormat('H:i')
+			->setOption('description', 'Zobrazí se v záložce KARTA („Zavírá v …“). Jen informativní – Palainfo kód přijme i po zavření. Prázdné = otevřeno do konce hry.');
+		$form->addCheckbox('has_password_solution', 'Řešením je heslo')
+			->setOption('description', 'Po příchodu tým zadá do Palainfa heslo („Řešení“); správné heslo zapíše odchod a zobrazí „Řešení v totálce“ (polohu dalšího stanoviště). Nezaškrtnuto: tým jen dojde na další stanoviště a zadá jeho kód. U cíle ročníku s cílovou šifrou se heslo vyžaduje vždy, i bez zaškrtnutí.');
+		$form->addUpload('cipher_image', 'Obrázek šifry')
+			->setOption('description', 'Obrázek zadání v archivu; nový soubor nahradí předchozí.');
+		$form->addUpload('solution_image', 'Obrázek řešení')
+			->setOption('description', 'Obrázek v řešení v archivu; nový soubor nahradí předchozí.');
+		$form->addUpload('pdf_file', 'PDF soubor se šifrou')
+			->setOption('description', 'Ke stažení v archivu; nový soubor nahradí předchozí.');
 		$form->addSubmit('send', 'VLOŽIT ŠIFRU');
 
 		if ($data) {
@@ -289,6 +303,7 @@ final class AdministrationPresenter extends BasePresenter
 				'solution_description' => $data->solution_description,
 				'solution' => $data->solution,
 				'dead_solution' => $data->dead_solution,
+				'entry_message' => $data->entry_message,
 				'code' => $data->code,
 				'specification' => $data->specification,
 				'checkpoint_close_time' => $data->checkpoint_close_time?->format('%H:%I'),
@@ -296,8 +311,30 @@ final class AdministrationPresenter extends BasePresenter
 			]);
 		}
 
+		$form->onValidate[] = $this->validateCipherForm(...);
 		$form->onSuccess[] = $this->cipherFormSucceeded(...);
 		return $form;
+	}
+
+
+	/**
+	 * Password ciphers need the password and the location of the next checkpoint (otherwise Palainfo
+	 * would show the password itself as the location). The finish cipher is always solved by a password.
+	 * @param array<string, mixed> $values
+	 */
+	private function validateCipherForm(Form $form, array $values): void
+	{
+		$checkpoint = (int) $this->getParameter('checkpoint');
+		$isFinishCipher = $this->yearsModel->hasFinishCipher($this->selectedYear)
+			&& $checkpoint === $this->yearsModel->getCheckpointCount($this->selectedYear) - 1;
+
+		if (($values['has_password_solution'] || $isFinishCipher) && trim((string) $values['solution']) === '') {
+			$form->addError('Vyplňte řešení – heslo, které týmy zadávají do Palainfa.');
+		}
+
+		if ($values['has_password_solution'] && !$isFinishCipher && trim((string) $values['dead_solution']) === '') {
+			$form->addError('Vyplňte řešení v totálce – umístění dalšího stanoviště, které se zobrazí po zadání hesla.');
+		}
 	}
 
 
@@ -315,6 +352,7 @@ final class AdministrationPresenter extends BasePresenter
 			'solution_description' => $values['solution_description'],
 			'solution' => $values['solution'],
 			'dead_solution' => $values['dead_solution'],
+			'entry_message' => $values['entry_message'],
 			'code' => $values['code'],
 			'specification' => $values['specification'],
 			'checkpoint_close_time' => $values['checkpoint_close_time'],

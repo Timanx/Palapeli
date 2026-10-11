@@ -41,6 +41,7 @@ final class CardScreen extends BaseControl
 			'specifications' => $this->ciphersModel->getSpecifications($this->year),
 			'checkpointCount' => $this->yearsModel->getCheckpointCount($this->year),
 			'hasFinishCipher' => $this->yearsModel->hasFinishCipher($this->year),
+			'hasHintForStart' => $this->yearsModel->hasHintForStart($this->year),
 		]);
 	}
 

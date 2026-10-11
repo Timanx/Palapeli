@@ -180,6 +180,7 @@ final class GamePresenter extends BasePresenter
 
 		$year = $this->selectedYear;
 		$this->template->totalCheckpoints = $this->yearsModel->getCheckpointCount($year);
+		$this->template->individualStart = $this->yearsModel->hasIndividualStart($year);
 		$this->template->teams = $this->resultsModel->getTeamStandings($year);
 		$this->template->results = $this->resultsModel->getCompleteResults($year);
 		$this->template->resultsPublic = $this->resultsModel->getResultsPublic($year);

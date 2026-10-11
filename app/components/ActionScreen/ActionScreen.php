@@ -20,6 +20,9 @@ use Nette\Utils\DateTime;
 /**
  * Palainfo "AKCE" screen: teams enter checkpoint codes and password solutions, set their
  * departure times, ask for total hints ("totálka") and can quit the game.
+ *
+ * In an edition with a finish cipher, the finish cipher is always solved by a password typed into
+ * Palainfo; solving it is stored as an extra checkpoint number "checkpoint_count" (see docs/game-logic.md).
  */
 final class ActionScreen extends BaseControl
 {
@@ -29,6 +32,9 @@ final class ActionScreen extends BaseControl
 	/** Confirmation screens that can be opened right after the page loads. */
 	public const DeadScreen = 0;
 	public const EndScreen = 1;
+
+	/** A typed departure later than now by more than this is taken as a time before midnight. */
+	private const FutureDepartureTolerance = '+10 minutes';
 
 	private ?int $defaultScreen = null;
 	private ?Row $lastCheckpointData = null;
@@ -59,23 +65,22 @@ final class ActionScreen extends BaseControl
 		$nextCheckpoint = $this->resultsModel->getFirstEmptyCheckpoint($teamId, $this->year);
 		$endgame = $this->yearsModel->getEndgameData($this->year);
 		$checkpointCount = (int) $endgame?->checkpoint_count;
-		$hasPasswordSolution = $this->isWaitingForPasswordSolution($nextCheckpoint);
+		$hasFinishCipher = (bool) $endgame?->has_finish_cipher;
 
 		$params = [
 			'checkpointCount' => $checkpointCount,
 			'nextCheckpointNumber' => $nextCheckpoint,
-			'hasPasswordSolution' => $hasPasswordSolution,
-			'hasFinishCipher' => (bool) $endgame?->has_finish_cipher,
+			'hasPasswordSolution' => $this->isWaitingForPasswordSolution($nextCheckpoint),
+			'hasFinishCipher' => $hasFinishCipher,
 			'defaultScreen' => $this->defaultScreen,
 			'teamEnded' => true,
-			'deadOpened' => false,
-			'deadSolution' => null,
+			'canAskForDead' => false,
 			'endCode' => self::EndCode,
 			'lastCheckpointData' => null,
 		];
 
 		if ($this->teamsModel->hasTeamEnded($teamId, $this->year)) {
-			if (self::hasReachedFinish($nextCheckpoint, $checkpointCount)) {
+			if (self::hasReachedFinish($nextCheckpoint, $checkpointCount, $hasFinishCipher)) {
 				$this->flashMessage('Hru jste úspěšně dokončili! Gratulujeme.', 'success');
 			} else {
 				$this->flashMessage('Již jste ukončili hru a ve hře tak nemůžete pokračovat.');
@@ -85,17 +90,14 @@ final class ActionScreen extends BaseControl
 			$this->flashAfterparty($endgame);
 
 		} elseif ($this->yearsModel->hasGameEnded($this->year)) {
-			$this->flashMessage(sprintf('Hra již skončila, děkujeme za účast. Již nelze zadávat příchody na stanoviště, můžete pouze upravit odchody ze stanovišť na záložce KARTA. Přijďte se za námi podívat do cíle: %s', $endgame?->finish_location), 'info');
+			$this->flashMessage(sprintf('Hra již skončila, děkujeme za účast. Již nelze zadávat kódy stanovišť ani hesla. Přijďte se za námi podívat do cíle: %s', $endgame?->finish_location), 'info');
 			$this->flashAfterparty($endgame);
 
 		} else {
 			$this->lastCheckpointData = $last = $this->resultsModel->getLastCheckpointData($teamId, $this->year);
 			$params['teamEnded'] = false;
 			$params['lastCheckpointData'] = $last;
-			if ($last) {
-				$params['deadOpened'] = $this->resultsModel->hasTeamOpenedDead($teamId, $this->year, (int) $last->checkpoint_number);
-				$params['deadSolution'] = $this->ciphersModel->getDeadSolution($this->year, (int) $last->checkpoint_number);
-			}
+			$params['canAskForDead'] = $last !== null && $this->canAskForDead((int) $last->checkpoint_number);
 		}
 
 		$this->renderTemplate(__DIR__ . '/actionScreen.latte', $params);
@@ -118,6 +120,7 @@ final class ActionScreen extends BaseControl
 	 */
 	private function codeInputSucceeded(Form $form, array $values): void
 	{
+		$this->assertCanAct('Bohužel jste kód nestihli zadat před koncem hry.');
 		$teamId = $this->requireTeamId();
 		$nextCheckpoint = $this->resultsModel->getFirstEmptyCheckpoint($teamId, $this->year);
 
@@ -133,7 +136,7 @@ final class ActionScreen extends BaseControl
 
 	/**
 	 * The team solved a cipher whose solution is a password: the password counts as leaving the
-	 * checkpoint and reveals the location of the next one.
+	 * checkpoint and reveals the location of the next one. The finish password ends the game.
 	 */
 	private function handlePasswordSolution(int $checkpoint, string $solution): void
 	{
@@ -143,16 +146,16 @@ final class ActionScreen extends BaseControl
 			return;
 		}
 
-		$this->resultsModel->insertResultsRow($teamId, $this->year, $checkpoint, exitTime: new DateTime);
+		$now = new DateTime;
+		$this->resultsModel->insertResultsRow($teamId, $this->year, $checkpoint, exitTime: $now);
 		$checkpointCount = $this->yearsModel->getCheckpointCount($this->year);
 
-		if ($checkpoint + 1 === $checkpointCount) {
-			// the finish password
+		if ($checkpoint === $checkpointCount - 1) {
+			// the finish password counts as one more checkpoint, the same way the administration stores it
+			$this->resultsModel->insertResultsRow($teamId, $this->year, $checkpointCount, entryTime: $now, exitTime: $now, usedHint: false);
+			$this->logModel->log(LogType::EnterCheckpoint, $teamId, $checkpointCount, $this->year);
 			$this->teamsModel->teamEnded($teamId, $this->year);
-			$this->flashMessage(sprintf(
-				'Gratulujeme k dokončení Palapeli! Hru jste dokončili jako %s., výsledky se započítanými totálkami budou vyhlášeny po skončení hry.',
-				$this->resultsModel->getTeamsArrivedCount($this->year, $checkpoint),
-			), 'success');
+			$this->flashFinished($this->resultsModel->getTeamsArrivedCount($this->year, $checkpointCount));
 			return;
 		}
 
@@ -174,13 +177,10 @@ final class ActionScreen extends BaseControl
 	private function handleCheckpointCode(int $checkpoint, string $code): void
 	{
 		$teamId = $this->requireTeamId();
-		if ($this->yearsModel->hasGameEnded($this->year)) {
-			$this->flashMessage('Bohužel jste kód nestihli zadat před koncem hry.', 'error');
-			return;
-		}
-
 		if (!$this->ciphersModel->checkCode($this->year, $checkpoint, $code)) {
-			$this->flashMessage('Nesprávně zadaný kód', 'error');
+			// typically a second phone with an outdated page
+			$alreadyEntered = $checkpoint > 0 && $this->ciphersModel->checkCode($this->year, $checkpoint - 1, $code);
+			$this->flashMessage($alreadyEntered ? 'Tento kód už máte zadaný.' : 'Nesprávně zadaný kód', 'error');
 			return;
 		}
 
@@ -190,15 +190,22 @@ final class ActionScreen extends BaseControl
 		$checkpointCount = $this->yearsModel->getCheckpointCount($this->year);
 		$order = $this->resultsModel->getTeamsArrivedCount($this->year, $checkpoint);
 
-		if ($checkpoint === $checkpointCount) {
+		if ($checkpoint === $checkpointCount - 1 && !$this->yearsModel->hasFinishCipher($this->year)) {
+			// without a finish cipher, reaching the finish completes the game
 			$this->teamsModel->teamEnded($teamId, $this->year);
-			$this->flashMessage(sprintf('Gratulujeme k dokončení Palapeli! Hru jste dokončili jako %s., výsledky se započítanými totálkami budou vyhlášeny po skončení hry.', $order), 'success');
+			$this->flashFinished($order);
 		} elseif ($checkpoint === $checkpointCount - 1) {
 			$this->flashMessage(sprintf('Dorazili jste do cíle jako %s.', $order), 'success');
 		} elseif ($checkpoint === 0) {
 			$this->flashMessage(sprintf('Vítejte na startu Palapeli. Kód startovní šifry jste zadali jako %s.', $order), 'success');
 		} else {
 			$this->flashMessage(sprintf('Dorazili jste na stanoviště %s jako %s.', $checkpoint, $order), 'success');
+		}
+
+		$entryMessage = $this->ciphersModel->getEntryMessage($this->year, $checkpoint);
+		if ($entryMessage !== null) {
+			$this->flashMessage($entryMessage, 'info');
+			$this->logModel->log(LogType::MessageFromOrg, $teamId, $checkpoint, $this->year, $entryMessage);
 		}
 	}
 
@@ -220,8 +227,7 @@ final class ActionScreen extends BaseControl
 	 */
 	private function exitTimeInputSucceeded(Form $form, array $values): void
 	{
-		$teamId = $this->requireTeamId();
-		$checkpoint = $this->resultsModel->getLastCheckpointNumber($teamId, $this->year);
+		$this->assertCanAct();
 
 		try {
 			// an empty value means "now", the same as the "TEĎ" button
@@ -231,12 +237,12 @@ final class ActionScreen extends BaseControl
 			$this->redirect('this');
 		}
 
-		if ($checkpoint !== null) {
-			$this->resultsModel->insertResultsRow($teamId, $this->year, $checkpoint, exitTime: $time);
-			$this->flashMessage('Odchod ze stanoviště byl nastaven na ' . $time->format('H:i'), 'success');
+		// only the time is entered, a time in the future means the departure was before midnight
+		if ($time > new DateTime(self::FutureDepartureTolerance)) {
+			$time = $time->modify('-1 day');
 		}
 
-		$this->redirect('this');
+		$this->setExitTime($time);
 	}
 
 
@@ -251,13 +257,32 @@ final class ActionScreen extends BaseControl
 
 	private function exitTimeNowSucceeded(): void
 	{
-		$teamId = $this->requireTeamId();
-		$checkpoint = $this->resultsModel->getLastCheckpointNumber($teamId, $this->year);
-		$now = new DateTime;
+		$this->assertCanAct();
+		$this->setExitTime(new DateTime);
+	}
 
-		if ($checkpoint !== null) {
-			$this->resultsModel->insertResultsRow($teamId, $this->year, $checkpoint, exitTime: $now);
-			$this->flashMessage('Odchod ze stanoviště byl nastaven na ' . $now->format('H:i'), 'success');
+
+	/**
+	 * Sets the departure from the last checkpoint the team arrived to.
+	 */
+	private function setExitTime(DateTime $time): void
+	{
+		$teamId = $this->requireTeamId();
+		$last = $this->resultsModel->getLastCheckpointData($teamId, $this->year);
+
+		if ($last === null) {
+			$this->redirect('this');
+
+		} elseif ($this->isWaitingForPasswordSolution((int) $last->checkpoint_number + 1)) {
+			// a password cipher is left only by entering the password
+			$this->flashMessage('Nejprve zadejte řešení šifry.', 'error');
+
+		} elseif ($time < $last->entry_datetime) {
+			$this->flashMessage('Odchod nemůže být dříve než příchod na stanoviště.', 'error');
+
+		} else {
+			$this->resultsModel->insertResultsRow($teamId, $this->year, (int) $last->checkpoint_number, exitTime: $time);
+			$this->flashMessage('Odchod ze stanoviště byl nastaven na ' . $time->format('H:i'), 'success');
 		}
 
 		$this->redirect('this');
@@ -280,17 +305,24 @@ final class ActionScreen extends BaseControl
 	 */
 	private function askForDeadSucceeded(Form $form, array $values): void
 	{
+		$this->assertCanAct();
 		$teamId = $this->requireTeamId();
 		$checkpoint = $this->resultsModel->getLastCheckpointNumber($teamId, $this->year);
 
-		if ($checkpoint === null || !$this->ciphersModel->checkCode($this->year, $checkpoint, $values['code'])) {
+		if ($checkpoint === null || !$this->canAskForDead($checkpoint)) {
+			$this->flashMessage('Totální nápovědu teď nelze otevřít.', 'error');
+			$this->redirect('this');
+		}
+
+		if (!$this->ciphersModel->checkCode($this->year, $checkpoint, $values['code'])) {
 			$this->flashMessage('Nesprávně zadaný kód', 'error');
 			$this->getPresenter()->redirect('PalaInfo:', self::DeadScreen);
 		}
 
 		$deadSolution = $this->ciphersModel->getDeadSolution($this->year, $checkpoint);
 		$this->resultsModel->insertResultsRow($teamId, $this->year, $checkpoint, exitTime: new DateTime, usedHint: true);
-		$this->flashMessage(sprintf('Řešením šifry číslo %s je: %s', $checkpoint, $deadSolution), 'info');
+		$cipherName = $checkpoint === 0 ? 'startovní šifry' : 'šifry číslo ' . $checkpoint;
+		$this->flashMessage(sprintf('Řešením %s je: %s', $cipherName, $deadSolution), 'info');
 		$this->logModel->log(LogType::OpenDead, $teamId, $checkpoint, $this->year);
 		$this->redirect('this');
 	}
@@ -311,6 +343,7 @@ final class ActionScreen extends BaseControl
 	 */
 	private function askForEndSucceeded(Form $form, array $values): void
 	{
+		$this->assertCanAct();
 		$teamId = $this->requireTeamId();
 		if (mb_strtoupper($values['code']) !== self::EndCode) {
 			$this->flashMessage('Nesprávně zadaný kód', 'error');
@@ -324,25 +357,78 @@ final class ActionScreen extends BaseControl
 
 
 	/**
-	 * Whether the team stands on a checkpoint whose cipher is solved by entering a password
-	 * and has not entered it yet.
+	 * Refuses actions of a team that finished or quit the game and actions after the end of the game.
+	 * The forms are not displayed then, but an outdated page (e.g. on another phone) can still submit them.
 	 */
-	private function isWaitingForPasswordSolution(int $nextCheckpoint): bool
+	private function assertCanAct(string $gameEndedMessage = 'Hra již skončila, tuto akci už nelze provést.'): void
 	{
-		$teamId = $this->requireTeamId();
-		return $nextCheckpoint !== 0
-			&& $this->ciphersModel->hasCheckpointPasswordSolution($this->year, $nextCheckpoint - 1)
-			&& !$this->resultsModel->hasTeamLeft($teamId, $this->year, $nextCheckpoint - 1);
+		if ($this->teamsModel->hasTeamEnded($this->requireTeamId(), $this->year)) {
+			$this->flashMessage('Již jste ukončili hru a ve hře tak nemůžete pokračovat.', 'error');
+			$this->redirect('this');
+		}
+
+		if ($this->yearsModel->hasGameEnded($this->year)) {
+			$this->flashMessage($gameEndedMessage, 'error');
+			$this->redirect('this');
+		}
 	}
 
 
 	/**
-	 * Whether the team got past the last checkpoint (the finish), i.e. it completed the game
-	 * instead of quitting it.
+	 * Whether the team stands on a checkpoint whose cipher is solved by entering a password
+	 * and has not entered it yet. The finish cipher (if the edition has one) is always solved by a password.
 	 */
-	public static function hasReachedFinish(int $nextCheckpoint, int $checkpointCount): bool
+	private function isWaitingForPasswordSolution(int $nextCheckpoint): bool
 	{
-		return $checkpointCount > 0 && $nextCheckpoint >= $checkpointCount;
+		if ($nextCheckpoint === 0) {
+			return false;
+		}
+
+		$checkpoint = $nextCheckpoint - 1;
+		$isPasswordCipher = $checkpoint === $this->yearsModel->getCheckpointCount($this->year) - 1
+			? $this->yearsModel->hasFinishCipher($this->year)
+			: $this->ciphersModel->hasCheckpointPasswordSolution($this->year, $checkpoint);
+
+		return $isPasswordCipher
+			&& !$this->resultsModel->hasTeamLeft($this->requireTeamId(), $this->year, $checkpoint);
+	}
+
+
+	/**
+	 * Total hint is available on regular checkpoints and on the start when the edition allows it
+	 * (hint_for_start_exists), never on the finish; once, and not for a password cipher the team
+	 * has already solved.
+	 */
+	private function canAskForDead(int $checkpoint): bool
+	{
+		$teamId = $this->requireTeamId();
+		$checkpointCount = $this->yearsModel->getCheckpointCount($this->year);
+		$firstCheckpoint = $this->yearsModel->hasHintForStart($this->year) ? 0 : 1;
+
+		return $checkpoint >= $firstCheckpoint
+			&& $checkpoint <= $checkpointCount - 2
+			&& !$this->resultsModel->hasTeamOpenedDead($teamId, $this->year, $checkpoint)
+			&& !(
+				$this->ciphersModel->hasCheckpointPasswordSolution($this->year, $checkpoint)
+				&& $this->resultsModel->hasTeamLeft($teamId, $this->year, $checkpoint)
+			);
+	}
+
+
+	/**
+	 * Whether the team completed the game (instead of quitting it): it got past the finish, and in an
+	 * edition with a finish cipher also solved the finish password (stored as checkpoint "checkpoint_count").
+	 */
+	public static function hasReachedFinish(int $nextCheckpoint, int $checkpointCount, bool $hasFinishCipher): bool
+	{
+		return $checkpointCount > 0
+			&& ($hasFinishCipher ? $nextCheckpoint > $checkpointCount : $nextCheckpoint >= $checkpointCount);
+	}
+
+
+	private function flashFinished(int $order): void
+	{
+		$this->flashMessage(sprintf('Gratulujeme k dokončení Palapeli! Hru jste dokončili jako %s., výsledky se započítanými totálkami budou vyhlášeny po skončení hry.', $order), 'success');
 	}
 
 

@@ -28,8 +28,9 @@ vw_team_start_datetime = start (checkpoint 0) arrival of each team
 | `game_start`, `game_end` | game time; drive "has the game started/ended" everywhere |
 | `registration_start`, `registration_end` | registration window |
 | `checkpoint_count` | number of checkpoints **including start (0) and finish (count − 1)** |
-| `has_finish_cipher` | teams must solve a cipher/password at the finish |
-| `hint_for_start_exists` | (kept, currently unused by the web) |
+| `has_finish_cipher` | teams must solve the finish cipher and enter its password into Palainfo; solving it is stored as checkpoint `checkpoint_count` |
+| `hint_for_start_exists` | teams can take the total hint for the start cipher in Palainfo (column default is `1`) |
+| `individual_start` | klouzavý start – each team starts by entering the start code, results are relative to that moment (edition 10) |
 | `team_limit` | max. playing teams; later registrations are substitutes; `NULL` = unlimited |
 | `entry_fee`, `entry_fee_account` (`number/bankcode`), `entry_fee_deadline`, `entry_fee_return_deadline` | payment info |
 | `last_info_time` | when the last information is sent (informative) |
@@ -61,7 +62,10 @@ Variable symbol for the entry fee = `calendar_year` followed by `team_id` (e.g. 
 
 ### `results` – passage of a team through checkpoints
 
-One row per (`team_id`, `checkpoint_number`, `year`).
+One row per (`team_id`, `checkpoint_number`, `year`). In editions with a finish cipher, solving the
+finish password is an extra row `checkpoint_number = checkpoint_count` (entry = exit = solve time);
+editions whose finish password was entered in Palainfo before October 2026 (edition 12) have the
+solve time only in `exit_datetime` of the finish and are ranked by the arrival to the finish.
 
 | Column | Meaning |
 |---|---|
@@ -73,11 +77,13 @@ One row per (`team_id`, `checkpoint_number`, `year`).
 ### `ciphers` – cipher on a checkpoint
 
 PK (`year`, `checkpoint_number`). `name`, `cipher_description` (HTML), `solution_description`
-(HTML), `solution`, `dead_solution` (text revealed with the total hint, falls back to `solution`),
-`code` (code found on the checkpoint, entered into Palainfo), `specification` ("upřesnítko",
-shown on the team card), `checkpoint_close_time`, `has_password_solution` (the solution is a
-password typed into Palainfo; then `solution` must be stored webalized – lower/upper case and
-diacritics are ignored), file references to `files`.
+(HTML), `solution`, `dead_solution` (text revealed with the total hint, falls back to `solution`;
+for password ciphers the location shown after the correct password), `entry_message` (text shown
+to the team right after it enters the code), `code` (code found on the checkpoint, entered into
+Palainfo), `specification` ("upřesnítko", shown on the team card), `checkpoint_close_time`
+(informative), `has_password_solution` (the solution is a password typed into Palainfo; case,
+diacritics, spaces and punctuation are ignored on both sides; the finish cipher of an edition with
+`has_finish_cipher` is always a password cipher), file references to `files`.
 
 ### `files`
 
@@ -118,9 +124,8 @@ Links to reports written by teams: `year`, `link`, `team_id`, `name`, `descripti
 
 ### `vw_team_start_datetime` (view)
 
-Start time of every team (arrival to checkpoint 0). Used only for the 10th edition (2022),
-which had individual starts – its results are computed relative to the start
-(`AppConstants::IndividualStartYear`).
+Start time of every team (arrival to checkpoint 0). Used for editions with `years.individual_start`
+(so far the 10th edition, 2022) – their results are computed relative to the start.
 
 ## Data notes
 

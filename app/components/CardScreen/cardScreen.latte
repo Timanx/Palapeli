@@ -48,7 +48,7 @@
 							{/if}
 						</td>
 						<td class="right">
-							{if $i != 0 && $i != $checkpointCount - 1}
+							{if ($i != 0 || $hasHintForStart) && $i != $checkpointCount - 1}
 								{input usedHint}
 							{/if}
 						</td>

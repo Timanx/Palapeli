@@ -27,10 +27,4 @@ final class AppConstants
 
 	/** Answer to the anti-spam question "how many puzzle pieces does the Palapeli logo have". */
 	public const CaptchaAnswer = 4;
-
-	/**
-	 * The 10th year (2022) was played with individual starts because of COVID restrictions.
-	 * Results of that year are computed relative to each team's start time.
-	 */
-	public const IndividualStartYear = 10;
 }

@@ -38,6 +38,7 @@ final class TeamCard extends BaseControl
 		$this->renderTemplate(__DIR__ . '/teamCard.latte', [
 			'selectedYear' => $this->year,
 			'checkpointCount' => $this->yearsModel->getCheckpointCount($this->year),
+			'hasHintForStart' => $this->yearsModel->hasHintForStart($this->year),
 			'teamId' => $teamId,
 			'teamName' => $teamId === null ? null : $this->teamsModel->getTeamName($teamId),
 			'isTeamFinalized' => $teamId !== null && $this->teamsModel->isTeamFinalized($teamId, $this->year),

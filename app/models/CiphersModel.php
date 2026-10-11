@@ -37,7 +37,7 @@ final class CiphersModel extends BaseModel
 
 	/**
 	 * Inserts or updates the textual data of a cipher.
-	 * @param array{name: ?string, cipher_description: ?string, solution_description: ?string, solution: ?string, dead_solution: ?string, code: ?string, specification: ?string, checkpoint_close_time: ?string, has_password_solution: bool} $data
+	 * @param array{name: ?string, cipher_description: ?string, solution_description: ?string, solution: ?string, dead_solution: ?string, entry_message: ?string, code: ?string, specification: ?string, checkpoint_close_time: ?string, has_password_solution: bool} $data
 	 */
 	public function upsertCipher(int $year, int $checkpoint, array $data): void
 	{
@@ -91,16 +91,25 @@ final class CiphersModel extends BaseModel
 
 
 	/**
-	 * Checks a password-type cipher solution. The answer is webalized (no diacritics,
-	 * spaces turned into dashes) before comparing, so the stored solution must be in that form.
+	 * Checks a password-type cipher solution. Both the answer and the stored solution are webalized
+	 * (case, diacritics, spaces and punctuation are ignored), so "Tajné heslo!" matches "tajne-heslo".
 	 */
 	public function checkSolution(int $year, int $checkpoint, string $solution): bool
 	{
-		$requiredSolution = $this->getColumn($year, $checkpoint, 'solution');
+		$requiredSolution = Strings::webalize((string) $this->getColumn($year, $checkpoint, 'solution'));
 
-		return $requiredSolution !== null
-			&& $requiredSolution !== ''
-			&& mb_strtoupper(Strings::webalize($solution)) === mb_strtoupper($requiredSolution);
+		return $requiredSolution !== ''
+			&& Strings::webalize($solution) === $requiredSolution;
+	}
+
+
+	/**
+	 * Text shown to a team right after it enters the code of the checkpoint.
+	 */
+	public function getEntryMessage(int $year, int $checkpoint): ?string
+	{
+		$message = $this->getColumn($year, $checkpoint, 'entry_message');
+		return $message === null || $message === '' ? null : (string) $message;
 	}
 
 

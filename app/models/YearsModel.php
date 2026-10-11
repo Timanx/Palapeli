@@ -18,7 +18,7 @@ final class YearsModel extends BaseModel
 		'registration_end', 'checkpoint_count', 'entry_fee', 'entry_fee_account', 'entry_fee_deadline',
 		'entry_fee_return_deadline', 'last_info_time', 'team_limit', 'results_public',
 		'show_tester_notification', 'is_current', 'has_finish_cipher', 'hint_for_start_exists',
-		'afterparty_location', 'afterparty_time', 'finish_location', 'finish_open_time',
+		'individual_start', 'afterparty_location', 'afterparty_time', 'finish_location', 'finish_open_time',
 	];
 
 
@@ -44,6 +44,24 @@ final class YearsModel extends BaseModel
 	public function hasFinishCipher(int $year): bool
 	{
 		return (bool) $this->getColumn($year, 'has_finish_cipher');
+	}
+
+
+	/**
+	 * Whether teams can take the total hint ("totálka") for the start cipher.
+	 */
+	public function hasHintForStart(int $year): bool
+	{
+		return (bool) $this->getColumn($year, 'hint_for_start_exists');
+	}
+
+
+	/**
+	 * Individual start ("klouzavý start"): each team starts when it enters the start code.
+	 */
+	public function hasIndividualStart(int $year): bool
+	{
+		return (bool) $this->getColumn($year, 'individual_start');
 	}
 
 

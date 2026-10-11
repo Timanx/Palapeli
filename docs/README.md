@@ -23,6 +23,7 @@ The user interface is in Czech; the code and this documentation are in English.
 | [deployment.md](deployment.md) | Requirements, installation, upgrade from the PHP 7 version (checklist) |
 | [database.md](database.md) | Tables, their meaning and relations ([schema.sql](schema.sql)) |
 | [game-logic.md](game-logic.md) | Checkpoints, codes, total hints, ending the game, results and statistics |
+| [palainfo-audit.md](palainfo-audit.md) | Audit of Palainfo: game variants (klouzavý start, password ciphers, finish password), known bugs, proposed fixes |
 | [presenters.md](presenters.md) | All pages: presenters, actions, templates, access rules |
 | [components.md](components.md) | UI components (Palainfo screens, admin cards, forms, discussion) |
 | [models.md](models.md) | Models and services – the data access API |

@@ -28,7 +28,7 @@ trait EndgameMessages
 		$endgame = $this->yearsModel->getEndgameData($this->year);
 		$nextCheckpoint = $this->resultsModel->getFirstEmptyCheckpoint($teamId, $this->year);
 
-		if (ActionScreen::hasReachedFinish($nextCheckpoint, (int) $endgame?->checkpoint_count)) {
+		if (ActionScreen::hasReachedFinish($nextCheckpoint, (int) $endgame?->checkpoint_count, (bool) $endgame?->has_finish_cipher)) {
 			$this->flashMessage('Hru jste úspěšně dokončili! Gratulujeme.', 'success');
 		} else {
 			$this->flashMessage('Již jste ukončili hru a ve hře tak nemůžete pokračovat.');

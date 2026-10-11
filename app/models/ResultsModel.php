@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Models;
 
-use App\Utils\AppConstants;
 use App\Utils\Colors;
 use Nette\Database\Row;
 
@@ -24,7 +23,7 @@ final class ResultsModel extends BaseModel
 	 */
 	public function getTeamStandings(int $year): array
 	{
-		if ($year === AppConstants::IndividualStartYear) {
+		if ($this->hasIndividualStart($year)) {
 			// times are relative to the moment each team started
 			return $this->database->query("
 				SELECT
@@ -71,7 +70,7 @@ final class ResultsModel extends BaseModel
 	 */
 	public function getCompleteResults(int $year): array
 	{
-		if ($year === AppConstants::IndividualStartYear) {
+		if ($this->hasIndividualStart($year)) {
 			return $this->database->query("
 				SELECT
 					results.team_id,
@@ -97,6 +96,15 @@ final class ResultsModel extends BaseModel
 			FROM results
 			WHERE year = ?
 		", Colors::YellowTint, 'initial', Colors::BlueTint, $year)->fetchAssoc('team_id|checkpoint_number');
+	}
+
+
+	/**
+	 * Individual start ("klouzavý start"): times are relative to the moment each team started.
+	 */
+	private function hasIndividualStart(int $year): bool
+	{
+		return (bool) $this->database->query('SELECT individual_start FROM years WHERE year = ?', $year)->fetchField();
 	}
 
 

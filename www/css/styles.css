@@ -445,6 +445,16 @@ form td, form th {
     border-spacing: 0px;
 }
 
+/* descriptions of form fields (setOption('description')) */
+form td small {
+    display: block;
+    max-width: 500px;
+    margin: 4px 0 16px 0;
+    color: #777;
+    font-size: 85%;
+    line-height: 1.35;
+}
+
 .teamForm td, .teamForm th {
     display: table-cell;
 }

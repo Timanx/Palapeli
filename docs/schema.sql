@@ -14,6 +14,7 @@ CREATE TABLE `ciphers` (
   `pdf_file_id` int(11) DEFAULT NULL,
   `solution` varchar(1023) DEFAULT NULL,
   `dead_solution` varchar(1023) DEFAULT NULL COMMENT 'text that is displayed to team after he asks for solution during game',
+  `entry_message` varchar(1023) DEFAULT NULL COMMENT 'text shown to the team after it enters the code of this checkpoint',
   `code` varchar(255) DEFAULT NULL,
   `checkpoint_close_time` time DEFAULT NULL,
   `specification` varchar(255) DEFAULT NULL,
@@ -188,6 +189,7 @@ CREATE TABLE `years` (
   `finish_open_time` time DEFAULT NULL,
   `has_finish_cipher` tinyint(1) NOT NULL DEFAULT 1 COMMENT 'whether the teams must solve a special cipher when they reach the finish',
   `hint_for_start_exists` tinyint(1) NOT NULL DEFAULT 1,
+  `individual_start` tinyint(1) NOT NULL DEFAULT 0 COMMENT 'klouzavý start: each team starts when it enters the start code, results are relative to that moment',
   PRIMARY KEY (`year`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_czech_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
