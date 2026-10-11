@@ -372,7 +372,9 @@ final class TeamPresenter extends BasePresenter
 		$paid = $this->teamsModel->getTeamPaymentStatus($teamId, $year);
 		$wasPlaying = in_array($teamId, $this->teamsModel->getPlayingTeamsIds($year), strict: true);
 		$teamsCount = $this->teamsModel->getTeamsCount($year);
+		$team = $this->teamsModel->getTeamData($teamId, $year);
 
+		// the data are needed to find the payment and return the fee
 		$this->mailer->send(new Message()
 			->setFrom(AppConstants::OrgMailFrom)
 			->addTo(AppConstants::OrgEmail)
@@ -380,6 +382,10 @@ final class TeamPresenter extends BasePresenter
 			->setBody(
 				'Odhlásil se tým ' . $teamName . ' s id ' . $teamId
 				. "\nStartovné " . ($paid === PaymentStatus::Paid ? 'už bylo' : 'ještě nebylo') . ' zaplacené.'
+				. "\n\nVariabilní symbol: " . $this->yearsModel->getCalendarYear($year) . $teamId
+				. "\nČlenové: " . self::joinFilled($team?->member1, $team?->member2, $team?->member3, $team?->member4)
+				. "\nE-maily: " . self::joinFilled($team?->email1, $team?->email2)
+				. "\nTelefony: " . self::joinFilled($team?->phone1, $team?->phone2)
 				. "\n\nAutomaticky generovaná zpráva z webu.",
 			));
 
@@ -541,6 +547,15 @@ final class TeamPresenter extends BasePresenter
 	private function requireLoggedTeam(): int
 	{
 		return $this->teamId ?? $this->error('Nejste přihlášeni.', 403);
+	}
+
+
+	/**
+	 * Comma separated non-empty values, a dash when there are none.
+	 */
+	private static function joinFilled(?string ...$values): string
+	{
+		return implode(', ', array_filter($values, static fn(?string $value): bool => $value !== null && $value !== '')) ?: '–';
 	}
 
 

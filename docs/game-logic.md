@@ -100,6 +100,8 @@ they were published (organizers see the scorecard earlier).
   "Zaregistrovat" links.
 - With `team_limit` set, teams registered over the limit are substitutes. When a **playing** team
   cancels its participation, the first substitute gets an e-mail that a place is free.
+- Every cancellation is e-mailed to the organizers with the payment state, variable symbol,
+  members, e-mails and phones of the team (to find the payment when returning the fee).
 - The anti-spam question (registration, discussion for anonymous visitors) expects the number of
   puzzle pieces in the logo: **4**.
 
