@@ -383,6 +383,7 @@ final class ResultsModel extends BaseModel
 		\DateTimeInterface|string|null $entryTime = null,
 		\DateTimeInterface|string|null $exitTime = null,
 		?bool $usedHint = null,
+		\DateTimeInterface|string|null $pickupTime = null,
 	): void
 	{
 		$this->database->query('
@@ -401,6 +402,10 @@ final class ResultsModel extends BaseModel
 
 		if ($usedHint !== null) {
 			$changes['used_hint'] = (int) $usedHint;
+		}
+
+		if ($pickupTime !== null) {
+			$changes['pickup_datetime'] = $pickupTime === '' ? null : $pickupTime;
 		}
 
 		if ($changes) {

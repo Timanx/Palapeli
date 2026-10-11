@@ -37,7 +37,7 @@ final class CiphersModel extends BaseModel
 
 	/**
 	 * Inserts or updates the textual data of a cipher.
-	 * @param array{name: ?string, cipher_description: ?string, solution_description: ?string, solution: ?string, dead_solution: ?string, entry_message: ?string, code: ?string, specification: ?string, checkpoint_close_time: ?string, has_password_solution: bool} $data
+	 * @param array{name: ?string, cipher_description: ?string, solution_description: ?string, solution: ?string, dead_solution: ?string, entry_message: ?string, wait_minutes: ?int, wait_message: ?string, pickup_code: ?string, code: ?string, specification: ?string, checkpoint_close_time: ?string, has_password_solution: bool} $data
 	 */
 	public function upsertCipher(int $year, int $checkpoint, array $data): void
 	{
@@ -82,11 +82,16 @@ final class CiphersModel extends BaseModel
 	 */
 	public function checkCode(int $year, int $checkpoint, string $code): bool
 	{
-		$requiredCode = $this->getColumn($year, $checkpoint, 'code');
+		return self::matchesCode($code, $this->getColumn($year, $checkpoint, 'code'));
+	}
 
-		return $requiredCode !== null
-			&& $requiredCode !== ''
-			&& mb_strtoupper($code) === mb_strtoupper($requiredCode);
+
+	/**
+	 * Checks the code a team got together with the cipher after the mandatory wait (case insensitive).
+	 */
+	public function checkPickupCode(int $year, int $checkpoint, string $code): bool
+	{
+		return self::matchesCode($code, $this->getColumn($year, $checkpoint, 'pickup_code'));
 	}
 
 
@@ -109,6 +114,27 @@ final class CiphersModel extends BaseModel
 	public function getEntryMessage(int $year, int $checkpoint): ?string
 	{
 		$message = $this->getColumn($year, $checkpoint, 'entry_message');
+		return $message === null || $message === '' ? null : (string) $message;
+	}
+
+
+	/**
+	 * Minutes the team has to wait after entering the code of the checkpoint before organizers hand out
+	 * its cipher (e.g. at a campfire); null when there is no wait.
+	 */
+	public function getWaitMinutes(int $year, int $checkpoint): ?int
+	{
+		$minutes = (int) $this->getColumn($year, $checkpoint, 'wait_minutes');
+		return $minutes > 0 ? $minutes : null;
+	}
+
+
+	/**
+	 * Text shown to the team while it waits for the cipher.
+	 */
+	public function getWaitMessage(int $year, int $checkpoint): ?string
+	{
+		$message = $this->getColumn($year, $checkpoint, 'wait_message');
 		return $message === null || $message === '' ? null : (string) $message;
 	}
 
@@ -152,6 +178,14 @@ final class CiphersModel extends BaseModel
 	public function hasCheckpointPasswordSolution(int $year, int $checkpoint): bool
 	{
 		return (bool) $this->getColumn($year, $checkpoint, 'has_password_solution');
+	}
+
+
+	private static function matchesCode(string $code, mixed $requiredCode): bool
+	{
+		return $requiredCode !== null
+			&& $requiredCode !== ''
+			&& mb_strtoupper($code) === mb_strtoupper((string) $requiredCode);
 	}
 
 

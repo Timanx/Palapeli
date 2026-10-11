@@ -19,7 +19,9 @@ use Nette\Utils\DateTime;
 
 /**
  * Palainfo "AKCE" screen: teams enter checkpoint codes and password solutions, set their
- * departure times, ask for total hints ("totálka") and can quit the game.
+ * departure times, ask for total hints ("totálka") and can quit the game. On a checkpoint with
+ * a mandatory wait for the cipher (ciphers.wait_minutes, e.g. a campfire) it shows a countdown
+ * until the team enters the pickup code it gets with the cipher.
  *
  * In an edition with a finish cipher, the finish cipher is always solved by a password typed into
  * Palainfo; solving it is stored as an extra checkpoint number "checkpoint_count" (see docs/game-logic.md).
@@ -78,6 +80,7 @@ final class ActionScreen extends BaseControl
 			'endCode' => self::EndCode,
 			'lastCheckpointData' => null,
 			'specification' => null,
+			'cipherWait' => null,
 		];
 
 		if ($this->teamsModel->hasTeamEnded($teamId, $this->year)) {
@@ -99,6 +102,7 @@ final class ActionScreen extends BaseControl
 			$params['teamEnded'] = false;
 			$params['lastCheckpointData'] = $last;
 			$params['canAskForDead'] = $last !== null && $this->canAskForDead((int) $last->checkpoint_number);
+			$params['cipherWait'] = $last !== null ? $this->getCipherWait($last) : null;
 			// specification of the checkpoint the team is heading to (none for the finish password)
 			$params['specification'] = $nextCheckpoint < $checkpointCount
 				? $this->ciphersModel->getSpecification($this->year, $nextCheckpoint)
@@ -120,7 +124,7 @@ final class ActionScreen extends BaseControl
 
 
 	/**
-	 * Handles both checkpoint codes and solutions of password-type ciphers.
+	 * Handles checkpoint codes, pickup codes of ciphers handed out after a wait and solutions of password-type ciphers.
 	 * @param array{code: string} $values
 	 */
 	private function codeInputSucceeded(Form $form, array $values): void
@@ -128,14 +132,49 @@ final class ActionScreen extends BaseControl
 		$this->assertCanAct('Bohužel jste kód nestihli zadat před koncem hry.');
 		$teamId = $this->requireTeamId();
 		$nextCheckpoint = $this->resultsModel->getFirstEmptyCheckpoint($teamId, $this->year);
+		$last = $this->resultsModel->getLastCheckpointData($teamId, $this->year);
 
-		if ($this->isWaitingForPasswordSolution($nextCheckpoint)) {
+		if ($last !== null && $this->isWaitingForPickup($last)) {
+			$this->handlePickupCode($last, $nextCheckpoint, $values['code']);
+		} elseif ($this->isWaitingForPasswordSolution($nextCheckpoint)) {
 			$this->handlePasswordSolution($nextCheckpoint - 1, $values['code']);
 		} else {
 			$this->handleCheckpointCode($nextCheckpoint, $values['code']);
 		}
 
 		$this->redirect('this');
+	}
+
+
+	/**
+	 * The team waited for the cipher (ciphers.wait_minutes) and got it from organizers; entering the code
+	 * written on the cipher (pickup code) records the pickup and removes the green screen. The code is accepted
+	 * even before the countdown ends (organizers may shorten the wait). A team that forgot the pickup
+	 * code can go on with the password solution or the code of the next checkpoint.
+	 */
+	private function handlePickupCode(Row $last, int $nextCheckpoint, string $code): void
+	{
+		$teamId = $this->requireTeamId();
+		$checkpoint = (int) $last->checkpoint_number;
+		$isPasswordCipher = $this->isWaitingForPasswordSolution($nextCheckpoint);
+
+		if ($this->ciphersModel->checkPickupCode($this->year, $checkpoint, $code)) {
+			$this->resultsModel->insertResultsRow($teamId, $this->year, $checkpoint, pickupTime: new DateTime);
+			$this->flashMessage('Převzetí šifry bylo zapsáno. Hodně štěstí při luštění!', 'success');
+
+		} elseif ($isPasswordCipher && $this->ciphersModel->checkSolution($this->year, $checkpoint, $code)) {
+			$this->handlePasswordSolution($checkpoint, $code);
+
+		} elseif (!$isPasswordCipher && $this->ciphersModel->checkCode($this->year, $nextCheckpoint, $code)) {
+			$this->handleCheckpointCode($nextCheckpoint, $code);
+
+		} elseif ($this->ciphersModel->checkCode($this->year, $checkpoint, $code)) {
+			// typically a second phone with an outdated page
+			$this->flashMessage('Tento kód už máte zadaný. Po převzetí šifry zadejte kód, který je na ní napsaný.', 'error');
+
+		} else {
+			$this->flashMessage('Nesprávně zadaný kód na šifře.', 'error');
+		}
 	}
 
 
@@ -282,6 +321,10 @@ final class ActionScreen extends BaseControl
 			// a password cipher is left only by entering the password
 			$this->flashMessage('Nejprve zadejte řešení šifry.', 'error');
 
+		} elseif ($this->isWaitingForPickup($last)) {
+			// the team has not got the cipher yet
+			$this->flashMessage('Odchod ze stanoviště lze zadat až po převzetí šifry – zadejte kód, který je na ní napsaný.', 'error');
+
 		} elseif ($time < $last->entry_datetime) {
 			$this->flashMessage('Odchod nemůže být dříve než příchod na stanoviště.', 'error');
 
@@ -396,6 +439,57 @@ final class ActionScreen extends BaseControl
 
 		return $isPasswordCipher
 			&& !$this->resultsModel->hasTeamLeft($this->requireTeamId(), $this->year, $checkpoint);
+	}
+
+
+	/**
+	 * Mandatory wait for the cipher of the checkpoint the team stands on (e.g. at a campfire): organizers
+	 * hand out the cipher only "wait_minutes" after the team entered the code. Palainfo shows an orange
+	 * countdown that turns green with the team name – the team shows it to organizers as a proof.
+	 * Null when the checkpoint has no wait, the team entered the pickup code or left (password or total hint).
+	 * @return ?array{end: DateTime, remaining: int, countdown: string, message: ?string, teamName: ?string}
+	 */
+	private function getCipherWait(Row $last): ?array
+	{
+		$end = $this->getCipherWaitEnd($last);
+		if ($end === null) {
+			return null;
+		}
+
+		$checkpoint = (int) $last->checkpoint_number;
+		$remaining = max(0, $end->getTimestamp() - time());
+		return [
+			'end' => $end,
+			'remaining' => $remaining,
+			'countdown' => sprintf('%02d:%02d', intdiv($remaining, 60), $remaining % 60),
+			'message' => $this->ciphersModel->getWaitMessage($this->year, $checkpoint),
+			'teamName' => $this->teamsModel->getTeamName($this->requireTeamId()),
+		];
+	}
+
+
+	/**
+	 * Whether the team stands on a checkpoint with a wait for the cipher and has not entered its pickup
+	 * code yet (whether the countdown has run out or not). The departure cannot be set then.
+	 */
+	private function isWaitingForPickup(Row $last): bool
+	{
+		return $this->getCipherWaitEnd($last) !== null;
+	}
+
+
+	private function getCipherWaitEnd(Row $last): ?DateTime
+	{
+		if ($last->pickup_datetime !== null || $last->exit_datetime !== null) {
+			return null;
+		}
+
+		$minutes = $this->ciphersModel->getWaitMinutes($this->year, (int) $last->checkpoint_number);
+		if ($minutes === null) {
+			return null;
+		}
+
+		return DateTime::from($last->entry_datetime)->modify(sprintf('+%d minutes', $minutes));
 	}
 
 

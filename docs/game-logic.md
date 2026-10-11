@@ -47,20 +47,35 @@ server too, because an outdated page on another phone can still submit the forms
    (`results.entry_datetime`, `used_hint = 0`), a log entry is written and the team sees its
    order of arrival and the checkpoint's `entry_message` (if any, also written to the log).
    Re-entering the code of the previous checkpoint says it is already entered.
-3. **Password ciphers** (`has_password_solution`, and the finish cipher) – after arriving to such a
+3. **Wait for the cipher** (`ciphers.wait_minutes`, e.g. a campfire where teams warm up and have a
+   snack) – organizers hand out the cipher only `wait_minutes` after the team entered the code.
+   AKCE shows an orange screen with a countdown to `entry_datetime + wait_minutes`, the time it
+   ends and `wait_message` (prefilled in the administration: "Zatím si můžete opéct špekáček
+   nebo se jinak občerstvit."); when it runs out it turns green with "Tým **<team name>** si již
+   může vyzvednout šifru" – the team shows it to organizers as a proof. The countdown runs in the
+   browser from the remaining seconds sent by the server (it does not depend on the phone's clock)
+   and turns green without reloading the page. The cipher it gets has a code written on it
+   (**pickup code**, `ciphers.pickup_code`, "Kód na šifře" in the administration); until the team
+   enters it, the input is "KÓD NA ŠIFŘE X" (case-insensitive). The pickup code stores `results.pickup_datetime` and removes the screen;
+   it is accepted even before the countdown ends (organizers may shorten the wait). A team that
+   forgot the pickup code can enter the password (password cipher) or the code of the next
+   checkpoint instead – the pickup time then stays empty. Until the pickup, the departure cannot be
+   set (the form is hidden, the server refuses it); the total hint can be taken any time (also on
+   the orange screen) and removes the screen too.
+4. **Password ciphers** (`has_password_solution`, and the finish cipher) – after arriving to such a
    checkpoint, the input switches to "ŘEŠENÍ ŠIFRY" and the departure cannot be set. The answer and
    `ciphers.solution` are both webalized before comparing (case, diacritics, spaces and
    punctuation are ignored: `Tajné heslo!` = `tajne-heslo`). A correct answer stores the departure
    and reveals the location of the next checkpoint (`dead_solution`), also written to the log.
    The finish password completes the game (see above).
-4. **Departure** – the team can set the departure time from the current checkpoint (a time
+5. **Departure** – the team can set the departure time from the current checkpoint (a time
    input, or "TEĎ" = now). Empty input means now; a time more than 10 minutes in the future is
    taken as the previous day (departure before midnight); a departure before the arrival is refused.
-5. **Total hint ("totálka")** – available on checkpoints `1 … count − 2`, on the start cipher too
+6. **Total hint ("totálka")** – available on checkpoints `1 … count − 2`, on the start cipher too
    when `years.hint_for_start_exists` is set, never on the finish; once, and not for a password cipher the team has already solved; the team must
    re-enter the code of the current checkpoint. The departure is set to now, `used_hint = 1`, the
    location of the next checkpoint is shown and logged.
-6. **Quitting** – the team types `JEZIMADEMDOM` (`ActionScreen::EndCode`);
+7. **Quitting** – the team types `JEZIMADEMDOM` (`ActionScreen::EndCode`);
    `teamsyear.end_time` is set and Palainfo shows the finish and afterparty location.
 
 A wrong confirmation code redirects back with `?defaultScreen=0|1`, which re-opens the

@@ -145,6 +145,57 @@ body {
 .action-screen-container .consequences {
   margin-bottom: 20px;
 }
+.cipher-wait {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  box-sizing: border-box;
+  min-height: 50vh;
+  margin: -30px 0 20px 0;
+  padding: 30px 35px;
+  font-family: 'Source Sans Pro', sans-serif;
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.35;
+  text-align: center;
+  color: black;
+  word-break: break-word;
+}
+.cipher-wait.waiting {
+  background-color: #FF8C00;
+}
+.cipher-wait.waiting .cipher-wait-ready {
+  display: none;
+}
+.cipher-wait.ready {
+  background-color: #69B300;
+}
+.cipher-wait.ready .cipher-wait-waiting {
+  display: none;
+}
+.cipher-wait .cipher-wait-countdown {
+  font-variant-numeric: tabular-nums;
+}
+.cipher-wait .cipher-wait-timer {
+  font-size: 88px;
+  font-weight: 700;
+  line-height: 1;
+  margin-bottom: 24px;
+}
+.cipher-wait p {
+  margin: 0 0 12px 0;
+}
+.cipher-wait .cipher-wait-ready {
+  font-weight: 400;
+}
+.cipher-wait .cipher-wait-ready-title {
+  font-size: 34px;
+  line-height: 1.25;
+  margin-bottom: 20px;
+}
+.cipher-wait .cipher-wait-ready-title strong {
+  font-weight: 700;
+}
 .checkpoint-screen-container .checkpoint-container {
   margin: auto;
   text-align: center;

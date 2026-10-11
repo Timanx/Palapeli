@@ -39,6 +39,9 @@ The main game screen, see [game-logic.md](game-logic.md#palainfo-flow-component-
 | `askForEnd` | quit the game (confirmed by `EndCode`) |
 
 The specification ("upřesnítko") of the checkpoint the team is heading to is shown above the forms.
+On a checkpoint with a wait for the cipher (`ciphers.wait_minutes`) the orange countdown / green
+proof screen (`.cipher-wait`) is shown on top until the team enters the pickup code (`codeInput`
+then expects it); the countdown is a small inline script in the template.
 `setDefaultScreen(DeadScreen|EndScreen)` opens a confirmation screen after the page loads.
 `hasReachedFinish()` (static) tells whether a team that ended the game completed it.
 

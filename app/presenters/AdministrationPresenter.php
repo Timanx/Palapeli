@@ -37,6 +37,9 @@ final class AdministrationPresenter extends BasePresenter
 {
 	private const PaymentInputPrefix = 'team_';
 
+	/** Prefilled text shown to teams while they wait for the cipher (ciphers.wait_message). */
+	private const DefaultWaitMessage = 'Zatím si můžete opéct špekáček nebo se jinak občerstvit.';
+
 
 	public function __construct(
 		private readonly DiscussionControlFactory $discussionControlFactory,
@@ -314,6 +317,14 @@ final class AdministrationPresenter extends BasePresenter
 			->setOption('description', 'Zobrazí se týmu, který si v Palainfu vezme totálku – obvykle poloha dalšího stanoviště. U šifry s heslem se zobrazí i po zadání správného hesla, proto je povinné. Prázdné = zobrazí se „Řešení“.');
 		$form->addText('entry_message', 'Zpráva po zadání kódu', null, 1023)
 			->setOption('description', 'Zobrazí se týmu hned po zadání kódu tohoto stanoviště a zůstane v záložce INFO – např. kde přesně šifru najde, nebo u cíle, že má zadat heslo z poslední šifry.');
+		$form->addInteger('wait_minutes', 'Čekání na šifru (min)')
+			->addRule($form::Range, 'Čekání na šifru musí být 1 až 600 minut.', [1, 600])
+			->setOption('description', 'Povinné čekání po zadání kódu, než tým od organizátorů dostane šifru (např. u ohně). Palainfo týmu ukáže oranžovou obrazovku s odpočtem; po jeho uplynutí zezelená s nápisem „Tým <název týmu> si již může vyzvednout šifru“ – tu tým ukáže organizátorům. Zelená obrazovka zmizí, až tým zadá „Kód na šifře“. Odchod ze stanoviště lze zadat až po převzetí šifry, totálku kdykoli. Prázdné = bez čekání.');
+		$form->addText('wait_message', 'Zpráva během čekání', null, 1023)
+			->setDefaultValue(self::DefaultWaitMessage)
+			->setOption('description', 'Zobrazí se na oranžové obrazovce pod odpočtem. Předvyplněno, lze změnit; prázdné = nic navíc.');
+		$form->addText('pickup_code', 'Kód na šifře', null, 255)
+			->setOption('description', 'Kód napsaný na zadání šifry, kterou tým po čekání dostane. Palainfo ho po týmu chce jako „KÓD NA ŠIFŘE X“; jeho zadáním tým zapíše převzetí šifry a zmizí zelená obrazovka. Velikost písmen se nerozlišuje. Povinný, pokud je nastaveno čekání; musí se lišit od kódu stanoviště.');
 		$form->addText('code', 'Kód do Palainfa', null, 255)
 			->setOption('description', 'Kód umístěný na stanovišti; jeho zadáním tým v Palainfu zapíše příchod. Velikost písmen se nerozlišuje. Bez kódu na stanoviště nelze v Palainfu dojít.');
 		$form->addText('specification', 'Upřesnítko', null, 255)
@@ -338,6 +349,9 @@ final class AdministrationPresenter extends BasePresenter
 				'solution' => $data->solution,
 				'dead_solution' => $data->dead_solution,
 				'entry_message' => $data->entry_message,
+				'wait_minutes' => $data->wait_minutes,
+				'wait_message' => $data->wait_message ?? self::DefaultWaitMessage, // NULL = never saved
+				'pickup_code' => $data->pickup_code,
 				'code' => $data->code,
 				'specification' => $data->specification,
 				'checkpoint_close_time' => $data->checkpoint_close_time?->format('%H:%I'),
@@ -354,6 +368,7 @@ final class AdministrationPresenter extends BasePresenter
 	/**
 	 * Password ciphers need the password and the location of the next checkpoint (otherwise Palainfo
 	 * would show the password itself as the location). The finish cipher is always solved by a password.
+	 * A wait for the cipher needs the pickup code that removes the green screen in Palainfo.
 	 * @param array<string, mixed> $values
 	 */
 	private function validateCipherForm(Form $form, array $values): void
@@ -368,6 +383,13 @@ final class AdministrationPresenter extends BasePresenter
 
 		if ($values['has_password_solution'] && !$isFinishCipher && trim((string) $values['dead_solution']) === '') {
 			$form->addError('Vyplňte řešení v totálce – umístění dalšího stanoviště, které se zobrazí po zadání hesla.');
+		}
+
+		$pickupCode = trim((string) $values['pickup_code']);
+		if ($values['wait_minutes'] !== null && $pickupCode === '') {
+			$form->addError('Vyplňte kód na šifře – tým ho po čekání najde na zadání a zadá do Palainfa.');
+		} elseif ($values['wait_minutes'] !== null && mb_strtoupper($pickupCode) === mb_strtoupper(trim((string) $values['code']))) {
+			$form->addError('Kód na šifře se musí lišit od kódu stanoviště.');
 		}
 	}
 
@@ -387,6 +409,9 @@ final class AdministrationPresenter extends BasePresenter
 			'solution' => $values['solution'],
 			'dead_solution' => $values['dead_solution'],
 			'entry_message' => $values['entry_message'],
+			'wait_minutes' => $values['wait_minutes'],
+			'wait_message' => $values['wait_message'],
+			'pickup_code' => $values['pickup_code'],
 			'code' => $values['code'],
 			'specification' => $values['specification'],
 			'checkpoint_close_time' => $values['checkpoint_close_time'],

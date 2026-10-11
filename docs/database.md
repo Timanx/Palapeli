@@ -70,6 +70,7 @@ solve time only in `exit_datetime` of the finish and are ranked by the arrival t
 | Column | Meaning |
 |---|---|
 | `entry_datetime` | arrival (team entered the checkpoint code in Palainfo) |
+| `pickup_datetime` | team entered the pickup code of a cipher handed out after a mandatory wait (`ciphers.wait_minutes`); `NULL` otherwise |
 | `exit_datetime` | departure (team set it, solved the password, or took the total hint) |
 | `used_hint` | `1` total hint taken, `0` solved, `NULL` not filled in |
 | `entry_time`, `exit_time` | legacy TIME columns, not used by the current code |
@@ -79,7 +80,13 @@ solve time only in `exit_datetime` of the finish and are ranked by the arrival t
 PK (`year`, `checkpoint_number`). `name`, `cipher_description` (HTML), `solution_description`
 (HTML), `solution`, `dead_solution` (text revealed with the total hint, falls back to `solution`;
 for password ciphers the location shown after the correct password), `entry_message` (text shown
-to the team right after it enters the code), `code` (code found on the checkpoint, entered into
+to the team right after it enters the code), `wait_minutes` (mandatory wait after entering the code
+before organizers hand out the cipher, e.g. at a campfire; `NULL` = none, see
+[game-logic.md](game-logic.md#palainfo-flow-component-actionscreen)), `wait_message` (extra text on
+the Palainfo wait screen; the administration prefills "Zatím si můžete opéct špekáček nebo se jinak
+občerstvit." while it is `NULL`; `''` = none), `pickup_code` (code written on the cipher handed out
+after the wait; entering it records `results.pickup_datetime` and removes the wait screen; required with a
+wait), `code` (code found on the checkpoint, entered into
 Palainfo), `specification` ("upřesnítko", shown on the team card and on AKCE while the team is heading to the checkpoint; `''` = none), `checkpoint_close_time`
 (informative), `has_password_solution` (the solution is a password typed into Palainfo; case,
 diacritics, spaces and punctuation are ignored on both sides; the finish cipher of an edition with

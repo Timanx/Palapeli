@@ -333,6 +333,10 @@
         height: 200px;
     }
 
+    .cipherForm input[type="text"] {
+        width: calc(100% - 10px);
+    }
+
     .cipherImage {
         max-width: calc(100% - 24px);
     }

@@ -4,6 +4,7 @@
 @red: #FF0000;
 @yellow: #FFCA05;
 @green: #69B300;
+@orange: #FF8C00;
 @blue-tint: #A9CEFF;
 @red-tint: #FFB1B1;
 @yellow-tint: #FFEBA2;
@@ -157,6 +158,59 @@ body {
   }
   .consequences {
     margin-bottom: 20px;
+  }
+}
+
+// wait for the cipher (e.g. at a campfire): orange countdown, then green proof for organizers
+.cipher-wait {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  box-sizing: border-box;
+  min-height: 50vh;
+  margin: -30px 0 20px 0; // up to the top edge (.palainfo-container padding)
+  padding: 30px 35px;
+  font-family: 'Source Sans Pro', sans-serif;
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.35;
+  text-align: center;
+  color: black;
+  word-break: break-word;
+  &.waiting {
+    background-color: @orange;
+    .cipher-wait-ready {
+      display: none;
+    }
+  }
+  &.ready {
+    background-color: @green;
+    .cipher-wait-waiting {
+      display: none;
+    }
+  }
+  .cipher-wait-countdown {
+    font-variant-numeric: tabular-nums;
+  }
+  .cipher-wait-timer {
+    font-size: 88px;
+    font-weight: 700;
+    line-height: 1;
+    margin-bottom: 24px;
+  }
+  p {
+    margin: 0 0 12px 0;
+  }
+  .cipher-wait-ready {
+    font-weight: 400;
+  }
+  .cipher-wait-ready-title {
+    font-size: 34px;
+    line-height: 1.25;
+    margin-bottom: 20px;
+    strong {
+      font-weight: 700;
+    }
   }
 }
 

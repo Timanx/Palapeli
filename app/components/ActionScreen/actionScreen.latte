@@ -1,5 +1,20 @@
+{var $waitingForPickup = $cipherWait !== null}
+<div n:if="$waitingForPickup" n:class="cipher-wait, $cipherWait['remaining'] > 0 ? waiting : ready" id="cipher-wait" data-remaining="{$cipherWait['remaining']}">
+	<div class="cipher-wait-waiting">
+		<div class="cipher-wait-timer cipher-wait-countdown">{$cipherWait['countdown']}</div>
+		<p>
+			Tato obrazovka zezelená v&nbsp;{$cipherWait['end']|date:'H:i:s'}.
+			Pak obrazovku ukažte organizátorům a dostanete šifru.
+		</p>
+		<p n:if="$cipherWait['message'] !== null">{$cipherWait['message']}</p>
+	</div>
+	<div class="cipher-wait-ready">
+		<div class="cipher-wait-ready-title">Tým <strong>{$cipherWait['teamName']}</strong> si již může vyzvednout šifru</div>
+		<p>Po převzetí šifry zadejte níže kód, který je na ní napsaný.</p>
+	</div>
+</div>
 <div n:foreach="$flashes as $flash" n:class="flash, $flash->type">{$flash->message}</div>
-{if !$teamEnded && $hasPasswordSolution}
+{if !$teamEnded && $hasPasswordSolution && !$waitingForPickup}
 	{if $hasFinishCipher && $nextCheckpointNumber == $checkpointCount}
 		<div class="flash info">K dokončení hry vám zbývá zadat cílové heslo.</div>
 	{else}
@@ -11,11 +26,13 @@
 </div>
 <div class="action-screen-container screen-container">
 
-	{if !$teamEnded && ($hasPasswordSolution || $nextCheckpointNumber != $checkpointCount)}
+	{if !$teamEnded && ($waitingForPickup || $hasPasswordSolution || $nextCheckpointNumber != $checkpointCount)}
 
 		<div class="actions-container" id="actions-container" style="display: block;">
 			<div class="checkpoint-heading">
-				{if $hasPasswordSolution}
+				{if $waitingForPickup}
+					{if $lastCheckpointData->checkpoint_number == 0}KÓD NA STARTOVNÍ ŠIFŘE{elseif $lastCheckpointData->checkpoint_number == $checkpointCount - 1}KÓD NA CÍLOVÉ ŠIFŘE{else}KÓD NA ŠIFŘE {$lastCheckpointData->checkpoint_number}{/if}
+				{elseif $hasPasswordSolution}
 					ŘEŠENÍ ŠIFRY
 				{elseif $nextCheckpointNumber == 0}
 					KÓD STARTOVNÍ ŠIFRY
@@ -32,7 +49,7 @@
 				{/form}
 			</div>
 
-			<div n:if="$nextCheckpointNumber > 0 && !$hasPasswordSolution" class="exit-time-forms-container">
+			<div n:if="$nextCheckpointNumber > 0 && !$hasPasswordSolution && !$waitingForPickup" class="exit-time-forms-container">
 				<div class="checkpoint-heading">
 					{if $nextCheckpointNumber == 1}
 						ODCHOD ZE STARTU
@@ -122,6 +139,34 @@
         }
 
     }
+
+    // countdown of the wait for the cipher; turns the screen green without reloading (weak signal at the checkpoint)
+    (function () {
+        var wait = document.getElementById('cipher-wait');
+        if (!wait || wait.className.indexOf('waiting') === -1) {
+            return;
+        }
+
+        var end = Date.now() + parseInt(wait.getAttribute('data-remaining'), 10) * 1000;
+        var countdowns = wait.getElementsByClassName('cipher-wait-countdown');
+        var timer = setInterval(tick, 500);
+
+        function tick() {
+            var remaining = Math.ceil((end - Date.now()) / 1000);
+            if (remaining <= 0) {
+                clearInterval(timer);
+                wait.className = 'cipher-wait ready';
+                return;
+            }
+
+            var minutes = Math.floor(remaining / 60);
+            var seconds = remaining % 60;
+            var text = (minutes < 10 ? '0' : '') + minutes + ':' + (seconds < 10 ? '0' : '') + seconds;
+            for (var i = 0; i < countdowns.length; i++) {
+                countdowns[i].textContent = text;
+            }
+        }
+    })();
 
 	{if $defaultScreen === App\Components\ActionScreen\ActionScreen::EndScreen && !$teamEnded}
     toggleEndScreen();
