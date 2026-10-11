@@ -7,6 +7,7 @@
 {ifset $teamId}
 	<h2 class="heading">{$teamName|upper|noescape}</h2>
 	{form teamCardForm}
+		<div n:foreach="$form->getOwnErrors() as $error" class="flash error">{$error}</div>
 		<table class="card">
 			<tr class="headings">
 				<th title="Čas příchodu na stanoviště">

@@ -62,14 +62,18 @@ The team's log and broadcast messages, newest first.
 ### TeamCard
 
 Select a team (grouped into "Nevyplněné/Vyplněné týmy"), show its card, finalize it. The selected
-team is the component parameter `team` (URL `?teamCard-team=383`). Saving the card is disabled
-unless `cardEditing: true` (constructor argument `$editingEnabled`).
+team is the persistent component parameter `team` (URL `?teamCard-team=383`). Saving the card is
+disabled unless `cardEditing: true` (constructor argument `$editingEnabled`).
 
 ### CheckpointCard
 
 Select a checkpoint (optionally ordered by arrival to the previous one) and show arrivals of all
 teams; teams that did not visit the previous checkpoint are highlighted. Uses presenter parameters
 `checkpoint` and `previous`. Saving is controlled by `cardEditing` as well.
+
+Both cards save only the times that were changed (unchanged ones keep their seconds), convert a
+typed `H:i` to a date-time with `YearsModel::toGameDateTime()` and refuse an arrival later than the
+departure from the same checkpoint or earlier than the departure from the previous one.
 
 ### TeamMessage
 

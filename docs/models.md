@@ -17,6 +17,7 @@ Rows are returned as `Nette\Database\Row` (`$row->column` or `$row['column']`); 
 | `getCheckpointCount`, `hasFinishCipher`, `getTeamLimit` | per-edition values |
 | `isRegistrationOpen`, `hasRegistrationStarted`, `hasGameStarted`, `hasGameEnded` | evaluated by the database clock |
 | `getRegistrationStart($year)` | formatted "1. 12. 2025 v 20:00" |
+| `toGameDateTime($year, $time)` | a time typed into the administration cards (`H:i`) on the game day (next day in a multi-day game when earlier than the start); `null` = invalid |
 | `getArchiveSwitchData()`, `getYearNames()` | lists of editions |
 | `isTeamInCurrentYear($teamId)` | team registered in the current edition |
 | `addYear($values)`, `editYear($values)` | save; `is_current` is moved in a transaction |

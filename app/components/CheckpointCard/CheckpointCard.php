@@ -129,8 +129,44 @@ final class CheckpointCard extends BaseControl
 		}
 
 		$form->addSubmit('send', 'ODESLAT KARTU STANOVIŠTĚ');
+		$form->onValidate[] = $this->validateCheckpointCardForm(...);
 		$form->onSuccess[] = $this->checkpointCardFormSucceeded(...);
 		return $form;
+	}
+
+
+	/**
+	 * The arrival must not be later than the departure from this checkpoint, nor earlier than the
+	 * departure from the previous one.
+	 * @param array<string, array{entryTime: string, teamId: string}> $values
+	 */
+	private function validateCheckpointCardForm(Form $form, array $values): void
+	{
+		if ($this->checkpoint === null) {
+			return;
+		}
+
+		$checkpointCount = $this->yearsModel->getCheckpointCount($this->year);
+		foreach ($this->getChangedEntries($values) as $teamId => $entry) {
+			$teamName = $this->teamsModel->getTeamName($teamId);
+			if ($entry === null) {
+				$form->addError($teamName . ': neplatný čas.');
+				continue;
+			}
+
+			$results = $this->resultsModel->getTeamResults($teamId, $this->year);
+			$exit = $results[$this->checkpoint]['exit_datetime'] ?? null;
+			$previousExit = $results[$this->checkpoint - 1]['exit_datetime'] ?? null;
+
+			// the finish password row has the departure equal to the arrival, it is overwritten
+			if ($exit !== null && $exit < $entry && $this->checkpoint !== $checkpointCount) {
+				$form->addError($teamName . ': příchod je později než odchod z tohoto stanoviště.');
+			}
+
+			if ($previousExit !== null && $entry < $previousExit) {
+				$form->addError($teamName . ': příchod je dříve než odchod z předchozího stanoviště.');
+			}
+		}
 	}
 
 
@@ -146,20 +182,41 @@ final class CheckpointCard extends BaseControl
 
 		$checkpointCount = $this->yearsModel->getCheckpointCount($this->year);
 
-		foreach ($values as $team) {
-			$entryTime = $team['entryTime'];
-			if ($entryTime === '' || $entryTime === AppConstants::EmptyTimeValue) {
-				continue;
-			}
-
-			$this->resultsModel->insertResultsRow((int) $team['teamId'], $this->year, $this->checkpoint, entryTime: $entryTime);
+		foreach ($this->getChangedEntries($values) as $teamId => $entry) {
+			assert($entry !== null); // checked in validateCheckpointCardForm()
+			$this->resultsModel->insertResultsRow($teamId, $this->year, $this->checkpoint, entryTime: $entry);
 
 			if ($this->checkpoint === $checkpointCount) {
-				$this->resultsModel->insertResultsRow((int) $team['teamId'], $this->year, $this->checkpoint, exitTime: $entryTime);
+				$this->resultsModel->insertResultsRow($teamId, $this->year, $this->checkpoint, exitTime: $entry);
 			}
 		}
 
 		$this->flashMessage('Údaje z karty stanoviště byly úspěšně uloženy', 'success');
 		$this->redirect('this');
+	}
+
+
+	/**
+	 * Arrivals that were filled in or changed (unchanged ones keep the stored value incl. seconds).
+	 * @param array<string, array{entryTime: string, teamId: string}> $values
+	 * @return array<int, ?\DateTimeImmutable>  team ID => arrival, null = invalid time
+	 */
+	private function getChangedEntries(array $values): array
+	{
+		$stored = [];
+		foreach ($this->resultsModel->getCheckpointEntryTimes($this->year, (int) $this->checkpoint) as $team) {
+			$stored[(int) $team->id] = $team->entry_time;
+		}
+
+		$changed = [];
+		foreach ($values as $team) {
+			$teamId = (int) $team['teamId'];
+			$entryTime = $team['entryTime'];
+			if ($entryTime !== '' && $entryTime !== AppConstants::EmptyTimeValue && $entryTime !== ($stored[$teamId] ?? null)) {
+				$changed[$teamId] = $this->yearsModel->toGameDateTime($this->year, $entryTime);
+			}
+		}
+
+		return $changed;
 	}
 }

@@ -128,6 +128,30 @@ final class YearsModel extends BaseModel
 	}
 
 
+	/**
+	 * Date and time of a time ("H:i") entered in the administration cards: the game day; in a game
+	 * longer than one day (klouzavý start) a time earlier than the game start means the next day.
+	 * Null when the time is not valid or the edition has no game start.
+	 */
+	public function toGameDateTime(int $year, string $time): ?\DateTimeImmutable
+	{
+		$data = $this->getYearData($year);
+		if (
+			$data?->game_start === null
+			|| !preg_match('~^(\d{1,2}):(\d{2})(?::\d{2})?$~D', $time, $m)
+			|| (int) $m[1] > 23
+			|| (int) $m[2] > 59
+		) {
+			return null;
+		}
+
+		$gameStart = \DateTimeImmutable::createFromInterface($data->game_start);
+		$dateTime = $gameStart->setTime((int) $m[1], (int) $m[2]);
+		$isMultiDay = $data->game_end !== null && $data->game_end->format('Y-m-d') !== $gameStart->format('Y-m-d');
+		return $isMultiDay && $dateTime < $gameStart ? $dateTime->modify('+1 day') : $dateTime;
+	}
+
+
 	public function hasGameStarted(int $year): bool
 	{
 		return $this->evaluate($year, 'CURRENT_TIMESTAMP >= game_start');

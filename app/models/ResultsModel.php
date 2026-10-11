@@ -350,7 +350,7 @@ final class ResultsModel extends BaseModel
 
 
 	/**
-	 * @return array<int, Row>  checkpoint => row with entry_time, exit_time (H:i), used_hint, checkpoint_number
+	 * @return array<int, Row>  checkpoint => row with entry_time, exit_time (H:i), entry_datetime, exit_datetime, used_hint, checkpoint_number
 	 */
 	public function getTeamResults(int $teamId, int $year): array
 	{
@@ -358,6 +358,8 @@ final class ResultsModel extends BaseModel
 			SELECT
 				TIME_FORMAT(results.entry_datetime, '%H:%i') AS entry_time,
 				TIME_FORMAT(results.exit_datetime, '%H:%i') AS exit_time,
+				results.entry_datetime,
+				results.exit_datetime,
 				used_hint,
 				checkpoint_number
 			FROM results

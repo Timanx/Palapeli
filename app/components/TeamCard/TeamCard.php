@@ -9,7 +9,9 @@ use App\Models\ResultsModel;
 use App\Models\TeamsModel;
 use App\Models\YearsModel;
 use App\Utils\AppConstants;
+use Nette\Application\Attributes\Persistent;
 use Nette\Application\UI\Form;
+use Nette\Database\Row;
 
 
 /**
@@ -18,6 +20,11 @@ use Nette\Application\UI\Form;
  */
 final class TeamCard extends BaseControl
 {
+	/** Selected team; persistent so that a form shown again with errors keeps it. */
+	#[Persistent]
+	public ?int $team = null;
+
+
 	/**
 	 * @param bool $editingEnabled  saving of the card; disabled by default because teams enter their
 	 *                              data themselves in Palainfo (parameter cardEditing in common.neon)
@@ -88,8 +95,47 @@ final class TeamCard extends BaseControl
 
 		$form->addHidden('teamId', $teamId);
 		$form->addSubmit('send', 'ODESLAT KARTU TÝMU');
+		$form->onValidate[] = $this->validateTeamCardForm(...);
 		$form->onSuccess[] = $this->teamCardFormSucceeded(...);
 		return $form;
+	}
+
+
+	/**
+	 * Arrival to a checkpoint must not be later than the departure from it, nor earlier than the
+	 * departure from the previous checkpoint.
+	 * @param array<string, mixed> $values
+	 */
+	private function validateTeamCardForm(Form $form, array $values): void
+	{
+		$teamId = (int) $values['teamId'];
+		$results = $this->resultsModel->getTeamResults($teamId, $this->year);
+		$changes = $this->getTimeChanges($values, $results);
+		$checkpointCount = $this->yearsModel->getCheckpointCount($this->year);
+		$previousExit = null;
+
+		foreach ($changes as $number => $change) {
+			if ($change['entry'] === false || $change['exit'] === false) {
+				$form->addError(self::checkpointLabel($number, $checkpointCount) . ': neplatný čas.');
+				continue;
+			}
+
+			// the time after the change, or the stored one
+			$entry = $change['entry'] ?? $results[$number]['entry_datetime'] ?? null;
+			$exit = $change['exit'] ?? $results[$number]['exit_datetime'] ?? null;
+			$entry = $entry === '' ? null : $entry;
+			$exit = $exit === '' ? null : $exit;
+
+			if ($entry !== null && $exit !== null && $exit < $entry) {
+				$form->addError(self::checkpointLabel($number, $checkpointCount) . ': odchod je dříve než příchod.');
+			}
+
+			if ($entry !== null && $previousExit !== null && $entry < $previousExit) {
+				$form->addError(self::checkpointLabel($number, $checkpointCount) . ': příchod je dříve než odchod z předchozího stanoviště.');
+			}
+
+			$previousExit = $exit;
+		}
 	}
 
 
@@ -104,32 +150,73 @@ final class TeamCard extends BaseControl
 		}
 
 		$teamId = (int) $values['teamId'];
-		unset($values['teamId']);
-		$isEmpty = static fn(?string $time): bool => $time === null || $time === '' || $time === AppConstants::EmptyTimeValue;
+		$changes = $this->getTimeChanges($values, $this->resultsModel->getTeamResults($teamId, $this->year));
+		$last = $this->yearsModel->getCheckpointCount($this->year) - 1;
 
-		foreach ($values as $name => $checkpoint) {
-			$number = (int) substr($name, strlen('checkpoint'));
+		foreach ($changes as $number => $change) {
+			$checkpoint = $values['checkpoint' . $number];
 			$usedHint = isset($checkpoint['usedHint']) ? (bool) $checkpoint['usedHint'] : null;
+			assert($change['entry'] !== false && $change['exit'] !== false); // checked in validateTeamCardForm()
 
-			if ($usedHint || !$isEmpty($checkpoint['exitTime']) || !$isEmpty($checkpoint['entryTime'])) {
-				$this->resultsModel->insertResultsRow(
-					$teamId,
-					$this->year,
-					$number,
-					$isEmpty($checkpoint['entryTime']) ? '' : $checkpoint['entryTime'],
-					$isEmpty($checkpoint['exitTime']) ? '' : $checkpoint['exitTime'],
-					$usedHint,
-				);
+			if ($usedHint || !self::isEmptyTime($checkpoint['exitTime']) || !self::isEmptyTime($checkpoint['entryTime'])) {
+				$this->resultsModel->insertResultsRow($teamId, $this->year, $number, $change['entry'], $change['exit'], $usedHint);
 			}
 
 			// solving the finish password is stored as an extra checkpoint
-			if ($number === count($values) - 1 && !$isEmpty($checkpoint['exitTime'])) {
-				$this->resultsModel->insertResultsRow($teamId, $this->year, $number + 1, $checkpoint['exitTime'], $checkpoint['exitTime']);
+			if ($number === $last && $change['exit'] instanceof \DateTimeInterface) {
+				$this->resultsModel->insertResultsRow($teamId, $this->year, $number + 1, $change['exit'], $change['exit']);
 			}
 		}
 
 		$this->flashMessage('Údaje z karty týmu byly úspěšně uloženy', 'success');
 		$this->redirect('this', ['team' => $teamId]);
+	}
+
+
+	/**
+	 * Arrival and departure times of the card as the values for ResultsModel::insertResultsRow(): null = the time
+	 * was not changed (keeps the stored value incl. seconds), '' = cleared, false = invalid time.
+	 * @param array<string, mixed> $values
+	 * @param array<int, Row> $results
+	 * @return array<int, array{entry: \DateTimeImmutable|string|false|null, exit: \DateTimeImmutable|string|false|null}>
+	 */
+	private function getTimeChanges(array $values, array $results): array
+	{
+		$changes = [];
+		foreach ($values as $name => $checkpoint) {
+			if (!str_starts_with($name, 'checkpoint')) {
+				continue;
+			}
+
+			$number = (int) substr($name, strlen('checkpoint'));
+			foreach (['entry' => 'entryTime', 'exit' => 'exitTime'] as $key => $input) {
+				$time = self::isEmptyTime($checkpoint[$input]) ? '' : $checkpoint[$input];
+				$changes[$number][$key] = match (true) {
+					$time === ($results[$number][$key . '_time'] ?? '') => null,
+					$time === '' => '',
+					default => $this->yearsModel->toGameDateTime($this->year, $time) ?? false,
+				};
+			}
+		}
+
+		ksort($changes);
+		return $changes;
+	}
+
+
+	private static function isEmptyTime(?string $time): bool
+	{
+		return $time === null || $time === '' || $time === AppConstants::EmptyTimeValue;
+	}
+
+
+	private static function checkpointLabel(int $number, int $checkpointCount): string
+	{
+		return match ($number) {
+			0 => 'Start',
+			$checkpointCount - 1 => 'Cíl',
+			default => $number . '. stanoviště',
+		};
 	}
 
 
@@ -181,7 +268,6 @@ final class TeamCard extends BaseControl
 
 	private function getSelectedTeamId(): ?int
 	{
-		$team = $this->getParameter('team');
-		return $team === null || $team === '' ? null : (int) $team;
+		return $this->team;
 	}
 }
