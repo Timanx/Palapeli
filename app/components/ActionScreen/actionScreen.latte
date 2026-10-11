@@ -6,6 +6,9 @@
 		<div class="flash info">Řešením šifry je heslo. Po jeho zadání vám Palainfo vypíše polohu dalšího stanoviště.</div>
 	{/if}
 {/if}
+<div n:if="$specification !== null" class="flash info">
+	Upřesnítko {if $nextCheckpointNumber == 0}ke startu{elseif $nextCheckpointNumber == $checkpointCount - 1}k cíli{else}ke stanovišti {$nextCheckpointNumber}{/if}: {$specification}
+</div>
 <div class="action-screen-container screen-container">
 
 	{if !$teamEnded && ($hasPasswordSolution || $nextCheckpointNumber != $checkpointCount)}

@@ -38,6 +38,7 @@ The main game screen, see [game-logic.md](game-logic.md#palainfo-flow-component-
 | `askForDead` | total hint (confirmed by the checkpoint code) |
 | `askForEnd` | quit the game (confirmed by `EndCode`) |
 
+The specification ("upřesnítko") of the checkpoint the team is heading to is shown above the forms.
 `setDefaultScreen(DeadScreen|EndScreen)` opens a confirmation screen after the page loads.
 `hasReachedFinish()` (static) tells whether a team that ended the game completed it.
 

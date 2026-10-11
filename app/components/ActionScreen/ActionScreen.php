@@ -77,6 +77,7 @@ final class ActionScreen extends BaseControl
 			'canAskForDead' => false,
 			'endCode' => self::EndCode,
 			'lastCheckpointData' => null,
+			'specification' => null,
 		];
 
 		if ($this->teamsModel->hasTeamEnded($teamId, $this->year)) {
@@ -98,6 +99,10 @@ final class ActionScreen extends BaseControl
 			$params['teamEnded'] = false;
 			$params['lastCheckpointData'] = $last;
 			$params['canAskForDead'] = $last !== null && $this->canAskForDead((int) $last->checkpoint_number);
+			// specification of the checkpoint the team is heading to (none for the finish password)
+			$params['specification'] = $nextCheckpoint < $checkpointCount
+				? $this->ciphersModel->getSpecification($this->year, $nextCheckpoint)
+				: null;
 		}
 
 		$this->renderTemplate(__DIR__ . '/actionScreen.latte', $params);

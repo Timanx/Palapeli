@@ -40,7 +40,8 @@ Teams that finished or quit, and everybody after `game_end`, cannot do any actio
 server too, because an outdated page on another phone can still submit the forms).
 
 1. **Next checkpoint** = `MAX(checkpoint_number with arrival) + 1`, or 0 when the team has not
-   started (`ResultsModel::getFirstEmptyCheckpoint`).
+   started (`ResultsModel::getFirstEmptyCheckpoint`). Its specification ("upřesnítko"), if any, is
+   shown on AKCE.
 2. **Entering a checkpoint code** – compared case-insensitively with `ciphers.code` of the next
    checkpoint (a checkpoint without a code accepts nothing). On success the arrival is stored
    (`results.entry_datetime`, `used_hint = 0`), a log entry is written and the team sees its

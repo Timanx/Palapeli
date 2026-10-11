@@ -127,15 +127,25 @@ final class CiphersModel extends BaseModel
 
 
 	/**
-	 * @return array<int, ?string>  checkpoint number => specification ("upřesnítko")
+	 * @return array<int, string>  checkpoint number => specification ("upřesnítko"), only checkpoints that have one
 	 */
 	public function getSpecifications(int $year): array
 	{
-		return $this->database->query('
+		return $this->database->query("
 			SELECT checkpoint_number, specification
 			FROM ciphers
-			WHERE year = ?
-		', $year)->fetchPairs('checkpoint_number', 'specification');
+			WHERE year = ? AND specification <> ''
+		", $year)->fetchPairs('checkpoint_number', 'specification');
+	}
+
+
+	/**
+	 * Specification ("upřesnítko") of the checkpoint location.
+	 */
+	public function getSpecification(int $year, int $checkpoint): ?string
+	{
+		$specification = $this->getColumn($year, $checkpoint, 'specification');
+		return $specification === null || $specification === '' ? null : (string) $specification;
 	}
 
 

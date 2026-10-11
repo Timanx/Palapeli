@@ -80,7 +80,7 @@ PK (`year`, `checkpoint_number`). `name`, `cipher_description` (HTML), `solution
 (HTML), `solution`, `dead_solution` (text revealed with the total hint, falls back to `solution`;
 for password ciphers the location shown after the correct password), `entry_message` (text shown
 to the team right after it enters the code), `code` (code found on the checkpoint, entered into
-Palainfo), `specification` ("upřesnítko", shown on the team card), `checkpoint_close_time`
+Palainfo), `specification` ("upřesnítko", shown on the team card and on AKCE while the team is heading to the checkpoint; `''` = none), `checkpoint_close_time`
 (informative), `has_password_solution` (the solution is a password typed into Palainfo; case,
 diacritics, spaces and punctuation are ignored on both sides; the finish cipher of an edition with
 `has_finish_cipher` is always a password cipher), file references to `files`.

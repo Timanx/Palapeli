@@ -283,7 +283,7 @@ final class AdministrationPresenter extends BasePresenter
 		$form->addText('code', 'Kód do Palainfa', null, 255)
 			->setOption('description', 'Kód umístěný na stanovišti; jeho zadáním tým v Palainfu zapíše příchod. Velikost písmen se nerozlišuje. Bez kódu na stanoviště nelze v Palainfu dojít.');
 		$form->addText('specification', 'Upřesnítko', null, 255)
-			->setOption('description', 'Zobrazí se týmům v Palainfu v záložce KARTA u tohoto stanoviště.');
+			->setOption('description', 'Zobrazí se týmům v Palainfu v záložce KARTA u tohoto stanoviště a v záložce AKCE, dokud na toto stanoviště míří.');
 		$form->addTime('checkpoint_close_time', 'Zavření stanoviště')->setFormat('H:i')
 			->setOption('description', 'Zobrazí se v záložce KARTA („Zavírá v …“). Jen informativní – Palainfo kód přijme i po zavření. Prázdné = otevřeno do konce hry.');
 		$form->addCheckbox('has_password_solution', 'Řešením je heslo')

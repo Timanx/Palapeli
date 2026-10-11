@@ -51,7 +51,7 @@ Rows are returned as `Nette\Database\Row` (`$row->column` or `$row['column']`); 
 
 `getCipher` (with file paths), `upsertCipher`, `attachFile(…, CipherFileType, $fileId)`,
 `getDeadSolution`, `checkCode`, `checkSolution`, `getCheckpointCloseTimes`, `getSpecifications`,
-`hasCheckpointPasswordSolution`.
+`getSpecification`, `hasCheckpointPasswordSolution`.
 
 ## Other models
 
