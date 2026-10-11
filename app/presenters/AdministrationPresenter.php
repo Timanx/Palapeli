@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Presenters;
 
+use App\Components\ActionScreen\ActionScreen;
 use App\Components\CheckpointCard\CheckpointCard;
 use App\Components\CheckpointCard\CheckpointCardFactory;
 use App\Components\DiscussionControl\DiscussionControl;
@@ -24,6 +25,7 @@ use App\Models\ReportsModel;
 use App\Models\ResultsModel;
 use App\Models\TeamsModel;
 use Nette\Application\UI\Form;
+use Nette\Database\Row;
 use Nette\Http\FileUpload;
 
 
@@ -156,7 +158,38 @@ final class AdministrationPresenter extends BasePresenter
 	public function renderWhereIsWho(): void
 	{
 		$this->prepareHeading('Kde je kdo');
-		$this->template->data = $this->resultsModel->whereIsWho($this->selectedYear);
+		$year = $this->selectedYear;
+		$checkpointCount = $this->yearsModel->getCheckpointCount($year);
+		$hasFinishCipher = $this->yearsModel->hasFinishCipher($year);
+		$playingIds = $this->teamsModel->getPlayingTeamsIds($year);
+
+		// substitutes that did not get to the game are not listed
+		$teams = array_filter(
+			$this->resultsModel->whereIsWho($year),
+			static fn(Row $team): bool => $team->checkpoint_number !== null || in_array($team->team_id, $playingIds, strict: true),
+		);
+
+		$finishedIds = [];
+		$counts = ['playing' => 0, 'finished' => 0, 'quit' => 0, 'notStarted' => 0];
+		foreach ($teams as $team) {
+			// reaching the finish did not set end_time in older editions
+			if ($team->checkpoint_number === null) {
+				$counts['notStarted']++;
+			} elseif (ActionScreen::hasReachedFinish($team->checkpoint_number + 1, $checkpointCount, $hasFinishCipher)) {
+				$finishedIds[] = $team->team_id;
+				$counts['finished']++;
+			} elseif ($team->ended) {
+				$counts['quit']++;
+			} else {
+				$counts['playing']++;
+			}
+		}
+
+		$this->template->data = $teams;
+		$this->template->finishedIds = $finishedIds;
+		$this->template->counts = $counts;
+		$this->template->checkpointCount = $checkpointCount;
+		$this->template->hasFinishCipher = $hasFinishCipher;
 	}
 
 

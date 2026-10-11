@@ -1,6 +1,9 @@
 {layout '@layout.latte'}
 
 {block administrationBlock}
+<p class="information">
+    Na trase: {$counts['playing']}, dokončilo: {$counts['finished']}, vzdalo: {$counts['quit']}, nezačalo: {$counts['notStarted']}
+</p>
 <table class="teamTable">
     <tr>
         <th>
@@ -16,26 +19,39 @@
             Odchod
         </th>
         <th>
-            Ukončena hra předčasně
+            Konec hry
         </th>
     </tr>
     {foreach $data as $row}
     <tr>
-
         <td>
-            {$row->checkpoint_number}
+            {if $row->checkpoint_number === null}
+                nezačal
+            {elseif $row->checkpoint_number == 0}
+                Start
+            {elseif $row->checkpoint_number == $checkpointCount - 1}
+                Cíl
+            {elseif $row->checkpoint_number == $checkpointCount}
+                Cílové heslo
+            {else}
+                {$row->checkpoint_number}
+            {/if}
         </td>
         <td>
             {$row->name}
         </td>
         <td>
-            {$row->entry_datetime}
+            {$row->entry_time}
         </td>
         <td>
-            {$row->exit_datetime}
+            {$row->exit_time}
         </td>
         <td>
-            {if $row->ended}ANO{/if}
+            {if in_array($row->team_id, $finishedIds, true)}
+                dokončil
+            {elseif $row->ended}
+                vzdal {$row->end_time}
+            {/if}
         </td>
     </tr>
     {/foreach}

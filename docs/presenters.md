@@ -117,7 +117,7 @@ login link); their form submissions are refused with HTTP 403.
 | `results` | Výsledky | standings, button "publish" (after the game; removes hints of teams that did not reach the next checkpoint first) |
 | `reports` | Reportáže | add a report link |
 | `year` | Ročníky | edit the selected edition, `?createNew=1` creates a new one (`YearForm`) |
-| `whereIsWho` | Kde je kdo | last checkpoint of every team during the game |
+| `whereIsWho` | Kde je kdo | last checkpoint of every playing team (also teams that have not started) with arrival, departure and whether it finished or quit (and when); counts of teams on the route, finished, quit, not started |
 
 ## Error presenters
 

@@ -45,7 +45,7 @@ Rows are returned as `Nette\Database\Row` (`$row->column` or `$row['column']`); 
   `hasTeamLeft`, `hasTeamOpenedDead`, `getTeamResults`, `getCheckpointEntryTimes`.
 - `insertResultsRow($teamId, $year, $checkpoint, $entryTime, $exitTime, $usedHint)` – creates
   the row if missing and updates the given values (`null` = keep, `''` = clear).
-- `whereIsWho($year)`.
+- `whereIsWho($year)` – last checkpoint of every registered team (`NULL` = not started).
 
 ## CiphersModel – table `ciphers`
 

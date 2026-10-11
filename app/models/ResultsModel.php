@@ -512,24 +512,27 @@ final class ResultsModel extends BaseModel
 
 
 	/**
-	 * Current position of every team: its last visited checkpoint.
-	 * @return Row[]  rows with checkpoint_number, entry_datetime, exit_datetime, name, ended
+	 * Current position of every registered team: its last visited checkpoint (NULL when it has not started).
+	 * Teams furthest in the game first.
+	 * @return Row[]  rows with team_id, name, checkpoint_number, entry_time, exit_time (H:i), ended, end_time (H:i)
 	 */
 	public function whereIsWho(int $year): array
 	{
-		return $this->database->query('
+		return $this->database->query("
 			SELECT
-				results.checkpoint_number,
-				results.entry_datetime,
-				results.exit_datetime,
+				teams.id AS team_id,
 				teams.name,
-				(ty.end_time IS NOT NULL) AS ended
-			FROM results
-			JOIN teams ON teams.id = results.team_id
-			JOIN teamsyear ty ON ty.team_id = results.team_id AND results.year = ty.year
-			WHERE
-				results.entry_datetime IS NOT NULL
-				AND results.year = ?
+				results.checkpoint_number,
+				TIME_FORMAT(results.entry_datetime, '%H:%i') AS entry_time,
+				TIME_FORMAT(results.exit_datetime, '%H:%i') AS exit_time,
+				(ty.end_time IS NOT NULL) AS ended,
+				TIME_FORMAT(ty.end_time, '%H:%i') AS end_time
+			FROM teamsyear ty
+			JOIN teams ON teams.id = ty.team_id
+			LEFT JOIN results
+				ON results.team_id = ty.team_id
+				AND results.year = ty.year
+				AND results.entry_datetime IS NOT NULL
 				AND NOT EXISTS (
 					SELECT 1
 					FROM results next
@@ -539,11 +542,14 @@ final class ResultsModel extends BaseModel
 						AND next.checkpoint_number > results.checkpoint_number
 						AND next.entry_datetime IS NOT NULL
 				)
+			WHERE ty.year = ?
 			ORDER BY
+				results.checkpoint_number IS NULL,
 				results.checkpoint_number DESC,
 				results.exit_datetime IS NOT NULL DESC,
 				results.exit_datetime,
-				results.entry_datetime
-		', $year)->fetchAll();
+				results.entry_datetime,
+				LTRIM(teams.name) COLLATE utf8_czech_ci
+		", $year)->fetchAll();
 	}
 }
