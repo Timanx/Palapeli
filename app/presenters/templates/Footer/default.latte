@@ -1,4 +1,19 @@
 <script>
+	// close the year selector when clicking outside of it or pressing Escape
+	document.addEventListener('click', function (e) {
+		var selector = document.getElementById('yearSelector');
+		if (selector && selector.open && !selector.contains(e.target)) {
+			selector.open = false;
+		}
+	});
+	document.addEventListener('keydown', function (e) {
+		var selector = document.getElementById('yearSelector');
+		if (e.key === 'Escape' && selector && selector.open) {
+			selector.open = false;
+			selector.querySelector('summary').focus();
+		}
+	});
+
 	function handleMailForm(envelope) {
 		var mailForm = document.getElementById('mailForm');
 		var footer = document.getElementById('footer');
@@ -8,7 +23,7 @@
 		if ($(window).width() > 940) {
 			var responsiveModification = 0;
 		} else {
-			var responsiveModification = 113;
+			var responsiveModification = 18; // mobile footer height (responsive.css) minus the desktop one
 		}
 
 		if(mailForm.style.display == 'none') {
@@ -30,10 +45,20 @@
 
 <div>
 	<div class="archive">
-		<p class="archiveHeader">ROČNÍK</p>
-		{foreach $archiveData as $row}
-		<a class="archiveLink{if $selectedYear == $row['year']} selected{/if}" href="{plink Archive: $row['year'], $row['calendar_year'], $presenter->getAction(true)}">{$row['year']}</a>
-		{/foreach}
+		{* year selector: the list opens upwards as a popover; the script above closes it on outside click / Escape *}
+		<details class="yearSelector" id="yearSelector">
+			<summary class="archiveHeader" title="Vybrat ročník">
+				VYBRANÝ ROČNÍK: {$selectedYear}
+				<svg class="yearSelectorIcon" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true">
+					<path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+				</svg>
+			</summary>
+			<div class="yearSelectorList">
+				{foreach $archiveData as $row}
+				<a class="archiveLink{if $selectedYear == $row['year']} selected{/if}" href="{plink Archive: $row['year'], $row['calendar_year'], $presenter->getAction(true)}" title="{$row['year']}. ročník ({$row['calendar_year']})">{$row['year']}</a>
+				{/foreach}
+			</div>
+		</details>
 	</div>{*
 	*}<div class="contact">
 		<p class="archiveHeader">KONTAKT</p>

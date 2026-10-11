@@ -1,0 +1,19 @@
+# Machine specific configuration. Copy this file to config.neon and fill in the credentials.
+# config.neon is not versioned. Optional overrides (e.g. for local development)
+# can be placed into config.local.neon, which is loaded last when it exists.
+
+database:
+	dsn: 'mysql:host=localhost;dbname=master'
+	user: ''
+	password: ''
+	options:
+		charset: utf8mb4
+
+# Outgoing e-mail. Without this section e-mails are sent by PHP mail() (sendmail).
+#mail:
+#	smtp: true
+#	host: smtp.example.com
+#	port: 465
+#	username: ''
+#	password: ''
+#	encryption: ssl

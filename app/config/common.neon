@@ -1,0 +1,28 @@
+# Framework configuration shared by all environments.
+# Credentials and machine specific settings belong to config.neon (not versioned),
+# see config.neon.example.
+
+parameters:
+	# Allows organizers to save team cards and checkpoint cards in the administration.
+	# Disabled: teams enter all data themselves in Palainfo.
+	cardEditing: false
+
+
+application:
+	errorPresenter: Error
+	mapping:
+		*: App\*Module\Presenters\*Presenter
+
+
+session:
+	expiration: 14 days
+
+
+di:
+	export:
+		parameters: no
+		tags: no
+
+
+services:
+	router: App\RouterFactory::createRouter

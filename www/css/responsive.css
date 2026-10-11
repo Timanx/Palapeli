@@ -196,6 +196,19 @@
         width: 100%;
     }
 
+    /* "11. ROČNÍK | TEAM" heading: fit between the logo (73px) and the menu icon instead of the
+       desktop 377px, otherwise the page overflows and the phone zooms out when the menu opens
+       (menu.css is loaded later, hence the two classes) */
+    .menuItemContainer.palapeliHeading {
+        width: calc(100% - 73px - 60px);
+        overflow: hidden;
+    }
+
+    .palapeliHeading .teamText {
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
     .menuItemsContainer .menuText {
         font-size: 120%;
     }
@@ -221,16 +234,23 @@
     }
 
     .archive, .contact {
-        margin: 0 auto 20px auto;
+        margin: 0 auto;
+        width: auto; /* the desktop 50% width is too narrow for the three contact icons */
     }
 
+    /* the footer blocks are stacked on mobile, so keep their headings close together */
+    .footer .archiveHeader, .yearSelector summary {
+        margin: 8px 0;
+    }
+
+    /* footer height is also used by handleMailForm() in Footer/default.latte (responsiveModification = 116 - 98) */
     .wrapper {
         min-height: 100%;
-        margin-bottom: -263px;
+        margin-bottom: -168px;
     }
 
     .footer, .wrapper:after {
-        height: 211px;
+        height: 116px;
     }
 
     .archive {

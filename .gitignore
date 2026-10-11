@@ -1,4 +1,11 @@
-app/config/config.local.neon
+# dependencies (installed by Composer from composer.json + composer.lock)
 vendor
-composer.lock
 
+# local configuration with credentials (app/config/.gitignore ignores config.neon as well)
+app/config/config.local.neon
+
+# IDE settings (PhpStorm), personal per developer
+.idea/
+
+# old copy of nette/mail 2.4 files, not used since the Nette 3 upgrade
+vendor-backup/

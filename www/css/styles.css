@@ -1,5 +1,16 @@
 html {
     font-family: 'Raleway', sans-serif;
+    /* Raleway: lining figures (all digits on the same baseline) everywhere, see docs/development.md */
+    -webkit-font-feature-settings: "lnum" 1;
+    -moz-font-feature-settings: "lnum" 1;
+    font-feature-settings: "lnum" 1;
+}
+
+/* form controls do not inherit font settings by default */
+input, textarea, select, button {
+    -webkit-font-feature-settings: inherit;
+    -moz-font-feature-settings: inherit;
+    font-feature-settings: inherit;
 }
 
 body {
@@ -85,6 +96,59 @@ ul {
     font-family: 'Raleway', sans-serif;
     font-weight: 700;
     color: #666;
+}
+
+/* year selector in the footer: "ROČNÍK ⌄" opens a popover with all years above the label */
+.yearSelector {
+    position: relative;
+    display: inline-block;
+}
+
+.yearSelector summary {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin: 1em 0;
+    cursor: pointer;
+    list-style: none;
+    user-select: none;
+}
+
+.yearSelector summary::-webkit-details-marker {
+    display: none;
+}
+
+/* the label keeps its color when clicked/opened; only keyboard focus is highlighted */
+.yearSelector summary:focus-visible {
+    outline: 2px solid #666;
+    outline-offset: 2px;
+}
+
+.yearSelectorIcon {
+    transition: transform 0.2s;
+}
+
+.yearSelector[open] .yearSelectorIcon {
+    transform: rotate(180deg);
+}
+
+.yearSelectorList {
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+    display: grid;
+    grid-template-columns: repeat(7, 36px);
+    gap: 4px;
+    padding: 8px 10px;
+    background: white;
+    box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.15);
+}
+
+.yearSelectorList .archiveLink {
+    width: auto;
+    text-align: center;
 }
 
 h1 {
