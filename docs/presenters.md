@@ -114,7 +114,7 @@ login link); their form submissions are refused with HTTP 403.
 | `paymentMail` | Neplatiči | e-mails of unpaid playing teams (for copy & paste) |
 | `teamMail` | Maily týmů | e-mails of all playing teams |
 | `teamTable` | Tabulka týmů | all team data incl. variable symbols; `?orderByRegistration=1` |
-| `results` | Výsledky | standings, buttons "publish" and "remove trailing hints" |
+| `results` | Výsledky | standings, button "publish" (after the game; removes hints of teams that did not reach the next checkpoint first) |
 | `reports` | Reportáže | add a report link |
 | `year` | Ročníky | edit the selected edition, `?createNew=1` creates a new one (`YearForm`) |
 | `whereIsWho` | Kde je kdo | last checkpoint of every team during the game |

@@ -79,10 +79,11 @@ Teams are ordered by:
 3. arrival time to the highest checkpoint (with klouzavý start relative to the team's start).
 
 A total hint counts only when the team reached the next checkpoint before the end of the game.
-After the game organizers run "Odstranit totálky týmů, které nedošly na další stanoviště"
-(`ResultsModel::removeTrailingHints`), which clears hints of teams that did not, and then publish
-the results (`years.results_public`). Public pages show results only after the game ended and
-they were published (organizers see the scorecard earlier).
+Until the results are published, the standings (administration, scorecard) ignore hints of teams
+that did not (`getTeamStandings(…, ignoreTrailingHints: true)`). Publishing the results (possible
+only after the game ended) clears these hints in the data (`ResultsModel::removeTrailingHints`) and
+sets `years.results_public`. Public pages show results only after the game ended and they were
+published (organizers see the scorecard earlier).
 
 ## Statistics
 

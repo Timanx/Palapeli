@@ -113,8 +113,8 @@ final class GamePresenter extends BasePresenter
 		$this->prepareHeading('Výsledky');
 
 		$year = $this->selectedYear;
-		$this->template->data = $this->resultsModel->getTeamStandings($year);
-		$this->template->resultsPublic = $this->resultsModel->getResultsPublic($year);
+		$this->template->resultsPublic = $resultsPublic = $this->resultsModel->getResultsPublic($year);
+		$this->template->data = $this->resultsModel->getTeamStandings($year, ignoreTrailingHints: !$resultsPublic);
 		$this->template->hasGameStarted = $this->yearsModel->hasGameStarted($year);
 		$this->template->hasGameEnded = $this->yearsModel->hasGameEnded($year);
 	}
@@ -185,9 +185,10 @@ final class GamePresenter extends BasePresenter
 		$year = $this->selectedYear;
 		$this->template->totalCheckpoints = $this->yearsModel->getCheckpointCount($year);
 		$this->template->individualStart = $this->yearsModel->hasIndividualStart($year);
-		$this->template->teams = $this->resultsModel->getTeamStandings($year);
+		$this->template->resultsPublic = $resultsPublic = $this->resultsModel->getResultsPublic($year);
+		// organizers see the standings before publication the way they will be published
+		$this->template->teams = $this->resultsModel->getTeamStandings($year, ignoreTrailingHints: !$resultsPublic);
 		$this->template->results = $this->resultsModel->getCompleteResults($year);
-		$this->template->resultsPublic = $this->resultsModel->getResultsPublic($year);
 		$this->template->hasGameStarted = $this->yearsModel->hasGameStarted($year);
 		$this->template->hasGameEnded = $this->yearsModel->hasGameEnded($year);
 	}

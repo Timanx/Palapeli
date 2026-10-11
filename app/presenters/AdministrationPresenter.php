@@ -163,8 +163,9 @@ final class AdministrationPresenter extends BasePresenter
 	public function renderResults(): void
 	{
 		$this->prepareHeading('Výsledky');
-		$this->template->data = $this->resultsModel->getTeamStandings($this->selectedYear);
-		$this->template->resultsPublic = $this->resultsModel->getResultsPublic($this->selectedYear);
+		$this->template->resultsPublic = $resultsPublic = $this->resultsModel->getResultsPublic($this->selectedYear);
+		// before publication show the standings the way they will be published
+		$this->template->data = $this->resultsModel->getTeamStandings($this->selectedYear, ignoreTrailingHints: !$resultsPublic);
 	}
 
 
@@ -412,24 +413,13 @@ final class AdministrationPresenter extends BasePresenter
 		$form = new Form;
 		$form->addSubmit('send', 'PUBLIKOVAT VÝSLEDKY');
 		$form->onSuccess[] = function (): void {
-			$this->resultsModel->publishResults($this->selectedYear);
-			$this->flashMessage('Výsledky byly úspěšně zveřejněny', 'success');
-			$this->redirect('this');
-		};
-		return $form;
-	}
-
-
-	protected function createComponentRemoveTrailingHints(): Form
-	{
-		$form = new Form;
-		$form->addSubmit('send', 'ODSTRANIT TOTÁLKY TÝMŮ, KTERÉ NEDOŠLY NA DALŠÍ STANOVIŠTĚ');
-		$form->onSuccess[] = function (): void {
+			// hints of teams that did not reach the next checkpoint are known only after the end of the game
 			if (!$this->yearsModel->hasGameEnded($this->selectedYear)) {
-				$this->flashMessage('Hra ještě neskončila, tato akce by znehodnotila výsledky.', 'error');
+				$this->flashMessage('Hra ještě neskončila, výsledky lze zveřejnit až po jejím konci.', 'error');
 			} else {
 				$this->resultsModel->removeTrailingHints($this->selectedYear);
-				$this->flashMessage('Totálky byly úspěšně odstraněny', 'success');
+				$this->resultsModel->publishResults($this->selectedYear);
+				$this->flashMessage('Výsledky byly úspěšně zveřejněny (totálky týmů, které nedošly na další stanoviště, byly odstraněny).', 'success');
 			}
 
 			$this->redirect('this');

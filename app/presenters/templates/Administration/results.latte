@@ -59,6 +59,8 @@
 		{/foreach}
 	</table>
 
+	<p n:if="!$resultsPublic" class="information">
+		Výsledky ještě nejsou zveřejněné: totálky týmů, které nedošly na další stanoviště, se v tabulce nepočítají. Při zveřejnění (po konci hry) se z dat týmů odstraní.
+	</p>
 	{control publishResults}
-	{control removeTrailingHints}
 {/block}

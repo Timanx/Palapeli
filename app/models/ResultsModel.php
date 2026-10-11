@@ -19,10 +19,23 @@ final class ResultsModel extends BaseModel
 {
 	/**
 	 * Final standings: highest checkpoint minus used hints, then highest checkpoint, then arrival time.
+	 * @param bool $ignoreTrailingHints  do not count hints of teams that did not reach the next checkpoint (the same
+	 *                                   result as after removeTrailingHints(), for the standings before publication)
 	 * @return array<int, Row>  team ID => row with id, name, max_checkpoint, total_hints, finish_time (+ start_datetime)
 	 */
-	public function getTeamStandings(int $year): array
+	public function getTeamStandings(int $year, bool $ignoreTrailingHints = false): array
 	{
+		$hints = $this->database::literal($ignoreTrailingHints
+			? 'SUM(CASE WHEN results.used_hint = 1 AND NOT EXISTS (
+				SELECT 1
+				FROM results AS next_checkpoint
+				WHERE
+					next_checkpoint.team_id = results.team_id
+					AND next_checkpoint.year = results.year
+					AND next_checkpoint.checkpoint_number = results.checkpoint_number + 1
+			) THEN 0 ELSE results.used_hint END)'
+			: 'SUM(results.used_hint)');
+
 		if ($this->hasIndividualStart($year)) {
 			// times are relative to the moment each team started
 			return $this->database->query("
@@ -30,7 +43,7 @@ final class ResultsModel extends BaseModel
 					teams.id,
 					teams.name,
 					MAX(results.checkpoint_number) AS max_checkpoint,
-					SUM(results.used_hint) AS total_hints,
+					? AS total_hints,
 					TIME_FORMAT(TIMEDIFF(MAX(results.entry_datetime), vts.start_datetime), '%H:%i') AS finish_time,
 					DATE_FORMAT(vts.start_datetime, '%e.%c. %H:%i') AS start_datetime
 				FROM results
@@ -39,10 +52,10 @@ final class ResultsModel extends BaseModel
 				WHERE results.year = ?
 				GROUP BY teams.name
 				ORDER BY
-					(MAX(results.checkpoint_number) - SUM(results.used_hint)) DESC,
+					(MAX(results.checkpoint_number) - ?) DESC,
 					MAX(results.checkpoint_number) DESC,
 					TIMEDIFF(MAX(results.entry_datetime), vts.start_datetime) ASC
-			", $year)->fetchAssoc('id');
+			", $hints, $year, $hints)->fetchAssoc('id');
 		}
 
 		return $this->database->query("
@@ -50,17 +63,17 @@ final class ResultsModel extends BaseModel
 				teams.id,
 				teams.name,
 				MAX(results.checkpoint_number) AS max_checkpoint,
-				SUM(results.used_hint) AS total_hints,
+				? AS total_hints,
 				TIME_FORMAT(MAX(results.entry_datetime), '%H:%i') AS finish_time
 			FROM results
 			JOIN teams ON teams.id = results.team_id
 			WHERE year = ?
 			GROUP BY teams.name
 			ORDER BY
-				(MAX(results.checkpoint_number) - SUM(results.used_hint)) DESC,
+				(MAX(results.checkpoint_number) - ?) DESC,
 				MAX(results.checkpoint_number) DESC,
 				MAX(results.entry_datetime) ASC
-		", $year)->fetchAssoc('id');
+		", $hints, $year, $hints)->fetchAssoc('id');
 	}
 
 
