@@ -76,7 +76,10 @@ final class TeamPresenter extends BasePresenter
 		$this->template->hasRegistrationStarted = $this->yearsModel->hasRegistrationStarted($year);
 		$this->template->isRegistrationOpen = $this->yearsModel->isRegistrationOpen($year);
 		$this->template->hasGameStarted = $this->yearsModel->hasGameStarted($year);
-		$this->template->registered = $this->teamId !== null && $this->teamsModel->isTeamRegistered($this->teamId, $year);
+		$this->template->registered = $registered = $this->teamId !== null && $this->teamsModel->isTeamRegistered($this->teamId, $year);
+		$this->template->hasPaid = $registered && $this->teamsModel->getTeamPaymentStatus($this->teamId, $year) === PaymentStatus::Paid;
+		$this->template->feeReturnDeadline = $deadline = $this->yearsModel->getYearData($year)?->entry_fee_return_deadline;
+		$this->template->isFeeReturnable = self::isFeeReturnable($deadline);
 	}
 
 
@@ -373,6 +376,8 @@ final class TeamPresenter extends BasePresenter
 		$wasPlaying = in_array($teamId, $this->teamsModel->getPlayingTeamsIds($year), strict: true);
 		$teamsCount = $this->teamsModel->getTeamsCount($year);
 		$team = $this->teamsModel->getTeamData($teamId, $year);
+		$feeReturnDeadline = $this->yearsModel->getYearData($year)?->entry_fee_return_deadline;
+		$isFeeReturnable = self::isFeeReturnable($feeReturnDeadline);
 
 		// the data are needed to find the payment and return the fee
 		$this->mailer->send(new Message()
@@ -382,6 +387,9 @@ final class TeamPresenter extends BasePresenter
 			->setBody(
 				'Odhlásil se tým ' . $teamName . ' s id ' . $teamId
 				. "\nStartovné " . ($paid === PaymentStatus::Paid ? 'už bylo' : 'ještě nebylo') . ' zaplacené.'
+				. ($paid === PaymentStatus::Paid
+					? "\nStartovné vrátit: " . ($isFeeReturnable ? 'ano' : 'ne, účast byla zrušena po termínu pro vrácení (' . $feeReturnDeadline?->format('j. n. Y H:i') . ')')
+					: '')
 				. "\n\nVariabilní symbol: " . $this->yearsModel->getCalendarYear($year) . $teamId
 				. "\nČlenové: " . self::joinFilled($team?->member1, $team?->member2, $team?->member3, $team?->member4)
 				. "\nE-maily: " . self::joinFilled($team?->email1, $team?->email2)
@@ -397,6 +405,11 @@ final class TeamPresenter extends BasePresenter
 		}
 
 		$this->flashMessage('Účast týmu na hře byla úspěšně zrušena.', 'success');
+		if ($paid === PaymentStatus::Paid) {
+			$this->flashMessage($isFeeReturnable
+				? 'Startovné vám vrátíme na účet, ze kterého jste platili.'
+				: 'Účast jste zrušili po termínu pro vrácení startovného (' . $feeReturnDeadline?->format('j. n. Y H:i') . '), startovné se proto nevrací.', 'info');
+		}
 		$this->teamSession->logOut();
 		$this->redirect('Info:');
 	}
@@ -547,6 +560,15 @@ final class TeamPresenter extends BasePresenter
 	private function requireLoggedTeam(): int
 	{
 		return $this->teamId ?? $this->error('Nejste přihlášeni.', 403);
+	}
+
+
+	/**
+	 * A paid entry fee is returned to a team that cancels its participation until the return deadline.
+	 */
+	private static function isFeeReturnable(?\DateTimeInterface $deadline): bool
+	{
+		return $deadline === null || new \DateTimeImmutable <= $deadline;
 	}
 
 

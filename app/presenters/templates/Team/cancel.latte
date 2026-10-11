@@ -2,6 +2,15 @@
 	{if isset($teamName)}
 		{if $isSelectedYearCurrent}
 			{if $hasRegistrationStarted && !$hasGameStarted && $registered}
+				<div n:if="$hasPaid" class="flash info">
+					{if !$isFeeReturnable}
+						Startovné jste již zaplatili. Termín pro vrácení startovného ({$feeReturnDeadline|date: 'j. n. Y H:i'}) však již uplynul, po zrušení účasti vám ho proto nevrátíme.
+					{elseif $feeReturnDeadline}
+						Startovné jste již zaplatili. Pokud účast zrušíte nejpozději do {$feeReturnDeadline|date: 'j. n. Y H:i'}, vrátíme vám ho na účet, ze kterého jste platili. Po tomto termínu se startovné nevrací.
+					{else}
+						Startovné jste již zaplatili. Po zrušení účasti vám ho vrátíme na účet, ze kterého jste platili.
+					{/if}
+				</div>
 				<div id="formValidationError" class="flash info"></div>
 				{control cancelForm}
 			{elseif !$registered}

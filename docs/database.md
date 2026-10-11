@@ -32,7 +32,7 @@ vw_team_start_datetime = start (checkpoint 0) arrival of each team
 | `hint_for_start_exists` | teams can take the total hint for the start cipher in Palainfo (column default is `1`) |
 | `individual_start` | klouzavý start – each team starts by entering the start code, results are relative to that moment (edition 10) |
 | `team_limit` | max. playing teams; later registrations are substitutes; `NULL` = unlimited |
-| `entry_fee`, `entry_fee_account` (`number/bankcode`), `entry_fee_deadline`, `entry_fee_return_deadline` | payment info |
+| `entry_fee`, `entry_fee_account` (`[prefix-]number/bankcode`), `entry_fee_deadline`, `entry_fee_return_deadline` | payment info; a paid fee is returned when the team cancels until `entry_fee_return_deadline` (`NULL` = always) |
 | `last_info_time` | when the last information is sent (informative) |
 | `results_public` | results are published (set by organizers) |
 | `results_final` | (unused by the web) |

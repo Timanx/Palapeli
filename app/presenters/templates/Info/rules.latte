@@ -68,7 +68,7 @@
 		Týmy se mohou <a href="{plink Team:registration}">registrovat</a> na těchto stránkách od {$yearData->registration_start|date: 'j. n. Y'|noescape} nejpozději do {$yearData->registration_end|date: 'j. n. Y'|noescape}. {if $yearData->team_limit > 0}
 			Limit počtu hrajících týmů je {$yearData->team_limit}.
 		 Týmy registrované nad limit jsou považovány za náhradníky a dostanou se do hry, pouze pokud některé hrající týmy zruší účast. Většinou se na náhradníky dostane, takže se neváhejte registrovat, i když jste pod čarou.<br>{/if}
-		Startovné činí {$yearData->entry_fee|noescape} Kč na tým a je třeba je zaplatit na účet sdělený registrovaným týmům nejpozději do {$yearData->entry_fee_deadline|date: 'j. n. Y'|noescape}, jinak bude neplatící tým nahrazen týmem pod čarou. Podrobnosti o platbě se týmy dozví po registraci. Organizátoři nenesou za bezpečnost ani jednání hráčů zodpovědnost.
+		Startovné činí {$yearData->entry_fee|noescape} Kč na tým a je třeba je zaplatit na účet sdělený registrovaným týmům nejpozději do {$yearData->entry_fee_deadline|date: 'j. n. Y'|noescape}, jinak bude neplatící tým nahrazen týmem pod čarou. Podrobnosti o platbě se týmy dozví po registraci.{if $yearData->entry_fee_return_deadline} Pokud tým, který startovné zaplatil, zruší účast nejpozději do {$yearData->entry_fee_return_deadline|date: 'j. n. Y'|noescape}, vrátíme mu startovné na účet, ze kterého platil. Při pozdějším zrušení účasti se startovné nevrací.{/if} Organizátoři nenesou za bezpečnost ani jednání hráčů zodpovědnost.
 	</p>
 	</div>
 

@@ -21,7 +21,7 @@
 						{if $paid === App\Models\PaymentStatus::Paid}
 							Startovné je zaplacené.
 						{elseif $paid === App\Models\PaymentStatus::Unpaid}
-						Startovné ve výši <strong>{$yearData->entry_fee} Kč</strong> zaplaťte prosím do {$yearData->entry_fee_deadline|date: 'j. n. Y'|noescape} na účet <strong>{$yearData->entry_fee_account}</strong>. Ve zprávě prosím uveďte název vašeho týmu, jako variabilní symbol zadejte <strong>{$variableSymbol}</strong>. V případě zrušení účasti na hře do {$yearData->entry_fee_return_deadline|date: 'j. n. Y'|noescape} vám startovné vrátíme.
+						Startovné ve výši <strong>{$yearData->entry_fee} Kč</strong> zaplaťte prosím do {$yearData->entry_fee_deadline|date: 'j. n. Y'|noescape} na účet <strong>{$yearData->entry_fee_account}</strong>. Ve zprávě prosím uveďte název vašeho týmu, jako variabilní symbol zadejte <strong>{$variableSymbol}</strong>.{if $yearData->entry_fee_return_deadline} V případě zrušení účasti na hře do {$yearData->entry_fee_return_deadline|date: 'j. n. Y'|noescape} vám startovné vrátíme na účet, ze kterého jste platili.{/if}
 						{elseif $paid === App\Models\PaymentStatus::AtStart}
 							Startovné ve výši {$yearData->entry_fee} Kč budete platit na startu.
 						{else}

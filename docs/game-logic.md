@@ -102,6 +102,10 @@ they were published (organizers see the scorecard earlier).
   cancels its participation, the first substitute gets an e-mail that a place is free.
 - Every cancellation is e-mailed to the organizers with the payment state, variable symbol,
   members, e-mails and phones of the team (to find the payment when returning the fee).
+- **Fee return:** a paid fee is returned (to the account the team paid from) when the team cancels
+  until `entry_fee_return_deadline` (no deadline = always). The rules, the payment page, the cancel
+  page (for teams that paid), the message after cancelling and the organizers' e-mail
+  ("Startovné vrátit: ano/ne") say so.
 - The anti-spam question (registration, discussion for anonymous visitors) expects the number of
   puzzle pieces in the logo: **4**.
 

@@ -77,7 +77,7 @@ final class YearForm extends BaseControl
 		$form->addDateTime('entry_fee_deadline', 'Deadline zaplacení startovného:')->setFormat(self::DateTimeFormat)
 			->setOption('description', 'Zobrazí se na stránce platby a v pravidlech.');
 		$form->addDateTime('entry_fee_return_deadline', 'Vrácení startovného při zrušení účasti do:')->setFormat(self::DateTimeFormat)
-			->setOption('description', 'Zobrazí se na stránce platby (informativní).');
+			->setOption('description', 'Zobrazí se na stránce platby, v pravidlech a týmu, který zaplatil a ruší účast. Zaplacené startovné se při zrušení účasti do tohoto termínu vrací na účet, ze kterého tým platil (e-mail o zrušení účasti organizátorům uvádí, zda vrátit). Prázdné = vrací se vždy.');
 		$form->addDateTime('last_info_time', 'Čas rozeslání posledních informací:')->setFormat(self::DateTimeFormat)
 			->setOption('description', 'Jen pro evidenci, web ho nikde nezobrazuje.');
 		$form->addInteger('team_limit', 'Limit počtu týmů:')
