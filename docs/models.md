@@ -75,7 +75,7 @@ Rows are returned as `Nette\Database\Row` (`$row->column` or `$row['column']`); 
 
 | Service | Purpose |
 |---|---|
-| `PasswordHasher` | `hash()`, `verify()`, `generatePassword()` – the only place that knows the password scheme |
+| `PasswordHasher` | `hash()`, `verify()`, `createResetToken()`, `verifyResetToken()` – the only place that knows the password scheme |
 | `PaymentQrCodeGenerator` | `createPaymentString()` (SPD format), `createDataUri()` (PNG) |
 | `CipherFileStorage` | stores uploads to `www/cipher_images/<year>/<checkpoint>/` and registers them in `files` |
 | `App\Session\TeamSession` | logged-in team: `getTeamId`, `getTeamName`, `isLoggedIn`, `isOrg`, `logIn`, `logOut` |

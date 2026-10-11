@@ -47,7 +47,8 @@ animates them).
 | `edit` | Úprava údajů | edit members, contacts, password (organizers can edit their account any time) |
 | `payment` | Platba startovného | payment state, instructions, QR code |
 | `cancel` | Zrušení účasti | cancel the registration (current year, before the game) |
-| `password` | Zapomenuté heslo | generate a new password and e-mail it |
+| `password` | Zapomenuté heslo | e-mail a link for setting a new password |
+| `resetPassword` | Nové heslo | page of the e-mailed link (`?team&expires&token`): set a new password |
 | `actionLogout` / `logout` | Odhlášení | logs the team out |
 | `actionRegisterLogged` | – | registers the logged-in team to the selected (current) year, redirects to `edit` |
 

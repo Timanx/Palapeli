@@ -79,7 +79,7 @@ E-mails sent by the application:
 | contact form in the footer | organizers | visitor's e-mail (if given) |
 | team cancels its participation | organizers | `Palapeli Web <organizatori@palapeli.cz>` |
 | a playing team cancels and there are substitutes | first substitute team (Bcc organizers) | same |
-| forgotten password | team's e-mails (new password in the body) | same |
+| forgotten password | team's e-mails (link for setting a new password, valid 24 hours) | same |
 
 Addresses are defined in `App\Utils\AppConstants`.
 

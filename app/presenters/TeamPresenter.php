@@ -27,6 +27,9 @@ final class TeamPresenter extends BasePresenter
 	private const StandbyRegisteredMessage = 'Tým %s byl úspěšně zaregistrován do aktuálního ročníku jako náhradní. Již je totiž naplněn limit počtu týmů, které se mohou hry zúčastnit. Jakmile se pro vás uvolní místo, ozveme se vám.';
 	private const GdprMessage = 'Registruješ tým lidí a tím nám dáváš jejich jméno, příjmení, telefony a e-maily, tak jim to prosím alespoň řekni. My za to slíbíme, že je nezneužijeme jinak, než v souvislosti se hrou. Data od nás tahají šifrovačky.cz a statek.seslost.cz. Existuje GDPR, tam najdeš, co po nás můžeš chtít. Když se vám něco nebude líbit, tak se ozvěte orgům, Dark to s vámi vyřídí.';
 
+	/** Team whose password is being reset through a valid link from the forgotten password e-mail. */
+	private ?int $resetTeamId = null;
+
 
 	public function __construct(
 		private readonly TeamsModel $teamsModel,
@@ -443,7 +446,7 @@ final class TeamPresenter extends BasePresenter
 		$form = new Form;
 		$form->getElementPrototype()->setAttribute('class', 'center');
 		$form->addText('name', 'Název týmu:')
-			->setRequired('Zadejte prosím název týmu, pro který se má vygenerovat nové heslo.');
+			->setRequired('Zadejte prosím název týmu, pro který chcete nastavit nové heslo.');
 		$form->addSubmit('send', 'ODESLAT EMAIL')->setHtmlAttribute('class', 'autoWidth');
 		$form->onSuccess[] = $this->forgottenPasswordFormSucceeded(...);
 		return $form;
@@ -451,32 +454,40 @@ final class TeamPresenter extends BasePresenter
 
 
 	/**
-	 * Generates a new random password and sends it to the team's e-mail addresses.
+	 * Sends a link for setting a new password to the team's e-mail addresses. The password does not
+	 * change until the team sets a new one through the link.
 	 * @param array{name: string} $values
 	 */
 	private function forgottenPasswordFormSucceeded(Form $form, array $values): void
 	{
 		$name = $values['name'];
 		$team = $this->teamsModel->getEmailsByName($name);
+		$storedHash = $team === null ? null : $this->teamsModel->getPasswordHash((int) $team->id);
 
-		if ($team === null) {
+		if ($team === null || $storedHash === null) {
 			$form->addError(self::formError('Tým se zadaným názvem neexistuje.'));
 			return;
 		}
 
-		$newPassword = $this->passwordHasher->generatePassword();
-		$this->teamsModel->updatePassword((int) $team->id, $this->passwordHasher->hash($newPassword));
+		$teamId = (int) $team->id;
+		$expires = new \DateTimeImmutable(PasswordHasher::ResetLinkValidity);
+		$link = $this->link('//Team:resetPassword', [
+			'team' => $teamId,
+			'expires' => $expires->getTimestamp(),
+			'token' => $this->passwordHasher->createResetToken($teamId, $expires->getTimestamp(), $storedHash),
+		]);
 
 		$escapedName = htmlspecialchars($name, ENT_QUOTES);
 		$mail = new Message()
 			->setFrom(AppConstants::OrgMailFrom)
 			->addReplyTo(AppConstants::OrgMailFrom)
 			->addTo($team->email1)
-			->setSubject('Palapeli - změna hesla pro tým ' . $name)
+			->setSubject('Palapeli - nové heslo pro tým ' . $name)
 			->setHtmlBody(
-				'Ahoj!<br>Někdo (pravděpodobně vy) požádal na stránkách šifrovací hry Palapeli o změnu hesla týmu ' . $escapedName
-				. '. Bylo vám vygenerováno toto nové heslo: "' . $newPassword . '" (bez uvozovek). Pomocí hesla se můžete přihlásit'
-				. ' do autentizované sekce <a href="' . $this->link('//Team:') . '">na stránkách Palapeli</a>.'
+				'Ahoj!<br>Někdo (pravděpodobně vy) požádal na stránkách šifrovací hry Palapeli o nové heslo týmu ' . $escapedName
+				. '. Nové heslo si můžete nastavit na této stránce: <a href="' . htmlspecialchars($link, ENT_QUOTES) . '">' . htmlspecialchars($link) . '</a>'
+				. '<br>Odkaz platí do ' . $expires->format('j. n. Y H:i') . ' a lze ho použít jen jednou.'
+				. ' Pokud jste o nové heslo nežádali, e-mail ignorujte, vaše současné heslo zůstává v platnosti.'
 				. '<br><br>Těšíme se na vás na hře,<br>vaši organizátoři.',
 			);
 
@@ -486,7 +497,57 @@ final class TeamPresenter extends BasePresenter
 
 		$this->mailer->send($mail);
 
-		$this->flashMessage('Heslo bylo úspěšně změněno a zasláno na e-maily uvedené u týmu ' . $name, 'success');
+		$this->flashMessage('Odkaz pro nastavení nového hesla byl zaslán na e-maily uvedené u týmu ' . $name . '.', 'success');
+		$this->redirect('Team:');
+	}
+
+
+	/**
+	 * Page of the link from the forgotten password e-mail.
+	 */
+	public function actionResetPassword(int $team = 0, int $expires = 0, string $token = ''): void
+	{
+		if ($this->passwordHasher->verifyResetToken($team, $expires, $token, $this->teamsModel->getPasswordHash($team))) {
+			$this->resetTeamId = $team;
+		}
+	}
+
+
+	public function renderResetPassword(): void
+	{
+		$this->prepareHeading('Nové heslo');
+		$this->template->resetTeamName = $this->resetTeamId === null ? null : $this->teamsModel->getTeamName($this->resetTeamId);
+	}
+
+
+	protected function createComponentResetPasswordForm(): Form
+	{
+		$form = new Form;
+		$form->getElementPrototype()->setAttribute('class', 'center');
+		$form->addPassword('password', 'Nové heslo:')
+			->setRequired('Zadejte prosím nové heslo.')
+			->addRule($form::MaxLength, 'Heslo může mít maximálně 255 znaků', 255);
+		$form->addPassword('passwordVerify', 'Nové heslo znovu:')
+			->setRequired('Zadejte prosím heslo ještě jednou pro kontrolu.')
+			->addRule($form::Equal, 'Hesla se neshodují', $form['password']);
+		$form->addSubmit('send', 'NASTAVIT HESLO')->setHtmlAttribute('class', 'autoWidth');
+		$form->onSuccess[] = $this->resetPasswordFormSucceeded(...);
+		return $form;
+	}
+
+
+	/**
+	 * @param array{password: string, passwordVerify: string} $values
+	 */
+	private function resetPasswordFormSucceeded(Form $form, array $values): void
+	{
+		// the link was checked in actionResetPassword()
+		if ($this->resetTeamId === null) {
+			$this->error('Odkaz pro nastavení hesla je neplatný.', 403);
+		}
+
+		$this->teamsModel->updatePassword($this->resetTeamId, $this->passwordHasher->hash($values['password']));
+		$this->flashMessage('Nové heslo bylo nastaveno, nyní se s ním můžete přihlásit.', 'success');
 		$this->redirect('Team:');
 	}
 
