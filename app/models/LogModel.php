@@ -40,7 +40,7 @@ final class LogModel extends BaseModel
 			SELECT checkpoint_number, TIME_FORMAT(time, '%H:%i') AS log_time, message, type_id
 			FROM log
 			WHERE (team_id = ? OR team_id IS NULL) AND (year = ? OR year IS NULL)
-			ORDER BY time DESC
+			ORDER BY time DESC, id DESC
 		", $teamId, $year)->fetchAll();
 	}
 

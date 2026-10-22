@@ -56,22 +56,57 @@ application's autoloader; they are harmless.
 
 ## Testing
 
-There is no automated test suite in the repository yet (`nette/tester` is installed as a dev
-dependency). The rewrite was verified by end-to-end scenarios run against a copy of the
-production database:
+### Palainfo tests (PHPUnit)
 
-- all public pages for several editions (incl. the 10th edition with individual starts and the
-  oldest editions),
-- registration, login, editing, payment page with QR code, forgotten password (e-mail content),
-  cancellation with the substitute notification,
-- the whole Palainfo flow: start code, departures, regular codes, password cipher, total hint,
-  wrong confirmation codes, quitting the game, all four screens,
-- every administration page and form: news, payments, team message, report, edition edit/create
-  (round trip without changes), cipher with file upload, team/checkpoint cards, results, discussion,
-- refusal of anonymous form submissions to the administration and Palainfo.
+```bash
+composer test                                        # all tests
+vendor/bin/phpunit --filter RegularCipherTest        # one class
+vendor/bin/phpunit --filter "testSolving@password.*" # matrix cases whose name starts with "password"
+php -d xdebug.mode=off vendor/bin/phpunit            # ~1/3 faster when Xdebug runs in debug mode
+```
 
-When adding tests, the most valuable are integration tests of the models against a test database
-(results ordering, statistics, team limit/substitutes) and of `ActionScreen` handlers.
+The tests play Palainfo the way teams do: every step is a real request handled by the whole
+application (router, presenter, components, forms, Latte templates, session, redirects with flash
+messages), run **in the PHPUnit process** – no web server. A test creates an edition with its
+ciphers and teams, plays and checks the screens (headings, offered forms, messages), the stored
+`results`, `log` and `teamsyear` rows and the standings.
+
+- **Database:** a dedicated database (`palapeli_phpunit`) is **dropped and created** from
+  `docs/schema.sql` at the start of every run, so keep `schema.sql` up to date with `migrations/`.
+  Every test runs in a transaction that is rolled back; tests start with empty tables and do not
+  depend on each other. Connection: environment variables `PALAPELI_TEST_DB_HOST` (`127.0.0.1`),
+  `PALAPELI_TEST_DB_NAME` (`palapeli_phpunit`, must contain "test" or "phpunit"),
+  `PALAPELI_TEST_DB_USER` (`root`), `PALAPELI_TEST_DB_PASSWORD` (empty). `config.neon` is not used.
+- **Time:** instead of a fake clock, `Game::travel($minutes)` moves all stored times of the edition
+  (arrivals, pickups, departures, log, game start and end) to the past – the same as if the time
+  went on. `game_end` moves too, so travel far only after `Game::setGameEnd()`.
+- **Outdated pages:** `Team::secondPhone()` is another phone of the same team, `Team::submitOutdated()`
+  submits a form from a page loaded earlier and `Team::forge()` submits a form the screen does not
+  offer – the server must refuse what the current state does not allow.
+- Tests must not print anything (`echo`, `var_dump`): once output is sent, PHP refuses to start
+  the sessions of the simulated requests.
+
+| Test | Covers |
+|---|---|
+| `RegularCipherTest` | every combination of the cipher options on a regular checkpoint (location/password × no wait/wait + pickup code/wait without pickup code × entry message × specification and closing time × own hint text/solution) – 48 ciphers × arrival, solving, total hint, outdated page |
+| `StartTest` | the start: specification, start code, entry message, checkpoint without a code, `hint_for_start_exists`, password start cipher, wait at the start |
+| `FinishTest` | the finish without a finish cipher, finish cipher at the finish / password from the last cipher, wait at the finish, order of finishers, a finish cipher without a password |
+| `DepartureTest` | typed time, empty = now, corrections, before the arrival, a time in the future = previous day, invalid time, after the hint |
+| `CipherWaitTest` | countdown, pickup before the countdown ends, two phones |
+| `GameStateTest` | before the start, team of another edition, anonymous visitor, after the end of the game, quitting, messages from organizers |
+| `WholeGameTest` | whole games of five teams for all 8 combinations of finish cipher × hint for the start × klouzavý start, checked against the standings (incl. trailing hints) and the scorecard |
+
+Typed departure times are relative to the current time, so the tests pass at any time of day.
+Not covered: the JavaScript on AKCE (countdown turning green, confirmation screens) – the tests
+check the HTML and data it starts from.
+
+### Other parts
+
+The rest of the web was verified manually by end-to-end scenarios against a copy of the production
+database (public pages of several editions, registration, payments, forgotten password,
+cancellation, every administration page and form). The most valuable next tests are integration
+tests of the models (statistics, team limit/substitutes) and of the administration forms, written
+the same way as the Palainfo tests (`tests/Support`).
 
 ## Conventions
 

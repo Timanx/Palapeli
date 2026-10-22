@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
+		bootstrap="tests/bootstrap.php"
+		cacheDirectory="temp/phpunit"
+		colors="true"
+		executionOrder="defects"
+		failOnWarning="true"
+		failOnNotice="true"
+		failOnRisky="true"
+		failOnEmptyTestSuite="true"
+		displayDetailsOnTestsThatTriggerWarnings="true"
+		displayDetailsOnTestsThatTriggerNotices="true"
+		displayDetailsOnTestsThatTriggerErrors="true"
+		displayDetailsOnPhpunitDeprecations="true">
+	<testsuites>
+		<testsuite name="Palainfo">
+			<directory>tests/Palainfo</directory>
+		</testsuite>
+	</testsuites>
+
+	<source>
+		<include>
+			<directory>app</directory>
+		</include>
+	</source>
+</phpunit>

@@ -25,12 +25,32 @@ final class Bootstrap
 		$appDir = __DIR__;
 		$rootDir = dirname($appDir);
 
-		$configurator = new Configurator;
-		$configurator->setDebugMode(self::detectDebugMode());
+		$configurator = self::createConfigurator($rootDir . '/temp', self::detectDebugMode());
 		$configurator->enableTracy($rootDir . '/log');
+		$configurator->addConfig($appDir . '/config/config.neon');
 
+		$localConfig = $appDir . '/config/config.local.neon';
+		if (is_file($localConfig)) {
+			$configurator->addConfig($localConfig);
+		}
+
+		return $configurator;
+	}
+
+
+	/**
+	 * Configurator with the versioned configuration only (no credentials, no Tracy);
+	 * the web adds config.neon to it, the tests their own database configuration.
+	 */
+	public static function createConfigurator(string $tempDir, bool $debugMode): Configurator
+	{
+		$appDir = __DIR__;
+		$rootDir = dirname($appDir);
+
+		$configurator = new Configurator;
+		$configurator->setDebugMode($debugMode);
 		$configurator->setTimeZone('Europe/Prague');
-		$configurator->setTempDirectory($rootDir . '/temp');
+		$configurator->setTempDirectory($tempDir);
 		$configurator->addStaticParameters([
 			'rootDir' => $rootDir,
 			'wwwDir' => $rootDir . '/www',
@@ -42,13 +62,6 @@ final class Bootstrap
 
 		$configurator->addConfig($appDir . '/config/common.neon');
 		$configurator->addConfig($appDir . '/config/services.neon');
-		$configurator->addConfig($appDir . '/config/config.neon');
-
-		$localConfig = $appDir . '/config/config.local.neon';
-		if (is_file($localConfig)) {
-			$configurator->addConfig($localConfig);
-		}
-
 		return $configurator;
 	}
 

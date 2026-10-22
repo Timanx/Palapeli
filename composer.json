@@ -25,10 +25,16 @@
 	"autoload": {
 		"classmap": ["app/Bootstrap.php"]
 	},
+	"autoload-dev": {
+		"psr-4": {
+			"Tests\\": "tests/"
+		}
+	},
 	"require-dev": {
 		"nette/tester": "^2.5",
 		"phpstan/phpstan": "^2.1",
-		"phpstan/phpstan-nette": "^2.0"
+		"phpstan/phpstan-nette": "^2.0",
+		"phpunit/phpunit": "^12"
 	},
 	"config": {
 		"platform": {
@@ -38,7 +44,8 @@
 	},
 	"scripts": {
 		"phpstan": "phpstan analyse --memory-limit=1G",
-		"lint:latte": "latte-lint app"
+		"lint:latte": "latte-lint app",
+		"test": "phpunit"
 	},
 	"minimum-stability": "stable"
 }

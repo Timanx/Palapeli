@@ -12,7 +12,7 @@
 | E-mail | nette/mail | 4.2 |
 | Debugging / logging | tracy/tracy | 2.12 |
 | QR codes | endroid/qr-code | 6.1 |
-| Dev tools | phpstan/phpstan (+ phpstan-nette), nette/tester | 2.x |
+| Dev tools | phpstan/phpstan (+ phpstan-nette), phpunit/phpunit 12 (tests), nette/tester | 2.x |
 
 The front end is server-rendered HTML with plain CSS (`www/css`) and a little jQuery 1.12
 (loaded from Google CDN) for menus and the homepage puzzle animation. Client-side form
