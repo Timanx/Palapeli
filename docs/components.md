@@ -90,7 +90,9 @@ Add news to an edition (date, edition, text; new lines become `<br>`).
 
 Edit the selected edition or create a new one (`setCreateNew()`). Date-time inputs use
 `addDateTime()`/`addTime()` and return strings in database format; `calendar_year` and `date`
-are derived from the game start.
+are derived from the game start. Checking "Výsledky publikované" works like the publish button in the
+results: it is refused before the end of the game and removes hints of teams that did not reach the
+next checkpoint (`ResultsModel::removeTrailingHints`).
 
 ## DiscussionControl
 

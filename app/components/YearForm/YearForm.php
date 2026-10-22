@@ -6,6 +6,7 @@ namespace App\Components\YearForm;
 
 use App\Components\BaseControl;
 use App\Models\PaymentQrCodeGenerator;
+use App\Models\ResultsModel;
 use App\Models\YearsModel;
 use Nette\Application\UI\Form;
 
@@ -23,6 +24,7 @@ final class YearForm extends BaseControl
 
 	public function __construct(
 		private readonly YearsModel $yearsModel,
+		private readonly ResultsModel $resultsModel,
 	) {
 	}
 
@@ -84,7 +86,7 @@ final class YearForm extends BaseControl
 			->setOption('description', 'Maximální počet hrajících týmů; další registrované týmy jsou náhradníci. Prázdné = bez limitu.');
 
 		$form->addCheckbox('results_public', 'Výsledky publikované:')
-			->setOption('description', 'Veřejně se výsledky zobrazí až po konci hry a po zaškrtnutí (organizátoři je vidí dřív). Před zveřejněním spusťte „Odstranit totálky týmů, které nedošly na další stanoviště“.');
+			->setOption('description', 'Totéž jako tlačítko „Publikovat výsledky“ ve Výsledcích: lze zaškrtnout až po konci hry, zaškrtnutím se odstraní totálky týmů, které nedošly na další stanoviště. Veřejně se výsledky zobrazí až po zaškrtnutí (organizátoři je vidí dřív).');
 		$form->addCheckbox('show_tester_notification', 'Zobrazit notifikaci o hledání testerů:')
 			->setOption('description', 'Na webu se zobrazí výzva, že hledáme testery šifer.');
 		$form->addCheckbox('is_current', 'Je aktuální:')
@@ -117,8 +119,22 @@ final class YearForm extends BaseControl
 			$form->setDefaults($defaults);
 		}
 
+		$form->onValidate[] = $this->validateYear(...);
 		$form->onSuccess[] = $this->saveYear(...);
 		return $form;
+	}
+
+
+	/**
+	 * Hints of teams that did not reach the next checkpoint are known only after the end of the game,
+	 * so the results can be published only then (the same rule as the "publish" button).
+	 * @param array<string, mixed> $values
+	 */
+	private function validateYear(Form $form, array $values): void
+	{
+		if ($values['results_public'] && $values['game_end'] !== null && new \DateTimeImmutable($values['game_end']) > new \DateTimeImmutable) {
+			$form->addError('Výsledky lze zveřejnit až po konci hry.');
+		}
 	}
 
 
@@ -129,6 +145,7 @@ final class YearForm extends BaseControl
 	{
 		$isNew = (bool) $values['is_new'];
 		$gameStart = $values['game_start'];
+		$publishing = $values['results_public'] && ($isNew || !$this->resultsModel->getResultsPublic((int) $values['year']));
 
 		$values['calendar_year'] = $gameStart === null ? null : (int) substr($gameStart, 0, 4);
 		$values['date'] = $gameStart === null ? null : substr($gameStart, 0, 10);
@@ -142,6 +159,12 @@ final class YearForm extends BaseControl
 		} else {
 			$this->yearsModel->editYear($values);
 			$this->flashMessage('Ročník byl úspěšně upraven.', 'success');
+		}
+
+		// publishing here works the same as the "publish" button in the results
+		if ($publishing) {
+			$this->resultsModel->removeTrailingHints((int) $values['year']);
+			$this->flashMessage('Výsledky byly zveřejněny, totálky týmů, které nedošly na další stanoviště, byly odstraněny.', 'success');
 		}
 
 		$this->getPresenter()->redirect('this');
