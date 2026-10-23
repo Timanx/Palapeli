@@ -1,7 +1,5 @@
-Allow from all
-
-RewriteEngine On
-RewriteCond %{HTTP_HOST} ^palapeli/$
-RewriteRule ^$ www/ [L]
-RewriteCond %{HTTP_HOST} ^palapeli/$
-RewriteRule (.*) www/$1 [L]
+# routes every request to www/ so that app/, log/, temp/ and vendor/ are never served
+<IfModule mod_rewrite.c>
+	RewriteEngine On
+	RewriteRule ^(.*)$ www/$1 [L]
+</IfModule>
