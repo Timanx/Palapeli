@@ -17,6 +17,9 @@
 		<testsuite name="Palainfo">
 			<directory>tests/Palainfo</directory>
 		</testsuite>
+		<testsuite name="Web">
+			<directory>tests/Web</directory>
+		</testsuite>
 	</testsuites>
 
 	<source>

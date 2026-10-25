@@ -37,7 +37,7 @@ final class DiscussionControl extends BaseControl
 	}
 
 
-	public static function cipherThread(?int $year, ?int $checkpoint): string
+	public static function cipherThread(int $year, int $checkpoint): string
 	{
 		return self::CipherThreadPrefix . '_' . $year . '_' . $checkpoint;
 	}

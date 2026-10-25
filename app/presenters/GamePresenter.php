@@ -196,15 +196,12 @@ final class GamePresenter extends BasePresenter
 
 	protected function createComponentCipherDiscussion(): DiscussionControl
 	{
-		$year = $this->getParameter('year');
-		$checkpoint = $this->getParameter('checkpoint');
+		// the start has the default checkpoint 0, which is left out of its URL
+		$checkpoint = (int) ($this->getParameter('checkpoint') ?? 0);
 
 		return $this->discussionControlFactory->create()
 			->setTeamId($this->teamId)
 			->setTeamName($this->teamSession->getTeamName())
-			->setThread(DiscussionControl::cipherThread(
-				$year === null ? null : (int) $year,
-				$checkpoint === null ? null : (int) $checkpoint,
-			));
+			->setThread(DiscussionControl::cipherThread($this->selectedYear, $checkpoint));
 	}
 }
