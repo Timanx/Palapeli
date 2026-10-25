@@ -35,6 +35,16 @@ final class CipherDiscussionTest extends PalainfoTestCase
 	}
 
 
+	public function testCipherLinksWithoutGaps(): void
+	{
+		Game::createDefault($this->db, gameStart: '-6 hours', gameEnd: '-1 hour');
+
+		$list = (new Browser($this->db))->open('/game/ciphers')->getDocument()->querySelector('.ciphersList');
+		self::assertNotNull($list);
+		self::assertSame('S12C', $list->textContent, 'Whitespace between the links shows as gaps in the line.');
+	}
+
+
 	private function addPost(int $checkpoint, string $message): void
 	{
 		$this->db->query('INSERT INTO discussion ?', [
