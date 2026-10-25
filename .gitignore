@@ -9,3 +9,6 @@ app/config/config.local.neon
 
 # old copy of nette/mail 2.4 files, not used since the Nette 3 upgrade
 vendor-backup/
+
+# deployment targets with credentials and built upload folders (see .claude/skills/deploy)
+/deploy/
